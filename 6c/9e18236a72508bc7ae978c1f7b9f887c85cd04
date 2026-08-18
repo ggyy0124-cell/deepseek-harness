@@ -1,0 +1,19 @@
+.github/workflows/sync-upstream.yml
+  s_64a87bcd40d122::t_1def1c8e4eec07 18-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "6c9e18236a72508bc7ae978c1f7b9f887c85cd04",
+  "prompts": {},
+  "sessions": {
+    "s_64a87bcd40d122": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "50e86aa8-d46d-429a-8f19-74b3e56c041d",
+        "model": "composer-2.5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
