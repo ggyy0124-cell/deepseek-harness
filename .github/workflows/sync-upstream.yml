@@ -6,10 +6,6 @@ on:
     - cron: '15 18 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: write
-  workflows: write
-
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -19,6 +15,9 @@ jobs:
         with:
           fetch-depth: 0
           ref: master
+          # GITHUB_TOKEN 无法 push 含 .github/workflows/* 变更的 commit；
+          # 需在 repo secret 配置 SYNC_UPSTREAM_PAT（Contents + Workflows write）。
+          token: ${{ secrets.SYNC_UPSTREAM_PAT }}
 
       - name: Merge upstream/master
         run: |
