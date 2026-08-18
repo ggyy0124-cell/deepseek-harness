@@ -2,8 +2,8 @@ name: Sync Upstream
 
 on:
   schedule:
-    # 每天 UTC 03:00（北京时间 11:00）自动同步
-    - cron: '0 3 * * *'
+    # 每天 UTC 18:15（北京时间 02:15）自动同步，错开整点高峰
+    - cron: '15 18 * * *'
   workflow_dispatch:
 
 permissions:
