@@ -1,0 +1,28 @@
+.github/workflows/ci.yml
+  s_afab44ab2e3d50::t_c8d277847e0140 120-121
+  s_afab44ab2e3d50::t_a913a3d5b992de 122-124
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.zh.md
+  s_afab44ab2e3d50::t_f3dae929d3befa 13
+scripts/ci-workflow.spec.ts
+  s_afab44ab2e3d50::t_3a863177fca8d3 276-280
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.md
+  s_afab44ab2e3d50::t_f3dae929d3befa 13
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.i18n.yaml
+  s_afab44ab2e3d50::t_221756e3b547f0 5-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f730ed80964e3ccee88f9b3f21fc7661ad7e6c12",
+  "prompts": {},
+  "sessions": {
+    "s_afab44ab2e3d50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a085de-83bf-7a01-8a73-445ba91de386",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
