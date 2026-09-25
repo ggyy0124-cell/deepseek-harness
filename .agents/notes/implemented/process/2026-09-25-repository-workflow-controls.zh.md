@@ -10,7 +10,7 @@ Status: implemented
 
 ## Decision
 
-[CI](../../../../.github/workflows/ci.yml) 中必需的 Linux 和 Windows 任务在故障转移变量未设置时使用 GitHub 托管 Runner。托管 Runner 上的消费端任务与 Windows 覆盖率任务采用比专用 Runner 更小的工作线程及门禁并发预算，使大量启动进程的测试能在既定期限内完成。Windows tools-catalog 编译测试使用覆盖率任务配置的测试时间预算，不再以 30 秒覆盖它。变量值 `enterprise` 选择原有专用标签；`selfhosted` 和 `blacksmith` 保留各自的显式路由。Cloudflare 预览仅在 `deepseek-ai/deepseek-harness` 运行；可信的发布预演也允许该仓库和 `deepseek-harness/deepseek-harness` 使用自托管池。自动合并上游的工作流已移除，因此同步 Fork 需要显式 Git 操作。
+[CI](../../../../.github/workflows/ci.yml) 中必需的 Linux 和 Windows 任务在故障转移变量未设置时使用 GitHub 托管 Runner。托管 Runner 上的消费端任务与覆盖率任务采用比专用 Runner 更小的工作线程及门禁并发预算，使大量启动进程的测试能在既定期限内完成。Windows tools-catalog 编译测试使用覆盖率任务配置的测试时间预算，不再以 30 秒覆盖它。Python 宽结构抗恶意测试提高了执行时间上限，以兼顾低并发托管 Runner 在覆盖率插桩下的运行耗时。变量值 `enterprise` 选择原有专用标签；`selfhosted` 和 `blacksmith` 保留各自的显式路由。Cloudflare 预览仅在 `deepseek-ai/deepseek-harness` 运行；可信的发布预演也允许该仓库和 `deepseek-harness/deepseek-harness` 使用自托管池。自动合并上游的工作流已移除，因此同步 Fork 需要显式 Git 操作。
 
 [Issue policy](../../../../.github/workflows/issue-policy.yml) 和 [Issue lifecycle](../../../../.github/workflows/issue-lifecycle.yml) 工作流只在拥有对应 Project 配置的仓库请求 Project App 凭据。若在 Fork 中启用，任务会成功结束，不会尝试为其他仓库的 App 安装获取令牌。未接入此 Project 的 Fork 也可在 Actions 设置中停用这两个工作流。
 

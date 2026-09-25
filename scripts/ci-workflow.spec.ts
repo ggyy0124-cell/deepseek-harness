@@ -273,6 +273,11 @@ describe('CI workflow', () => {
       DSH_COVERAGE_PARTITIONS: "${{ vars.DSH_CI_FAILOVER_WINDOWS == '' && '2' || '4' }}",
       DSH_GATE_CONCURRENCY: "${{ vars.DSH_CI_FAILOVER_WINDOWS == '' && '2' || '3' }}",
     })
+    expect(node24Coverage.env).toMatchObject({
+      DSH_COVERAGE_MAX_WORKERS: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '3' || '6' }}",
+      DSH_COVERAGE_PARTITIONS: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '4' }}",
+      DSH_GATE_CONCURRENCY: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '3' }}",
+    })
     expect(node24Consumers.env).toMatchObject({
       DSH_GATE_CONCURRENCY: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '10' }}",
       DSH_WEB_SNAPSHOT_WORKERS: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '6' }}",
