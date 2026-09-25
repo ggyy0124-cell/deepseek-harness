@@ -1,0 +1,19 @@
+scripts/prepare-ci-bubblewrap.sh
+  s_afab44ab2e3d50::t_55086366d17676 7-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1ca1ed010aaf63b3552de0b796e214aca503618e",
+  "prompts": {},
+  "sessions": {
+    "s_afab44ab2e3d50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a085de-83bf-7a01-8a73-445ba91de386",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
