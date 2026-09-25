@@ -1,0 +1,59 @@
+.github/workflows/release-publish-github-packages.yml
+  s_afab44ab2e3d50::t_b28ff3bbea3cde 1-2,4-52,58-85,89-116
+  s_afab44ab2e3d50::t_0d46bb67ccdee6 3,53-57,86-88,117-118
+.github/workflows/build-desktop-unsigned.yml
+  s_afab44ab2e3d50::t_e761bc1f6e851f 1-54
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.md
+  s_afab44ab2e3d50::t_41e671f2db89e0 1-27
+.github/review-ownership/README.md
+  s_afab44ab2e3d50::t_b28ff3bbea3cde 20
+scripts/ci-workflow.spec.ts
+  s_afab44ab2e3d50::t_e761bc1f6e851f 85-86
+  s_afab44ab2e3d50::t_7412211fe8c3ce 40-63,227,391,393
+  s_afab44ab2e3d50::t_7dcf96aa6b2f3f 64-82,89-91
+  s_afab44ab2e3d50::t_9d1d818fcd7014 83-84,87-88
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.zh.md
+  s_afab44ab2e3d50::t_41e671f2db89e0 1-27
+.github/workflows/ci.yml
+  s_afab44ab2e3d50::t_47b39fc8916f94 15,22,26-28,48-49,116-117,247-248,477-478,523-524,601-602,652-653
+.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.i18n.yaml
+  s_afab44ab2e3d50::t_ecb1ddce242763 5-6
+.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.md
+  s_afab44ab2e3d50::t_c1eaeb00b53b41 9
+.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.zh.md
+  s_afab44ab2e3d50::t_0622e8e5edaf8a 9
+.agents/notes/implemented/process/2026-09-09-blacksmith-failover-leg.i18n.yaml
+  s_afab44ab2e3d50::t_8627ca355f797e 5-6
+.agents/notes/implemented/process/2026-09-09-blacksmith-failover-leg.md
+  s_afab44ab2e3d50::t_30697e14664d7d 9,15,17
+.agents/notes/implemented/process/2026-09-09-blacksmith-failover-leg.zh.md
+  s_afab44ab2e3d50::t_ebdab763d6edd8 9,15,17
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.i18n.yaml
+  s_afab44ab2e3d50::t_8cdc758ac8dffc 1-6
+.github/review-ownership/approval-policy.json
+  s_afab44ab2e3d50::t_6f4fe700de6351 6,11-12
+.github/review-ownership/check-approval.test.mjs
+  s_afab44ab2e3d50::t_e68cb14ddf9a6a 36,42
+.github/workflows/build-preview-cloudflare.yml
+  s_afab44ab2e3d50::t_e170787b9d678b 35
+.github/workflows/release-vendor.yml
+  s_afab44ab2e3d50::t_2339d496dfe4f8 35
+.github/workflows/release.yml
+  s_afab44ab2e3d50::t_f41eee7c858500 34,94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f3404c3306919f61bf123e1a78953bb7e6671d40",
+  "prompts": {},
+  "sessions": {
+    "s_afab44ab2e3d50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a085de-83bf-7a01-8a73-445ba91de386",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
