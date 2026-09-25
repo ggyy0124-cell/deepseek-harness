@@ -37,6 +37,58 @@ describe('CI workflow', () => {
     }
   })
 
+  it('publishes GitHub Packages only through the verified, serialized release sequence', () => {
+    const workflow = loadWorkflow('.github/workflows/release-publish-github-packages.yml')
+    const pack = workflowJob(workflow, 'pack')
+    const publish = workflowJob(workflow, 'publish')
+    expect(workflow.on).toEqual({ workflow_dispatch: null })
+    expect(pack.steps).toContainEqual(expect.objectContaining({
+      name: 'Verify release version',
+      env: { RELEASE_PUBLISH: 'true' },
+      run: 'pnpm run release:verify --family dsh',
+    }))
+    expect(publish.concurrency).toEqual({
+      group: 'Release-publish-github-packages',
+      'cancel-in-progress': false,
+    })
+    expect(publish.steps).toContainEqual(expect.objectContaining({
+      name: 'Publish tarballs to GitHub Packages',
+      env: {
+        NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+        npm_config_registry: 'https://npm.pkg.github.com',
+      },
+      run: 'pnpm run release:publish --family dsh --from dist/npm',
+    }))
+  })
+
+  it('keeps the unsigned desktop build manual and scoped to Windows x64', () => {
+    const workflow = loadWorkflow('.github/workflows/build-desktop-unsigned.yml')
+    const build = workflowJob(workflow, 'build-unsigned-windows')
+    expect(workflow.on).toEqual({
+      workflow_dispatch: { inputs: { target: {
+        description: 'Target platform to build',
+        required: true,
+        default: 'win-x64',
+        type: 'choice',
+        options: ['win-x64'],
+      } } },
+    })
+    expect(build['runs-on']).toBe('windows-2025')
+    expect(build.steps).toContainEqual(expect.objectContaining({
+      name: 'Build and Package Unsigned',
+      run: 'pnpm run package:desktop:win:x64:unsigned',
+    }))
+    expect(build.steps).toContainEqual(expect.objectContaining({
+      name: 'Upload Unsigned Artifacts',
+      with: {
+        name: 'deepseek-harness-desktop-unsigned-win-x64',
+        path: 'apps/desktop/.desktop-build/targets/win-x64/artifacts/*',
+        'if-no-files-found': 'error',
+        'retention-days': 7,
+      },
+    }))
+  })
+
   it('skips coverage-history uploads on cancellation but retains Wine cleanup', () => {
     const coverage = workflowJob(loadWorkflow('.github/workflows/ci.yml'), 'windows-coverage')
     const wine = workflowJob(loadWorkflow('.github/workflows/ci-master.yml'), 'windows')
@@ -172,7 +224,7 @@ describe('CI workflow', () => {
       expect(job['runs-on'], `${jobName} runs-on must not use the Linux failover switch`).not.toContain('DSH_CI_FAILOVER_LINUX')
       expect(job['runs-on']).toContain('self-hosted')
       expect(job['runs-on']).toContain('dsh-win-ci')
-      expect(job['runs-on']).toContain('dsh-windows-2025-16core')
+      expect(job['runs-on']).toContain('windows-2025')
       expect(job['runs-on']).toContain('blacksmith-16vcpu-windows-2025')
       expect(job.if).toBe("github.event_name == 'pull_request'")
     }
@@ -336,9 +388,9 @@ describe('CI workflow', () => {
       }, { timeout: 1000 })
     }
     for (const [name, selector, variable, pool, hosted] of [
-      ['linux gates', selectors.linux, 'DSH_CI_FAILOVER_LINUX', ['self-hosted', 'linux', 'x64', 'vm-backup'], 'dsh-ubuntu-24-04-16core'],
+      ['linux gates', selectors.linux, 'DSH_CI_FAILOVER_LINUX', ['self-hosted', 'linux', 'x64', 'vm-backup'], 'ubuntu-24.04'],
       ['linux aggregate', selectors.linuxAggregate, 'DSH_CI_FAILOVER_LINUX', ['self-hosted', 'linux', 'x64', 'vm-backup'], 'ubuntu-latest'],
-      ['windows lanes', selectors.windows, 'DSH_CI_FAILOVER_WINDOWS', ['self-hosted', 'dsh-win-ci', 'windows'], 'dsh-windows-2025-16core'],
+      ['windows lanes', selectors.windows, 'DSH_CI_FAILOVER_WINDOWS', ['self-hosted', 'dsh-win-ci', 'windows'], 'windows-2025'],
     ] as const) {
       expect(evaluate(selector, { [variable]: 'blacksmith' }), `${name} blacksmith value`).toMatch(/^blacksmith-/)
       expect(evaluate(selector, { [variable]: 'selfhosted' }), `${name} selfhosted value`).toEqual(pool)
