@@ -17,7 +17,9 @@ afterEach(() => {
 })
 
 describe('model-driven dsh-tools generation', () => {
-  it('round-trips the complete service and event structure through the runtime registry', { timeout: 30_000 }, async () => {
+  it('round-trips the complete service and event structure through the runtime registry', {
+    timeout: Number(process.env.DSH_COVERAGE_TEST_TIMEOUT_MS ?? 30_000),
+  }, async () => {
     const workspace = new WorkspaceAnalyzer({
       root: workspaceRoot,
       faces: ['host'],
