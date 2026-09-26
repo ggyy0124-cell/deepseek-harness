@@ -1,0 +1,19 @@
+.github/review-ownership/approval-policy.json
+  s_d4a17511be8a55::t_212a18fe39f904 6,11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bfc69de96ff1db21a8ede6f4858c0e82b79333d7",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "gemini-3.8-flash"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
