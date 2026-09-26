@@ -15,7 +15,7 @@ import {
 const roots: string[] = []
 
 afterEach(() => {
-  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
+  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 })
 })
 
 function writeJson(root: string, path: string, value: unknown): void {
