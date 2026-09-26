@@ -1,0 +1,103 @@
+packages/storage/storage-json/src/atomic.ts
+  s_d4a17511be8a55::t_2b824fa0c5f4b0 18-45,62
+packages/typert/generator/tests/tools-catalog.spec.ts
+  s_afab44ab2e3d50::t_e5f820d8ce3268 20-22
+.github/workflows/build-preview-cloudflare.yml
+  s_afab44ab2e3d50::t_e170787b9d678b 35
+apps/cli/tests/profiles/headless/tests/headless.expected.e2e.ts
+  s_d4a17511be8a55::t_e4363af618b52f 448
+.github/workflows/ci.yml
+  s_afab44ab2e3d50::t_e5f820d8ce3268 251,255,261,528-529,531
+  s_afab44ab2e3d50::t_c8d277847e0140 120-121
+  s_afab44ab2e3d50::t_a913a3d5b992de 122-124
+  s_afab44ab2e3d50::t_47b39fc8916f94 15,22,26-28,48-49,116-117,247-248,477-478,523-524,601-602,652-653
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.zh.md
+  s_afab44ab2e3d50::t_41e671f2db89e0 1-12,16-28
+  s_afab44ab2e3d50::t_d2d6b406a66aea 15
+  s_afab44ab2e3d50::t_aefb9316ca2e1f 14
+  s_d4a17511be8a55::t_416a882c5d6abd 13
+  s_afab44ab2e3d50::t_cad31878666a6d 29
+packages/session/session-projection-cache/tests/fixtures.spec.ts
+  s_d4a17511be8a55::t_358ba6e0dbe1ff 129
+packages/experimental/code-runtime-python/tests/runtime.spec.ts
+  s_d4a17511be8a55::t_b66d30cf137cdf 5150,5156,5161,5177,5187
+.agents/notes/implemented/process/2026-09-09-blacksmith-failover-leg.i18n.yaml
+  s_afab44ab2e3d50::t_8627ca355f797e 5-6
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.md
+  s_d4a17511be8a55::t_3bed3c422f3a23 13
+  s_afab44ab2e3d50::t_41e671f2db89e0 1-12,16-28
+  s_afab44ab2e3d50::t_d2d6b406a66aea 15
+  s_afab44ab2e3d50::t_cad31878666a6d 29
+  s_afab44ab2e3d50::t_63cc4c3bb23e21 14
+.agents/notes/implemented/process/2026-09-09-blacksmith-failover-leg.md
+  s_afab44ab2e3d50::t_30697e14664d7d 9,15,17
+.github/review-ownership/check-approval.test.mjs
+  s_afab44ab2e3d50::t_e68cb14ddf9a6a 36,42
+.github/workflows/release-vendor.yml
+  s_afab44ab2e3d50::t_2339d496dfe4f8 35
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.i18n.yaml
+  s_afab44ab2e3d50::t_221756e3b547f0 5-6
+  s_afab44ab2e3d50::t_8cdc758ac8dffc 1-4
+.github/review-ownership/approval-policy.json
+  s_afab44ab2e3d50::t_6f4fe700de6351 6,11-12
+apps/cli/tests/profiles/headless/tests/fixtures/deepseek-defaults.patch.yml
+  s_d4a17511be8a55::t_2c570797c03b29 13
+.github/workflows/release.yml
+  s_afab44ab2e3d50::t_f41eee7c858500 34,94
+scripts/prepare-ci-bubblewrap.sh
+  s_afab44ab2e3d50::t_55086366d17676 7-9
+.github/workflows/issue-lifecycle.yml
+  s_afab44ab2e3d50::t_54b931a3eb49ea 53,61
+.github/review-ownership/README.md
+  s_afab44ab2e3d50::t_b28ff3bbea3cde 20
+scripts/benchmark-npm-resolution.ts
+  s_d4a17511be8a55::t_8ab448b17fe8cc 485
+scripts/benchmark-npm-resolution.spec.ts
+  s_d4a17511be8a55::t_00f3f77b93a270 18
+.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.zh.md
+  s_afab44ab2e3d50::t_0622e8e5edaf8a 9
+.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.md
+  s_afab44ab2e3d50::t_c1eaeb00b53b41 9
+.agents/notes/implemented/process/2026-09-09-blacksmith-failover-leg.zh.md
+  s_afab44ab2e3d50::t_ebdab763d6edd8 9,15,17
+scripts/ci-workflow.spec.ts
+  s_afab44ab2e3d50::t_e761bc1f6e851f 85-86
+  s_afab44ab2e3d50::t_15949a23f2ed8f 269,271-275,281-285,1025-1026,1046
+  s_afab44ab2e3d50::t_3a863177fca8d3 276-280
+  s_afab44ab2e3d50::t_7412211fe8c3ce 40-63,227,405,407
+  s_afab44ab2e3d50::t_7dcf96aa6b2f3f 64-82,89-91
+  s_afab44ab2e3d50::t_9d1d818fcd7014 83-84,87-88
+.github/workflows/release-publish-github-packages.yml
+  s_afab44ab2e3d50::t_b28ff3bbea3cde 1-2,4-52,58-85,89-116
+  s_afab44ab2e3d50::t_0d46bb67ccdee6 3,53-57,86-88,117-118
+.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.i18n.yaml
+  s_afab44ab2e3d50::t_ecb1ddce242763 5-6
+.github/workflows/issue-policy.yml
+  s_afab44ab2e3d50::t_54b931a3eb49ea 26,36
+.github/workflows/build-desktop-unsigned.yml
+  s_afab44ab2e3d50::t_e761bc1f6e851f 1,5-20,23-25,27,30-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "24ef95270579c8abac4e2a7d64146b38276b5013",
+  "prompts": {},
+  "sessions": {
+    "s_afab44ab2e3d50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a085de-83bf-7a01-8a73-445ba91de386",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    },
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "gemini-3.8-flash"
+      },
+      "human_author": null
+    }
+  }
+}
