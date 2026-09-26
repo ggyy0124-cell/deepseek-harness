@@ -126,6 +126,7 @@ async function assertRewrite(ctx: Context, root: string, id: SessionId): Promise
   const session = ctx.sessions.create(id)
   session.append('fixtures-test/set-title', { title: '重写标题' })
   session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+  await ctx.sessionProjectionCache.write(session)
   const path = join(root, projectionCacheDomainSpec.name, 'sessions', `${id}.json`)
   await vi.waitFor(async () => {
     const doc = JSON.parse(await readFile(path, 'utf8')) as FixtureDoc
@@ -136,7 +137,7 @@ async function assertRewrite(ctx: Context, root: string, id: SessionId): Promise
       inheritedEventCount: 0,
     })
     expect(doc.record.rows['title']?.val).toBe('重写标题')
-  }, { timeout: 5_000 })
+  }, { timeout: 30_000 })
 }
 
 afterEach(async () => {

@@ -37,6 +37,58 @@ describe('CI workflow', () => {
     }
   })
 
+  it('publishes GitHub Packages only through the verified, serialized release sequence', () => {
+    const workflow = loadWorkflow('.github/workflows/release-publish-github-packages.yml')
+    const pack = workflowJob(workflow, 'pack')
+    const publish = workflowJob(workflow, 'publish')
+    expect(workflow.on).toEqual({ workflow_dispatch: null })
+    expect(pack.steps).toContainEqual(expect.objectContaining({
+      name: 'Verify release version',
+      env: { RELEASE_PUBLISH: 'true' },
+      run: 'pnpm run release:verify --family dsh',
+    }))
+    expect(publish.concurrency).toEqual({
+      group: 'Release-publish-github-packages',
+      'cancel-in-progress': false,
+    })
+    expect(publish.steps).toContainEqual(expect.objectContaining({
+      name: 'Publish tarballs to GitHub Packages',
+      env: {
+        NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+        npm_config_registry: 'https://npm.pkg.github.com',
+      },
+      run: 'pnpm run release:publish --family dsh --from dist/npm',
+    }))
+  })
+
+  it('keeps the unsigned desktop build manual and scoped to Windows x64', () => {
+    const workflow = loadWorkflow('.github/workflows/build-desktop-unsigned.yml')
+    const build = workflowJob(workflow, 'build-unsigned-windows')
+    expect(workflow.on).toEqual({
+      workflow_dispatch: { inputs: { target: {
+        description: 'Target platform to build',
+        required: true,
+        default: 'win-x64',
+        type: 'choice',
+        options: ['win-x64'],
+      } } },
+    })
+    expect(build['runs-on']).toBe('windows-2025')
+    expect(build.steps).toContainEqual(expect.objectContaining({
+      name: 'Build and Package Unsigned',
+      run: 'pnpm run package:desktop:win:x64:unsigned',
+    }))
+    expect(build.steps).toContainEqual(expect.objectContaining({
+      name: 'Upload Unsigned Artifacts',
+      with: {
+        name: 'deepseek-harness-desktop-unsigned-win-x64',
+        path: 'apps/desktop/.desktop-build/targets/win-x64/artifacts/*',
+        'if-no-files-found': 'error',
+        'retention-days': 7,
+      },
+    }))
+  })
+
   it('skips coverage-history uploads on cancellation but retains Wine cleanup', () => {
     const coverage = workflowJob(loadWorkflow('.github/workflows/ci.yml'), 'windows-coverage')
     const wine = workflowJob(loadWorkflow('.github/workflows/ci-master.yml'), 'windows')
@@ -172,7 +224,7 @@ describe('CI workflow', () => {
       expect(job['runs-on'], `${jobName} runs-on must not use the Linux failover switch`).not.toContain('DSH_CI_FAILOVER_LINUX')
       expect(job['runs-on']).toContain('self-hosted')
       expect(job['runs-on']).toContain('dsh-win-ci')
-      expect(job['runs-on']).toContain('dsh-windows-2025-16core')
+      expect(job['runs-on']).toContain('windows-2025')
       expect(job['runs-on']).toContain('blacksmith-16vcpu-windows-2025')
       expect(job.if).toBe("github.event_name == 'pull_request'")
     }
@@ -214,9 +266,23 @@ describe('CI workflow', () => {
       expect(install!.run).not.toContain('$cloneFlag')
     }
 
-    // windows-coverage uses the lower 4-partition profile.
+    // Hosted Windows has a smaller worker budget than the dedicated pools.
     expect(windowsCoverage.name).toBe('windows node 24 / coverage')
-    expect(windowsCoverage.env).toMatchObject({ DSH_COVERAGE_PARTITIONS: '4' })
+    expect(windowsCoverage.env).toMatchObject({
+      DSH_COVERAGE_MAX_WORKERS: "${{ vars.DSH_CI_FAILOVER_WINDOWS == '' && '3' || '6' }}",
+      DSH_COVERAGE_PARTITIONS: "${{ vars.DSH_CI_FAILOVER_WINDOWS == '' && '2' || '4' }}",
+      DSH_GATE_CONCURRENCY: "${{ vars.DSH_CI_FAILOVER_WINDOWS == '' && '2' || '3' }}",
+    })
+    expect(node24Coverage.env).toMatchObject({
+      DSH_COVERAGE_MAX_WORKERS: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '3' || '6' }}",
+      DSH_COVERAGE_PARTITIONS: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '4' }}",
+      DSH_GATE_CONCURRENCY: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '3' }}",
+    })
+    expect(node24Consumers.env).toMatchObject({
+      DSH_GATE_CONCURRENCY: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '10' }}",
+      DSH_WEB_SNAPSHOT_WORKERS: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '2' || '6' }}",
+      DSH_SNAPSHOT_MAX_CONCURRENCY: "${{ vars.DSH_CI_FAILOVER_LINUX == '' && '4' || vars.DSH_CI_FAILOVER_LINUX == 'selfhosted' && github.event.pull_request.user.login != 'dependabot[bot]' && '12' || '32' }}",
+    })
     const coverageSteps = windowsCoverage.steps as unknown[]
     const coverageCommands = coverageSteps.filter((step): step is Record<string, unknown> & { run: string } => (
       isRecord(step) && typeof step.run === 'string'
@@ -336,9 +402,9 @@ describe('CI workflow', () => {
       }, { timeout: 1000 })
     }
     for (const [name, selector, variable, pool, hosted] of [
-      ['linux gates', selectors.linux, 'DSH_CI_FAILOVER_LINUX', ['self-hosted', 'linux', 'x64', 'vm-backup'], 'dsh-ubuntu-24-04-16core'],
+      ['linux gates', selectors.linux, 'DSH_CI_FAILOVER_LINUX', ['self-hosted', 'linux', 'x64', 'vm-backup'], 'ubuntu-24.04'],
       ['linux aggregate', selectors.linuxAggregate, 'DSH_CI_FAILOVER_LINUX', ['self-hosted', 'linux', 'x64', 'vm-backup'], 'ubuntu-latest'],
-      ['windows lanes', selectors.windows, 'DSH_CI_FAILOVER_WINDOWS', ['self-hosted', 'dsh-win-ci', 'windows'], 'dsh-windows-2025-16core'],
+      ['windows lanes', selectors.windows, 'DSH_CI_FAILOVER_WINDOWS', ['self-hosted', 'dsh-win-ci', 'windows'], 'windows-2025'],
     ] as const) {
       expect(evaluate(selector, { [variable]: 'blacksmith' }), `${name} blacksmith value`).toMatch(/^blacksmith-/)
       expect(evaluate(selector, { [variable]: 'selfhosted' }), `${name} selfhosted value`).toEqual(pool)
@@ -956,7 +1022,8 @@ describe('Issue lifecycle workflow', () => {
     expect(lifecyclePullRequest.types).not.toContain('ready_for_review')
     expect(lifecyclePullRequest.types).toContain('review_requested')
     expect(lifecycleReview.types).toEqual(['submitted'])
-    const gated = "${{ github.event_name != 'pull_request_review' || github.event.review.state == 'changes_requested' }}"
+    const trusted = "(github.repository == 'deepseek-ai/deepseek-harness' || github.repository == 'deepseek-harness/deepseek-harness')"
+    const gated = `\${{ ${trusted} && (github.event_name != 'pull_request_review' || github.event.review.state == 'changes_requested') }}`
     const steps = lifecycleJob.steps.filter(isRecord)
     const tokenStep = steps.find(s => s.name === 'Create project token')
     const handleStep = steps.find(s => s.name === 'Handle repository event')
@@ -976,7 +1043,7 @@ describe('Issue lifecycle workflow', () => {
     const tokenStep = steps.find(step => step.name === 'Create Project read token')
     const validateStep = steps.find(step => step.name === 'Validate pull request')
     const humanPullRequest =
-      "${{ github.event.pull_request.user.type != 'Bot' && github.event.pull_request.user.type != 'App' }}"
+      "${{ (github.repository == 'deepseek-ai/deepseek-harness' || github.repository == 'deepseek-harness/deepseek-harness') && github.event.pull_request.user.type != 'Bot' && github.event.pull_request.user.type != 'App' }}"
 
     expect(tokenStep).toMatchObject({
       id: 'app-token',

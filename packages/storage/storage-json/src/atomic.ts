@@ -15,6 +15,34 @@ import { open, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 
+/* v8 ignore start -- Windows retry for transient file lock interference; Windows tests exercise this. */
+const WINDOWS_TRANSIENT_RENAME_ERRORS: ReadonlySet<string> = new Set(['EACCES', 'EBUSY', 'EPERM'])
+const WINDOWS_RENAME_RETRY_INITIAL_MS = 5
+const WINDOWS_RENAME_RETRY_MAX_MS = 80
+const WINDOWS_RENAME_RETRY_LIMIT = 8
+
+async function renameAtomic(source: string, destination: string): Promise<void> {
+  if (process.platform !== 'win32') {
+    await rename(source, destination)
+    return
+  }
+  let delay = WINDOWS_RENAME_RETRY_INITIAL_MS
+  for (let retries = 0;; retries += 1) {
+    try {
+      await rename(source, destination)
+      return
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException | null)?.code ?? ''
+      if (!WINDOWS_TRANSIENT_RENAME_ERRORS.has(code) || retries >= WINDOWS_RENAME_RETRY_LIMIT) {
+        throw error
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, delay))
+    delay = Math.min(delay * 2, WINDOWS_RENAME_RETRY_MAX_MS)
+  }
+}
+/* v8 ignore stop */
+
 /**
  * Durably replace `path` with `data`.
  * @param path - Absolute target file path.
@@ -31,7 +59,7 @@ export async function writeAtomic(path: string, data: string): Promise<void> {
     } finally {
       await handle.close()
     }
-    await rename(tmp, path)
+    await renameAtomic(tmp, path)
     await fsyncDirectory(dirname(path))
   } catch (error) {
     await rm(tmp, { force: true })
