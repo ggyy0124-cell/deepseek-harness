@@ -1,0 +1,47 @@
+snapshots/task/task.snapshot.ts
+  s_d4a17511be8a55::t_8e3e1f7eab1208 30
+packages/task/task-local/tests/host-fixture.ts
+  s_d4a17511be8a55::t_c8ffcaa7d509a0 27-29
+  s_d4a17511be8a55::t_ab0c37aeb1203c 30,34
+packages/task/task-local/src/index.ts
+  s_d4a17511be8a55::t_45da30b43709ac 243
+  s_d4a17511be8a55::t_891957db4f86d4 172,180,185
+packages/task/task-local/tests/resources.spec.ts
+  s_d4a17511be8a55::t_94116d00b775fe 203
+  s_d4a17511be8a55::t_4c1edd715f8f9a 151-158
+packages/task/task-local/tests/engine.spec.ts
+  s_d4a17511be8a55::t_09ce8402e2f615 389-399,401-409
+  s_d4a17511be8a55::t_93b773440cac1b 15,17
+  s_d4a17511be8a55::t_03b92b3391ee52 400
+packages/task/task-local/src/maintenance.ts
+  s_d4a17511be8a55::t_3d975467e08d05 51
+  s_d4a17511be8a55::t_0a9b216a7722b1 28
+packages/task/task-local/tests/sessions.spec.ts
+  s_d4a17511be8a55::t_3542e0c72260c1 144-153,155-161,164,166-167
+  s_d4a17511be8a55::t_3197944290027c 154,162-163,165
+packages/task/task-local/tests/provider.spec.ts
+  s_d4a17511be8a55::t_c3b59f73f88189 9-11,13
+  s_d4a17511be8a55::t_d1c5e88eb6f92d 168-171,182-196
+  s_d4a17511be8a55::t_00f7fecee777d3 172-181
+packages/task/task-agent/tests/agent.spec.ts
+  s_d4a17511be8a55::t_5f33f66fc829bb 57
+  s_d4a17511be8a55::t_6630556d0f0262 52-55,58-63
+  s_d4a17511be8a55::t_b86d717aa1e431 7
+  s_d4a17511be8a55::t_04cd200c31c6a4 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "cc6ec7e70088ee3396a5da1aadd76ac7f8650da6",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "composer-2.5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
