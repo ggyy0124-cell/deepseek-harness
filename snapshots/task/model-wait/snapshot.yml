@@ -1,0 +1,8 @@
+version: 1
+scenario: model-wait
+profile: task
+composition: task-standard
+recording: authored
+header:
+  class: task-standard
+  pin: true

@@ -13,6 +13,8 @@ import LlmRuntime from '@deepseek-ai/dsh-llm'
 import type { ToolSchema } from '@deepseek-ai/dsh-llm'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent'
+import type { TaskService } from '@deepseek-ai/dsh-task'
+import * as ToolTaskDispatch from '@deepseek-ai/dsh-tool-task-dispatch'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -188,6 +190,25 @@ export interface ToolPackage {
  * guard proves it is exhaustive against the on-disk glob.
  */
 const TOOL_PACKAGES: ToolPackage[] = [
+  {
+    pkg: '@deepseek-ai/dsh-tool-task-dispatch',
+    dir: 'tool-task-dispatch',
+    source: 'packages/task/tool-task-dispatch/src/index.ts',
+    requires: ['ctx.tasks', 'ctx.tools', 'an admitted special-task Agent'],
+    writes: ['tool/call', 'tool/result', 'task dispatch receipts and source associations'],
+    async mount(ctx) {
+      // Schema harvest observes only task kind; it never executes business operations.
+      ctx.provide('tasks', { forSession: () => ({ kind: 'manual' }) } as unknown as TaskService)
+      await ctx.plugin(ToolTaskDispatch)
+      const agent = { id: SessionId('tool-catalog-task') } as Agent
+      await mountCatalogChildScope(ctx, (childCtx) => {
+        Object.assign(agent, { ctx: childCtx })
+        ctx.emit('agent/created', { agent })
+      }, agent, ['tools', 'tasks'])
+    },
+    scope: ctx => catalogChildScopes.get(ctx) as Agent,
+    note: 'Only special-task Agents receive this tool. The provider validates live stage admission and plugin-defined business identity.',
+  },
   {
     pkg: '@deepseek-ai/dsh-tool-ask-user',
     dir: 'tool-ask-user',

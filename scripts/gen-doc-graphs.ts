@@ -586,6 +586,23 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Owns the implicit-root roster, durable peer mailbox, shared task DAG, continuable-child lifecycle, and generated Team Remote methods; tool-agent-team contributes model controls and client-ui-agent-team mounts the browser contribution.',
   },
   {
+    key: 'taskGateway', pkg: 'task-api-gateway', title: 'Task HTTP gateway', mode: 'core', implementations: [],
+    note: 'Authenticated REST, independent Task/Session SSE and attachment delivery for the standalone Task application.',
+  },
+  {
+    key: 'taskStartup', pkg: 'task-app', title: 'Task application startup', mode: 'core', implementations: [],
+    note: 'Launcher-owned Task application flags select serving or local administration.',
+  },
+  {
+    key: 'tasks',
+    pkg: 'task',
+    title: 'Durable business task service',
+    mode: 'seam',
+    implementations: ['task-local'],
+    consumers: ['tool-task-dispatch', 'task-api-gateway'],
+    note: 'Business plugins register one special-task definition each; the local provider owns durable runs, scheduling, associations, admission, recovery, and Session coordination.',
+  },
+  {
     key: 'inspector',
     pkg: 'inspector',
     title: 'Cross-realm runtime inspection',
@@ -827,7 +844,7 @@ const APP_EXAMPLES = [
     title: 'DSH Base Composition',
     label: 'packages/bundle/base/cordis.patch.yml',
     config: 'packages/bundle/base/cordis.patch.yml',
-    summary: 'The dsh-base bundle patch shared by the web, headless, sdk, and acp profiles; their mode bundles and user layers patch over it, while sdk-minimal owns a separate standalone tree.',
+    summary: 'The dsh-base bundle patch shared by the web, task, headless, sdk, and acp profiles; their mode bundles and user layers patch over it, while sdk-minimal owns a separate standalone tree.',
   },
 ]
 

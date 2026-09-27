@@ -267,6 +267,38 @@ describe('loadProfile', () => {
     ])
   })
 
+  it('normalizes only the exact installation-owned task bundle tuple', () => {
+    const anchor = stageInstallation({
+      '@deepseek-ai/dsh-base': { patch: '[]\n' },
+      '@deepseek-ai/dsh-web-app': { patch: '[]\n' },
+      '@deepseek-ai/dsh-task-app': { patch: '[]\n' },
+      'custom-bundle': { patch: '[]\n' },
+    })
+    const home = tmp()
+    const stock = resolveProfileDir('task', home)
+    initProfile(stock, [
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-task-app',
+    ])
+    const retiredManifest = readProfileManifest('t', stock)
+    delete retiredManifest.dsh!.profile!.patchReload
+    writeProfileManifest(stock, retiredManifest)
+    loadProfile('t', 'task', anchor, home)
+    expect(readProfileManifest('t', stock).dsh?.profile).toEqual({
+      bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-task-app'],
+      patchReload: 'live',
+    })
+
+    const customHome = tmp()
+    const custom = resolveProfileDir('task', customHome)
+    initProfile(custom, [
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-task-app', 'custom-bundle',
+    ])
+    loadProfile('t', 'task', anchor, customHome)
+    expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-task-app', 'custom-bundle',
+    ])
+  })
+
   it('adds a shipped reload default only to an exact stock tuple and preserves explicit choices', () => {
     const anchor = stageInstallation({
       '@deepseek-ai/dsh-base': { patch: '[]\n' },

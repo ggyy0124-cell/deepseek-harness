@@ -1,0 +1,224 @@
+/** Public Task API records. These schemas contain no Host service or Session implementation types. */
+import { z } from 'zod'
+import { executionConfigSchema } from '@deepseek-ai/dsh-task/schema'
+
+/** Opaque wire identity; consumers must not interpret its contents. */
+export const idSchema = z
+  .string()
+  .min(1)
+  .max(256)
+  .regex(/^(?!\.{1,2}$)[A-Za-z0-9._:-]+$/)
+  .brand<'TaskApiId'>()
+/** Persisted revision accepted for optimistic concurrency. */
+export const revisionSchema = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
+/** UTC wire timestamp; storage adapters own conversion from internal timestamps. */
+export const timestampSchema = z.iso.datetime()
+/** Self-contained business schema; plugin registration owns compilation and resource limits. */
+export const businessSchema = z.record(z.string(), z.json())
+/** Credential status contains no resolved secret. */
+export const credentialStatusSchema = z.object({
+  reference: idSchema,
+  configured: z.boolean(),
+  writable: z.boolean(),
+})
+/** Stable resource status values published by API version 1. */
+export const statusSchema = z.enum([
+  'provisioning',
+  'queued',
+  'running',
+  'waiting_input',
+  'waiting_retry',
+  'blocked',
+  'recovering',
+  'cancelling',
+  'succeeded',
+  'failed',
+  'cancelled',
+])
+/** Execution configuration preserves references rather than secret values. */
+export const configSchema = executionConfigSchema
+/** Read-only installed or historical business definition. */
+export const definitionSchema = z.object({
+  id: idSchema,
+  title: z.string(),
+  codeVersion: z.string(),
+  configSchemaVersion: z.number().int().nonnegative(),
+  revision: revisionSchema,
+  installed: z.boolean(),
+  enabled: z.boolean(),
+  config: configSchema,
+  businessConfigSchema: businessSchema,
+  manualInputSchema: businessSchema.nullable(),
+  nextDueAt: timestampSchema.nullable(),
+})
+/** Persisted human interaction with a version-bound reply. */
+export const interactionSchema = z.object({
+  id: idSchema,
+  revision: revisionSchema,
+  source: z.enum(['business', 'tool_approval', 'agent_question']),
+  title: z.string(),
+  description: z.string(),
+  schema: businessSchema,
+  createdAt: timestampSchema,
+  expiresAt: timestampSchema.nullable(),
+})
+/** Public execution record deliberately excludes private checkpoints and operation receipts. */
+export const runSchema = z.object({
+  id: idSchema,
+  sessionId: idSchema,
+  definitionId: idSchema,
+  kind: z.enum(['manual', 'polling', 'scheduled', 'ordinary']),
+  parentRunId: idSchema.nullable(),
+  businessKey: z.string().nullable(),
+  codeVersion: z.string(),
+  configRevision: revisionSchema,
+  revision: revisionSchema,
+  status: statusSchema,
+  reason: z.string().nullable(),
+  cleanup: z.enum(['pending', 'blocked', 'complete']),
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema,
+  terminalAt: timestampSchema.nullable(),
+  retryAt: timestampSchema.nullable(),
+  result: z.json(),
+})
+/** Stable diagnostic response shared by every HTTP error. */
+export const problemSchema = z.object({
+  type: z.string().min(1),
+  status: z.number().int().min(400).max(599),
+  title: z.string(),
+  detail: z.string(),
+  instance: z.string(),
+  code: z.string().min(1),
+  requestId: idSchema,
+  currentRevision: revisionSchema.optional(),
+  errors: z.array(z.strictObject({ path: z.string(), code: z.string(), message: z.string() })).optional(),
+})
+/** Body accepted when replacing a business configuration. */
+export const configureSchema = z.strictObject({
+  revision: revisionSchema,
+  configSchemaVersion: revisionSchema,
+  config: configSchema,
+})
+/** Body accepted when enabling or pausing future triggers. */
+export const enableSchema = z.strictObject({ revision: revisionSchema, enabled: z.boolean() })
+/** Input submitted to a manual trigger or the durable supplemental inbox. */
+export const inputSchema = z.strictObject({ input: z.json() })
+/** Human response bound to the interaction revision observed by the client. */
+export const responseSchema = z.strictObject({ revision: revisionSchema, response: z.json() })
+/** Receipt acknowledges durable acceptance, not completion of cleanup. */
+export const cancellationSchema = z.object({ runId: idSchema, status: z.literal('cancelling') })
+/** Canonical decimal page size; parsers reject ambiguous or oversized query values. */
+export const pageQuerySchema = z.strictObject({
+  cursor: z.string().min(1).max(2048).optional(),
+  limit: z
+    .string()
+    .regex(/^(?:[1-9]|[1-9][0-9]|1[0-9]{2}|200)$/)
+    .optional(),
+})
+/** Execution filters use exact business keys and UTC interval endpoints. */
+export const runsQuerySchema = pageQuerySchema.extend({
+  definitionId: idSchema.optional(),
+  status: statusSchema.optional(),
+  kind: z.enum(['manual', 'polling', 'scheduled', 'ordinary']).optional(),
+  businessKey: z.string().min(1).max(1024).optional(),
+  createdFrom: timestampSchema.optional(),
+  createdTo: timestampSchema.optional(),
+})
+/** Cursor page has an explicit end marker. */
+export const runsPageSchema = z.object({ items: z.array(runSchema), nextCursor: z.string().nullable() })
+/** Full definition catalog includes uninstalled historical definitions. */
+export const definitionsSchema = z.object({ items: z.array(definitionSchema) })
+
+/** Replay cursor includes database identity to reject a cursor from another Task store. */
+export const taskCursorSchema = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:(?:0|[1-9][0-9]{0,15})$/)
+  .brand<'TaskEventCursor'>()
+/** A ready event establishes the position before clients acquire their REST baseline. */
+export const taskStreamEventSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('ready'), cursor: taskCursorSchema }),
+  z.object({
+    kind: z.literal('task'),
+    cursor: taskCursorSchema,
+    event: z.string(),
+    runId: idSchema.nullable(),
+    at: timestampSchema,
+  }),
+])
+/** Durable Task SSE event, independent of Cordis and Session implementation records. */
+export type TaskStreamEvent = z.infer<typeof taskStreamEventSchema>
+
+/** Public transcript blocks omit provider replay state, tool metadata and attachment storage paths. */
+export const transcriptBlockSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('text'), text: z.string() }),
+  z.object({ kind: z.literal('reasoning'), text: z.string() }),
+  z.object({ kind: z.literal('tool_call'), callId: z.string(), name: z.string(), arguments: z.string() }),
+  z.object({ kind: z.literal('image'), name: z.string(), bytes: z.number().int().nonnegative(), mediaType: z.string() }),
+  z.object({ kind: z.literal('file'), name: z.string(), bytes: z.number().int().nonnegative(), mediaType: z.string() }),
+  z.object({ kind: z.literal('unsupported'), type: z.string() }),
+])
+/** One original transcript message; context replacements and internal events are excluded. */
+export const transcriptEntrySchema = z.object({
+  sequence: revisionSchema,
+  at: timestampSchema,
+  role: z.enum(['user', 'assistant', 'tool']),
+  blocks: z.array(transcriptBlockSchema),
+  callId: z.string().nullable(),
+  isError: z.boolean(),
+})
+/** Forward event window; an empty page can advance over internal records. */
+export const transcriptPageSchema = z.object({
+  runId: idSchema,
+  sessionId: idSchema,
+  items: z.array(transcriptEntrySchema),
+  nextCursor: z.string(),
+  hasMore: z.boolean(),
+})
+
+/** Session feed events carry an independent transcript cursor and bounded durable message windows. */
+export const sessionStreamEventSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('session_ready'), cursor: z.string().max(1024) }),
+  z.object({ kind: z.literal('session'), cursor: z.string().max(1024), page: transcriptPageSchema }),
+])
+/** Public Session SSE event independent of shared Session implementation types. */
+export type SessionStreamEvent = z.infer<typeof sessionStreamEventSchema>
+
+/** Run-scoped immutable attachment metadata; no filesystem address is published. */
+export const attachmentSchema = z.object({
+  id: idSchema,
+  runId: idSchema,
+  sessionId: idSchema,
+  name: z.string(),
+  mime: z.string(),
+  size: revisionSchema,
+  digest: z.string().regex(/^[a-f0-9]{64}$/),
+  createdAt: timestampSchema,
+})
+
+/** Uniform business output blocks; attachment identities resolve through the owning Run API. */
+export const resultDocumentSchema = z.object({
+  format: z.literal('task-result/v1'),
+  blocks: z.array(z.discriminatedUnion('kind', [
+    z.object({ kind: z.literal('text'), text: z.string() }),
+    z.object({ kind: z.literal('markdown'), text: z.string() }),
+    z.object({ kind: z.literal('json'), value: z.json() }),
+    z.object({ kind: z.literal('code'), text: z.string(), language: z.string().optional() }),
+    z.object({ kind: z.literal('diff'), text: z.string() }),
+    z.object({ kind: z.literal('table'), columns: z.array(z.string()), rows: z.array(z.array(z.json())) }),
+    z.object({ kind: z.enum(['image', 'file']), attachmentId: idSchema }),
+  ])),
+})
+/** Durable plugin retirement; package removal is safe only after complete. */
+export const retirementSchema = z.object({ id: idSchema, definitionId: idSchema, codeVersion: z.string(), state: z.enum(['pending','blocked','complete']),
+  requestedAt: timestampSchema, completedAt: timestampSchema.nullable() })
+/** Authenticated operating counters expose no business inputs or credential values. */
+export const diagnosticsSchema = z.object({
+  scheduler: z.enum(['starting', 'running', 'failed', 'stopping']), concurrency: z.number().int().positive(), activePermits: revisionSchema,
+  totalRuns: revisionSchema, activeRuns: revisionSchema, completedRuns: revisionSchema, queuedRuns: revisionSchema,
+  oldestQueuedAt: timestampSchema.nullable(), pendingInputs: revisionSchema, recoveryErrors: revisionSchema,
+  cleanupFailures: revisionSchema, outboxPending: revisionSchema, oldestOutboxAt: timestampSchema.nullable(),
+  resources: z.array(z.object({ name: z.string(), capacity: z.number().int().positive(), runIds: z.array(idSchema) })),
+  retirements: z.array(retirementSchema),
+  storage: z.object({ availableBytes: z.number().nonnegative(), totalBytes: z.number().nonnegative(), pressure: z.boolean() }).nullable(),
+})

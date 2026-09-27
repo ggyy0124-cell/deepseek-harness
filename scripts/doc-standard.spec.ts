@@ -51,6 +51,9 @@ const KIND_TEMPLATES: Readonly<Record<string, string>> = {
  * library; the check re-derives the entry shape so a stale entry fails loud.
  */
 const PACKAGE_LIBRARIES: Readonly<Record<string, string>> = {
+  'packages/task/task-api-protocol': 'Runtime JSON schemas and OpenAPI generation; no plugin exports or registration.',
+  'packages/task/task-api-client': 'Fetch client with explicit dependencies; no Cordis runtime registration.',
+
   'packages/boot/app-boot': 'Boot library the app bins import; plain helper exports.',
   'packages/boot/cmdline': 'Command-line library the app bins import; plain module exports.',
   'packages/client/store': 'Browser-side state primitives; plain function/type exports.',

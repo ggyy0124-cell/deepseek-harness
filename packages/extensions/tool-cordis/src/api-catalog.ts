@@ -2458,6 +2458,184 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'taskGateway',
+    summary: 'HTTP Consumer of Task and Credentials; business plugins contribute no routes.',
+    description: 'HTTP Consumer of Task and Credentials; business plugins contribute no routes.',
+    methods: [
+      {
+        signature: 'createLaunchToken(): Promise<string>',
+        description: 'Create a browser launch secret for an authorized local application entry.',
+        parameters: [],
+        returns: 'single-use secret; never logged by the gateway.',
+      },
+      {
+        signature: 'createDeviceToken(): Promise<{ id: TaskDeviceId; token: string }>',
+        description: 'Provision a device through an authorized local caller.',
+        parameters: [],
+        returns: 'device revocation identity and its secret once.',
+      },
+      {
+        signature: 'revokeDeviceToken(id: TaskDeviceId): Promise<void>',
+        description: 'Revoke a previously provisioned native client.',
+        parameters: [{ name: 'id', description: 'device revocation identity.' }],
+        returns: 'durable revocation completion.',
+      },
+    ],
+  },
+  {
+    key: 'tasks',
+    summary: 'Provider-neutral task service.',
+    description: 'Provider-neutral task service. Only registered special runs may dispatch ordinary work.',
+    methods: [
+      {
+        signature: 'abstract register(owner: Context, definition: TaskDefinition): () => Promise<void>',
+        description: 'Register one business definition on its contributing plugin\'s lifecycle.',
+        parameters: [{ name: 'owner', description: 'exact context of the contributing business plugin.' }, { name: 'definition', description: 'plugin-owned executable definition.' }],
+        returns: 'idempotent asynchronous removal.',
+      },
+      {
+        signature: 'abstract registerNotificationProvider(owner: Context, id: string, provider: TaskNotificationProvider): () => Promise<void>',
+        description: 'Attach a notification destination with its own durable replay cursor.',
+        parameters: [{ name: 'owner', description: 'contributing plugin lifecycle.' }, { name: 'id', description: 'stable provider identity; log is reserved for the built-in destination.' }, { name: 'provider', description: 'idempotent delivery adapter.' }],
+        returns: 'asynchronous unregistration after active delivery settles.',
+      },
+      {
+        signature: 'abstract diagnostics(): Promise<TaskDiagnostics>',
+        description: 'Read value-free scheduler, cleanup and storage diagnostics.',
+        parameters: [],
+        returns: 'current operating state; storage is null when unavailable.',
+      },
+      {
+        signature: 'abstract getRetirement(id: TaskDefinitionId): TaskRetirement | undefined',
+        description: 'Inspect the last plugin retirement, including its completion evidence.',
+        parameters: [{ name: 'id', description: 'stable business definition.' }],
+        returns: 'its last retirement if one has been requested.',
+      },
+      {
+        signature: 'abstract listDefinitions(): readonly TaskDefinitionView[]',
+        description: 'Read installed and historical definitions.',
+        parameters: [],
+        returns: 'detached snapshots.',
+      },
+      {
+        signature: 'abstract interactions(id: TaskRunId): readonly TaskInteraction[]',
+        description: 'Read outstanding tool approvals and model questions for one execution.',
+        parameters: [{ name: 'id', description: 'execution identity.' }],
+        returns: 'detached waiting requests.',
+      },
+      {
+        signature: 'abstract checkConfig(id: TaskDefinitionId, config: TaskConfig, signal: AbortSignal): Promise<readonly string[]>',
+        description: 'Check proposed configuration without saving it.',
+        parameters: [{ name: 'id', description: 'installed definition.' }, { name: 'config', description: 'proposed configuration.' }, { name: 'signal', description: 'caller lifetime.' }],
+        returns: 'diagnostic messages from the plugin.',
+      },
+      {
+        signature: 'abstract options( id: TaskDefinitionId, field: string, config: TaskConfig, signal: AbortSignal, ): Promise<readonly { value: JsonValue; label: string }[]>',
+        description: 'Obtain dynamic form options.',
+        parameters: [{ name: 'id', description: 'installed definition.' }, { name: 'field', description: 'requested schema field.' }, { name: 'config', description: 'proposed configuration.' }, { name: 'signal', description: 'caller lifetime.' }],
+        returns: 'plugin-owned options.',
+      },
+      {
+        signature: 'abstract queryRuns(query: TaskRunQuery): TaskRunPage',
+        description: 'Read a bounded execution history page without scanning payloads.',
+        parameters: [{ name: 'query', description: 'exact filters and optional stable cursor identities.' }],
+        returns: 'one insertion-order page and continuation availability.',
+      },
+      {
+        signature: 'abstract listRuns(): readonly TaskRun[]',
+        description: 'Read execution history.',
+        parameters: [],
+        returns: 'detached execution snapshots.',
+      },
+      {
+        signature: 'abstract getRun(id: TaskRunId): TaskRun | undefined',
+        description: 'Read one execution.',
+        parameters: [{ name: 'id', description: 'execution identity.' }],
+        returns: 'its snapshot or undefined.',
+      },
+      {
+        signature: 'abstract forSession(id: SessionId): TaskRun | undefined',
+        description: 'Resolve Session ownership, including cold terminal Sessions.',
+        parameters: [{ name: 'id', description: 'Session identity.' }],
+        returns: 'owning execution if managed by tasks.',
+      },
+      {
+        signature: 'abstract dispatch(sessionId: SessionId, requestId: TaskRequestId, input: JsonValue): Promise<TaskDispatchReceipt>',
+        description: 'Dispatch on behalf of an admitted special-task Agent.',
+        parameters: [{ name: 'sessionId', description: 'tool execution\'s exact owning Session.' }, { name: 'requestId', description: 'retry identity within the special run.' }, { name: 'input', description: 'business data.' }],
+        returns: 'durable dispatch receipt.',
+      },
+      {
+        signature: 'abstract updateConfig(id: TaskDefinitionId, revision: number, config: TaskConfig): void',
+        description: 'Replace future configuration with optimistic concurrency.',
+        parameters: [{ name: 'id', description: 'definition identity.' }, { name: 'revision', description: 'observed configuration revision.' }, { name: 'config', description: 'complete non-secret configuration.' }],
+      },
+      {
+        signature: 'abstract setEnabled(id: TaskDefinitionId, enabled: boolean): void',
+        description: 'Pause or enable future triggers.',
+        parameters: [{ name: 'id', description: 'definition.' }, { name: 'enabled', description: 'desired scheduling state.' }],
+      },
+      {
+        signature: 'abstract triggerManual(id: TaskDefinitionId, requestId: TaskRequestId, input: JsonValue): TaskRun',
+        description: 'Idempotently start a manual special execution.',
+        parameters: [{ name: 'id', description: 'installed manual definition.' }, { name: 'requestId', description: 'caller retry identity.' }, { name: 'input', description: 'business input.' }],
+        returns: 'the reserved execution.',
+      },
+      {
+        signature: 'abstract respond(id: TaskRunId, waitId: TaskWaitId, revision: number, requestId: TaskRequestId, response: JsonValue): void',
+        description: 'Submit a version-bound business confirmation.',
+        parameters: [{ name: 'id', description: 'execution.' }, { name: 'waitId', description: 'current interaction.' }, { name: 'revision', description: 'interaction revision.' }, { name: 'requestId', description: 'caller retry identity.' }, { name: 'response', description: 'plugin-owned response.' }],
+      },
+      {
+        signature: 'abstract sendInput(id: TaskRunId, requestId: TaskRequestId, input: JsonValue): void',
+        description: 'Supply input and wake a blocked or waiting task.',
+        parameters: [{ name: 'id', description: 'execution.' }, { name: 'requestId', description: 'caller retry identity.' }, { name: 'input', description: 'user data.' }],
+      },
+      {
+        signature: 'abstract cancel(id: TaskRunId): Promise<void>',
+        description: 'Stop and drain work before resource cleanup.',
+        parameters: [{ name: 'id', description: 'execution.' }],
+        returns: 'completion after cleanup, or a rejection with persisted cleanup blockage.',
+      },
+      {
+        signature: 'abstract command(principal: TaskPrincipalId, requestId: TaskRequestId, command: TaskCommand): TaskCommandResult',
+        description: 'Admit a mutation and persist its original result in the same transaction.',
+        parameters: [{ name: 'principal', description: 'authenticated caller, stable across credential rotation.' }, { name: 'requestId', description: 'retry identity shared across this caller\'s commands.' }, { name: 'command', description: 'validated administrative mutation.' }],
+        returns: 'original admission result on replay; changed input rejects key reuse.',
+      },
+      {
+        signature: 'abstract journal(after: number): readonly TaskJournalEntry[]',
+        description: 'Read durable lifecycle diagnostics.',
+        parameters: [{ name: 'after', description: 'exclusive journal sequence.' }],
+        returns: 'ordered entries.',
+      },
+      {
+        signature: 'abstract journalHead(): TaskJournalCursor',
+        description: 'Read the latest committed position before acquiring a REST baseline.',
+        parameters: [],
+        returns: 'database identity and inclusive journal head.',
+      },
+      {
+        signature: 'abstract journalPage(after: number, limit: number): readonly TaskJournalEntry[]',
+        description: 'Read a bounded journal page for durable event replay.',
+        parameters: [{ name: 'after', description: 'exclusive sequence within this database.' }, { name: 'limit', description: 'maximum number of records.' }],
+        returns: 'ascending committed records.',
+      },
+      {
+        signature: 'abstract shutdown(): Promise<void>',
+        description: 'Stop admission and drain for host restart without terminating tasks.',
+        parameters: [],
+        returns: 'durability barrier completion.',
+      },
+    ],
+  },
+  {
+    key: 'taskStartup',
+    summary: 'Values consumed by Task application rows.',
+    description: 'Values consumed by Task application rows.',
+    methods: [],
+  },
+  {
     key: 'terminals',
     summary: 'In-process registry for replaceable PTY backends and exact-Agent sessions.',
     description: 'In-process registry for replaceable PTY backends and exact-Agent sessions.',
@@ -5679,6 +5857,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SpawnTeammateResult {\n    readonly member: TeamMemberView;\n}',
   },
   {
+    name: 'SpecialTaskKind',
+    declaration: 'export type SpecialTaskKind = \'polling\' | \'scheduled\' | \'manual\';',
+  },
+  {
     name: 'SpillLocator',
     declaration: 'export type SpillLocator = Branded<\'SpillLocator\'>;',
   },
@@ -5885,6 +6067,134 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TableValueOf',
     declaration: 'export type TableValueOf<S extends DomainSpec, N extends keyof S[\'tables\']> = S[\'tables\'][N] extends DomainTableSpec<string, infer V> ? V : never;',
+  },
+  {
+    name: 'TaskCommand',
+    declaration: 'export type TaskCommand = {\n    readonly kind: \'retire\';\n    readonly definitionId: TaskDefinitionId;\n    readonly revision: number;\n} | {\n    readonly kind: \'configure\';\n    readonly definitionId: TaskDefinitionId;\n    readonly revision: number;\n    readonly config: TaskConfig;\n    readonly configSchemaVersion?: number;\n} | {\n    readonly kind: \'enable\';\n    readonly definitionId: TaskDefinitionId;\n    readonly revision: number;\n    readonly enabled: boolean;\n} | {\n    readonly kind: \'trigger\';\n    readonly definitionId: TaskDefinitionId;\n    readonly input: JsonValue;\n} | {\n    readonly kind: \'input\';\n    readonly runId: TaskRunId;\n    readonly input: JsonValue;\n} | {\n    readonly kind: \'respond\';\n    readonly runId: TaskRunId;\n    readonly waitId: TaskWaitId;\n    readonly revision: number;\n    readonly response: JsonValue;\n} | {\n    readonly kind: \'cancel\';\n    readonly runId: TaskRunId;\n};',
+  },
+  {
+    name: 'TaskCommandResult',
+    declaration: 'export type TaskCommandResult = {\n    readonly kind: \'retirement\';\n    readonly retirement: TaskRetirement;\n} | {\n    readonly kind: \'definition\';\n    readonly definition: TaskDefinitionView;\n} | {\n    readonly kind: \'run\';\n    readonly run: TaskRun;\n} | {\n    readonly kind: \'cancellation\';\n    readonly runId: TaskRunId;\n    readonly status: \'cancelling\';\n};',
+  },
+  {
+    name: 'TaskConfig',
+    declaration: 'export interface TaskConfig {\n    readonly schedule: TaskSchedule;\n    readonly concurrency: number;\n    readonly preset: string;\n    readonly permissionPreset: string;\n    readonly workspacePath: string;\n    readonly business: JsonValue;\n    readonly model?: {\n        readonly provider: string;\n        readonly model: string;\n    };\n}',
+  },
+  {
+    name: 'TaskDefinition',
+    declaration: 'export interface TaskDefinition {\n    readonly id: TaskDefinitionId;\n    readonly title: string;\n    readonly codeVersion: string;\n    readonly config: TaskConfig;\n    readonly forms?: TaskForms;\n    readonly resourceHandlers?: Readonly<Record<string, TaskResourceHandler>>;\n    migrateConfig?(value: JsonValue, fromVersion: number): JsonValue;\n    checkConfig?(config: TaskConfig, signal: AbortSignal): Promise<readonly string[]>;\n    options?(field: string, config: TaskConfig, signal: AbortSignal): Promise<readonly {\n        value: JsonValue;\n        label: string;\n    }[]>;\n    parseInput(value: unknown): JsonValue;\n    parseCheckpoint(value: unknown): JsonValue;\n    runSpecial(stage: TaskStage): Promise<TaskStageResult>;\n    runOrdinary?(stage: TaskStage): Promise<TaskStageResult>;\n    businessKey?(input: JsonValue): string;\n    compareUpdate?(previous: JsonValue, incoming: JsonValue): \'ignore\' | \'update\' | \'cancel\';\n    priority(run: TaskRun): number;\n    resources(input: JsonValue): readonly string[];\n    stageResources?(run: TaskRun): readonly string[];\n    classifyError(error: unknown, run: TaskRun): Extract<TaskStageResult, {\n        kind: \'retry\' | \'block\' | \'fail\';\n    }>;\n    cleanup(run: TaskRun, signal: AbortSignal): Promise<void>;\n}',
+  },
+  {
+    name: 'TaskDefinitionId',
+    declaration: 'export type TaskDefinitionId = Branded<\'TaskDefinitionId\'>;',
+  },
+  {
+    name: 'TaskDefinitionView',
+    declaration: 'export interface TaskDefinitionView {\n    readonly id: TaskDefinitionId;\n    readonly title: string;\n    readonly codeVersion: string;\n    readonly revision: number;\n    readonly enabled: boolean;\n    readonly installed: boolean;\n    readonly config: TaskConfig;\n    readonly nextDueAt: number | null;\n    readonly forms?: TaskForms;\n}',
+  },
+  {
+    name: 'TaskDeviceId',
+    declaration: 'export type TaskDeviceId = Branded<\'TaskDeviceId\'>;',
+  },
+  {
+    name: 'TaskDiagnostics',
+    declaration: 'export interface TaskDiagnostics {\n    readonly scheduler: \'starting\' | \'running\' | \'failed\' | \'stopping\';\n    readonly concurrency: number;\n    readonly activePermits: number;\n    readonly totalRuns: number;\n    readonly activeRuns: number;\n    readonly completedRuns: number;\n    readonly queuedRuns: number;\n    readonly oldestQueuedAt: number | null;\n    readonly pendingInputs: number;\n    readonly recoveryErrors: number;\n    readonly cleanupFailures: number;\n    readonly outboxPending: number;\n    readonly oldestOutboxAt: number | null;\n    readonly resources: readonly {\n        name: string;\n        capacity: number;\n        runIds: readonly TaskRunId[];\n    }[];\n    readonly retirements: readonly TaskRetirement[];\n    readonly storage: {\n        availableBytes: number;\n        totalBytes: number;\n        pressure: boolean;\n    } | null;\n}',
+  },
+  {
+    name: 'TaskDispatchReceipt',
+    declaration: 'export interface TaskDispatchReceipt {\n    readonly outcome: \'created\' | \'associated\';\n    readonly runId: TaskRunId;\n    readonly sessionId: SessionId;\n    readonly changed: boolean;\n}',
+  },
+  {
+    name: 'TaskForms',
+    declaration: 'export interface TaskForms {\n    readonly version: number;\n    readonly business: Record<string, JsonValue>;\n    readonly input: Record<string, JsonValue>;\n}',
+  },
+  {
+    name: 'TaskInput',
+    declaration: 'export interface TaskInput {\n    readonly id: TaskRequestId;\n    readonly revision: number;\n    readonly kind: \'update\' | \'response\' | \'input\';\n    readonly value: JsonValue;\n}',
+  },
+  {
+    name: 'TaskInteraction',
+    declaration: 'export interface TaskInteraction {\n    readonly id: TaskWaitId;\n    readonly runId: TaskRunId;\n    readonly revision: number;\n    readonly source: \'tool_approval\' | \'agent_question\';\n    readonly title: string;\n    readonly description: string;\n    readonly schema: JsonValue;\n    readonly createdAt: number;\n    readonly expiresAt: number | null;\n    readonly state: \'waiting\' | \'answered\' | \'withdrawn\';\n    readonly answer: JsonValue;\n}',
+  },
+  {
+    name: 'TaskJournalCursor',
+    declaration: 'export interface TaskJournalCursor {\n    readonly storeId: TaskStoreId;\n    readonly sequence: number;\n}',
+  },
+  {
+    name: 'TaskJournalEntry',
+    declaration: 'export interface TaskJournalEntry {\n    readonly sequence: number;\n    readonly runId: TaskRunId | null;\n    readonly event: string;\n    readonly at: number;\n    readonly details: JsonValue;\n}',
+  },
+  {
+    name: 'TaskNotificationProvider',
+    declaration: 'export interface TaskNotificationProvider {\n    deliver(store: TaskStoreId, entry: Omit<TaskJournalEntry, \'details\'>, signal: AbortSignal): Promise<void>;\n}',
+  },
+  {
+    name: 'TaskPrincipalId',
+    declaration: 'export type TaskPrincipalId = Branded<\'TaskPrincipalId\'>;',
+  },
+  {
+    name: 'TaskRequestId',
+    declaration: 'export type TaskRequestId = Branded<\'TaskRequestId\'>;',
+  },
+  {
+    name: 'TaskResourceHandler',
+    declaration: 'export interface TaskResourceHandler {\n    acquire(record: TaskResourceRecord, signal: AbortSignal): Promise<JsonValue>;\n    reconcile(record: TaskResourceRecord, signal: AbortSignal): Promise<JsonValue>;\n    cleanup(record: TaskResourceRecord, signal: AbortSignal): Promise<void>;\n}',
+  },
+  {
+    name: 'TaskResourceRecord',
+    declaration: 'export interface TaskResourceRecord {\n    readonly runId: TaskRunId;\n    readonly key: string;\n    readonly type: string;\n    readonly request: JsonValue;\n    readonly value: JsonValue;\n    readonly state: \'prepared\' | \'ready\' | \'cleaning\' | \'released\' | \'blocked\';\n}',
+  },
+  {
+    name: 'TaskRetirement',
+    declaration: 'export interface TaskRetirement {\n    readonly id: TaskRetirementId;\n    readonly definitionId: TaskDefinitionId;\n    readonly codeVersion: string;\n    readonly state: \'pending\' | \'blocked\' | \'complete\';\n    readonly requestedAt: number;\n    readonly completedAt: number | null;\n}',
+  },
+  {
+    name: 'TaskRetirementId',
+    declaration: 'export type TaskRetirementId = Branded<\'TaskRetirementId\'>;',
+  },
+  {
+    name: 'TaskRun',
+    declaration: 'export interface TaskRun {\n    readonly id: TaskRunId;\n    readonly sessionId: SessionId;\n    readonly definitionId: TaskDefinitionId;\n    readonly kind: SpecialTaskKind | \'ordinary\';\n    readonly parentRunId: TaskRunId | null;\n    readonly businessKey: string | null;\n    readonly codeVersion: string;\n    readonly configRevision: number;\n    readonly forms?: TaskForms;\n    readonly config: TaskConfig;\n    readonly input: JsonValue;\n    readonly checkpoint: JsonValue;\n    readonly revision: number;\n    readonly inputRevision: number;\n    readonly status: TaskStatus;\n    readonly wait: TaskWait | null;\n    readonly retryAt: number | null;\n    readonly result: JsonValue;\n    readonly reason: string | null;\n    readonly createdAt: number;\n    readonly updatedAt: number;\n    readonly terminalAt: number | null;\n    readonly cleanup: \'pending\' | \'blocked\' | \'complete\';\n    readonly resources: readonly string[];\n}',
+  },
+  {
+    name: 'TaskRunId',
+    declaration: 'export type TaskRunId = Branded<\'TaskRunId\'>;',
+  },
+  {
+    name: 'TaskRunPage',
+    declaration: 'export interface TaskRunPage {\n    readonly items: readonly TaskRun[];\n    readonly head: TaskRunId | null;\n    readonly hasMore: boolean;\n}',
+  },
+  {
+    name: 'TaskRunQuery',
+    declaration: 'export interface TaskRunQuery {\n    readonly limit: number;\n    readonly head?: TaskRunId;\n    readonly after?: TaskRunId;\n    readonly definitionId?: TaskDefinitionId;\n    readonly status?: TaskStatus;\n    readonly kind?: TaskRun[\'kind\'];\n    readonly businessKey?: string;\n    readonly createdFrom?: number;\n    readonly createdTo?: number;\n}',
+  },
+  {
+    name: 'TaskSchedule',
+    declaration: 'export type TaskSchedule = {\n    readonly kind: \'manual\';\n} | {\n    readonly kind: \'polling\';\n    readonly intervalMs: number;\n} | {\n    readonly kind: \'scheduled\';\n    readonly cron: string;\n    readonly timezone: string;\n    readonly misfire: \'all\' | \'coalesce\' | \'skip\';\n    readonly overlap: \'queue\' | \'allow\';\n};',
+  },
+  {
+    name: 'TaskStage',
+    declaration: 'export interface TaskStage {\n    readonly run: TaskRun;\n    readonly inputs: readonly TaskInput[];\n    readonly signal: AbortSignal;\n    readonly children: readonly {\n        readonly sessionId: SessionId;\n        readonly modelKey: string;\n        readonly state: \'prepared\' | \'active\' | \'interrupted\' | \'complete\';\n    }[];\n    resource(key: string, type: string, request: JsonValue): Promise<JsonValue>;\n    model(operationId: string, prompt: string): Promise<string>;\n    dispatch(requestId: TaskRequestId, input: JsonValue): Promise<TaskDispatchReceipt>;\n    operation(key: string, execute: (signal: AbortSignal) => Promise<JsonValue>, reconcile: (signal: AbortSignal) => Promise<JsonValue>): Promise<JsonValue>;\n}',
+  },
+  {
+    name: 'TaskStageResult',
+    declaration: 'export type TaskStageResult = {\n    readonly kind: \'advance\';\n    readonly checkpoint: JsonValue;\n} | {\n    readonly kind: \'wait\';\n    readonly checkpoint: JsonValue;\n    readonly prompt: JsonValue;\n    readonly schema?: JsonValue;\n    readonly expiresAt?: number;\n} | {\n    readonly kind: \'retry\';\n    readonly checkpoint: JsonValue;\n    readonly at: number;\n    readonly reason: string;\n} | {\n    readonly kind: \'block\';\n    readonly checkpoint: JsonValue;\n    readonly reason: string;\n} | {\n    readonly kind: \'succeed\';\n    readonly result: JsonValue;\n} | {\n    readonly kind: \'fail\';\n    readonly reason: string;\n};',
+  },
+  {
+    name: 'TaskStatus',
+    declaration: 'export type TaskStatus = \'provisioning\' | \'queued\' | \'running\' | \'waiting_input\' | \'waiting_retry\' | \'blocked\' | \'recovering\' | \'cancelling\' | \'succeeded\' | \'failed\' | \'cancelled\';',
+  },
+  {
+    name: 'TaskStoreId',
+    declaration: 'export type TaskStoreId = Branded<\'TaskStoreId\'>;',
+  },
+  {
+    name: 'TaskWait',
+    declaration: 'export interface TaskWait {\n    readonly id: TaskWaitId;\n    readonly revision: number;\n    readonly prompt: JsonValue;\n    readonly schema?: JsonValue;\n    readonly expiresAt?: number;\n}',
+  },
+  {
+    name: 'TaskWaitId',
+    declaration: 'export type TaskWaitId = Branded<\'TaskWaitId\'>;',
   },
   {
     name: 'TeamId',

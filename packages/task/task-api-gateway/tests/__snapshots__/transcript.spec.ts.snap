@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Task transcript windows > pages over internal events and projects messages without replay or storage metadata 1`] = `
+[
+  {
+    "at": "1970-01-01T00:00:00.001Z",
+    "blocks": [
+      {
+        "kind": "text",
+        "text": "hello",
+      },
+    ],
+    "callId": null,
+    "isError": false,
+    "role": "user",
+    "sequence": 1,
+  },
+]
+`;

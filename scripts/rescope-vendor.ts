@@ -97,6 +97,10 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   // the preset a model mounts, so the scoped name would send the model after an
   // id no roster reports.
   { file: 'packages/preset/agent-presets/presets/cordis/agent.cordis.yml', upstream: ['cordis'] },
+  // Task's parity-pinned copy preserves the same preset id and model prompt.
+  { file: 'packages/task/task-agent-presets/presets/cordis/agent.cordis.yml', upstream: ['cordis'] },
+  // Source-copy digests preserve the `cordis` preset path, not a package specifier.
+  { file: 'packages/bundle/task-app/tests/expected/provider-deltas.json', upstream: ['cordis'] },
   // The preset-roster loop names the `cordis` preset id, not a package.
   { file: 'apps/cli/tests/windows-shell.spec.ts', upstream: ['cordis'] },
   // GROUP_ORDER holds `packages/<group>/` directory names, not package names.

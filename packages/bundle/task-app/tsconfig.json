@@ -1,0 +1,63 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cosmokit"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../task/task-local"
+    },
+    {
+      "path": "../../task/task-session"
+    },
+    {
+      "path": "../../task/task-agent"
+    },
+    {
+      "path": "../../task/task-session-persistence-jsonl"
+    },
+    {
+      "path": "../../task/task-agent-loop"
+    },
+    {
+      "path": "../../task/task-agent-presets"
+    },
+    {
+      "path": "../../task/tool-task-dispatch"
+    },
+    {
+      "path": "../../boot/app-boot"
+    },
+    {
+      "path": "../../task/task-api-gateway"
+    },
+    {
+      "path": "../../host/webserver"
+    },
+    {
+      "path": "../../workspace/workspace"
+    },
+    {
+      "path": "../../boot/cmdline"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../credentials/credentials"
+    }
+  ]
+}

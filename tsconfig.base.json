@@ -28,6 +28,21 @@
     // not declaration path aliases, keep each package/vendor source compiled
     // under its own tsconfig boundary.
     "paths": {
+      "@deepseek-ai/dsh-task-api-gateway": ["./packages/task/task-api-gateway/src/index.ts"],
+      "@deepseek-ai/dsh-task-api-client": ["./packages/task/task-api-client/src"],
+      "@deepseek-ai/dsh-task-api-protocol": ["./packages/task/task-api-protocol/src"],
+      "@deepseek-ai/dsh-task/invariant": ["./packages/task/task/src/invariant.ts"],
+      "@deepseek-ai/dsh-task/schema": ["./packages/task/task/src/schema.ts"],
+      "@deepseek-ai/dsh-task": ["./packages/task/task/src"],
+      "@deepseek-ai/dsh-task-local": ["./packages/task/task-local/src"],
+      "@deepseek-ai/dsh-tool-task-dispatch": ["./packages/task/tool-task-dispatch/src"],
+      "@deepseek-ai/dsh-task-app": ["./packages/bundle/task-app/src"],
+      "@deepseek-ai/dsh-task-app/startup": ["./packages/bundle/task-app/src/startup.ts"],
+      "@deepseek-ai/dsh-task-app/administration": ["./packages/bundle/task-app/src/administration.ts"],
+      "@deepseek-ai/dsh-task-api-gateway/auth-store": ["./packages/task/task-api-gateway/src/auth.ts"],
+      "@deepseek-ai/dsh-task-local/maintenance": ["./packages/task/task-local/src/maintenance.ts"],
+      "@deepseek-ai/dsh-task/types": ["./packages/task/task/src/types.ts"],
+
       "@deepseek-ai/cordis": ["./vendor/cordis/src"],
       "@deepseek-ai/cosmokit": ["./vendor/cosmokit/src"],
       "@deepseek-ai/schemastery": ["./vendor/schemastery/src"],
@@ -407,6 +422,11 @@
       "@deepseek-ai/dsh-subprocess-local": ["./packages/subprocess/subprocess-local/src"],
       "@deepseek-ai/dsh-system-prompt": ["./packages/core/system-prompt/src"],
       "@deepseek-ai/dsh-system-prompt/invariant": ["./packages/core/system-prompt/src/invariant.ts"],
+      "@deepseek-ai/dsh-task-agent": ["./packages/task/task-agent/src"],
+      "@deepseek-ai/dsh-task-agent-loop": ["./packages/task/task-agent-loop/src"],
+      "@deepseek-ai/dsh-task-agent-presets": ["./packages/task/task-agent-presets/src"],
+      "@deepseek-ai/dsh-task-session": ["./packages/task/task-session/src"],
+      "@deepseek-ai/dsh-task-session-persistence-jsonl": ["./packages/task/task-session-persistence-jsonl/src"],
       "@deepseek-ai/dsh-terminal": ["./packages/terminal/terminal/src"],
       "@deepseek-ai/dsh-terminal-bash": ["./packages/terminal/terminal-bash/src"],
       "@deepseek-ai/dsh-time-context": ["./packages/context/time-context/src"],

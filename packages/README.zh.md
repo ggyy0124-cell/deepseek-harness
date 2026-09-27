@@ -33,6 +33,7 @@ harness 由 `packages/` 下的 npm 包组装而成，按能力系列分组：会
 | [`typert/`](typert/README.zh.md) | 类型图生成、产物加载与运行时注册表 |
 | [`goal/`](goal/README.zh.md) | 同会话 goal 的持久化与生命周期 |
 | [`schedule/`](schedule/README.zh.md) | 仅限会话内的定时后续操作 |
+| [`task/`](task/README.zh.md) | 持久化的插件定义业务任务、调度与 API 网关 |
 | [`feedback/`](feedback/README.zh.md) | 人类反馈的采集与命令 |
 | [`identity/`](identity/README.zh.md) | 共享匿名身份 |
 | [`llm/`](llm/README.zh.md) | LLM（大语言模型）能力系列：抽象服务 + 提供方适配器 |
