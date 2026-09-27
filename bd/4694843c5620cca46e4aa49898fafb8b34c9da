@@ -1,0 +1,24 @@
+packages/task/task-local/src/index.ts
+  s_d4a17511be8a55::t_a689a45812954c 170
+  s_d4a17511be8a55::t_798588106b1c36 169,173-174,181
+packages/task/task-local/tests/provider.spec.ts
+  s_d4a17511be8a55::t_93072c2191e2e5 203-204
+packages/task/task-local/src/owned-files.ts
+  s_d4a17511be8a55::t_ec6374efb672db 139-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bd4694843c5620cca46e4aa49898fafb8b34c9da",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "gemini-3.8-flash"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
