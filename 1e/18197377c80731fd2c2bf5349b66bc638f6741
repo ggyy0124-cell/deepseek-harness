@@ -1,0 +1,28 @@
+scripts/run-gates.ts
+  s_d4a17511be8a55::t_0fa973fe39f160 1522-1523,1525-1527
+  s_d4a17511be8a55::t_6b16d7d07a52bc 1510
+  s_d4a17511be8a55::t_cd5631c0c80225 1518
+snapshots/task/task.snapshot.ts
+  s_d4a17511be8a55::t_a29203d58a2d11 37-38
+scripts/run-gates.spec.ts
+  s_d4a17511be8a55::t_f44a9384adea2f 932-935
+  s_d4a17511be8a55::t_5046f11129e165 8
+snapshots/task/model-wait/session.v3.jsonl
+  s_d4a17511be8a55::t_e594a3d4bdb7a7 1,17,20,24-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1e18197377c80731fd2c2bf5349b66bc638f6741",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "composer-2.5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
