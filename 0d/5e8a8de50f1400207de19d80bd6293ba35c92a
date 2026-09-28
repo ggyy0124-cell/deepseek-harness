@@ -1,0 +1,67 @@
+.agents/notes/implemented/process/2026-09-28-task-profile-fork-ci-surface.md
+  s_d4a17511be8a55::t_76a7149c1bc937 1-31
+scripts/ci-workflow.spec.ts
+  s_d4a17511be8a55::t_5cc2fc723fad35 409
+  s_d4a17511be8a55::t_b196fa0cd8304d 560
+  s_d4a17511be8a55::t_6721765e8dc1d4 335
+  s_d4a17511be8a55::t_676d3b7995634d 177
+.github/workflows/release-vendor.yml
+  s_d4a17511be8a55::t_a952717f8fd74e 31
+snapshots/task/task.snapshot.ts
+  s_d4a17511be8a55::t_1b51193a47acd2 30-32
+package.json
+  s_d4a17511be8a55::t_f2acee9ecc9960 52
+.github/workflows/ci.yml
+  s_d4a17511be8a55::t_80e58ed2fd8946 14
+  s_d4a17511be8a55::t_9ea76881e6f764 731-732,734-738,740-742
+  s_d4a17511be8a55::t_6da3a0c20dd038 182,195-198
+  s_d4a17511be8a55::t_06990fae85f4ce 484,529,606,655
+  s_d4a17511be8a55::t_0b6d38ac8d3f61 5
+  s_d4a17511be8a55::t_d18d5f4dd42666 733,739
+  s_d4a17511be8a55::t_006f8c46097bc2 51,119,255
+  s_d4a17511be8a55::t_d84789ea3e04dd 730
+  s_d4a17511be8a55::t_1f23f4241c1dd0 447,468
+  s_d4a17511be8a55::t_440bb0a2e293b8 203
+  s_d4a17511be8a55::t_0abf16d788b6b2 326,339-342,344,350
+  s_d4a17511be8a55::t_582cffa55624c1 728
+  s_d4a17511be8a55::t_368cd46f917371 358
+.agents/notes/implemented/process/2026-09-28-task-profile-fork-ci-surface.zh.md
+  s_d4a17511be8a55::t_7d9de4711fd84b 1-31
+scripts/ci-task-profile-surface.spec.ts
+  s_d4a17511be8a55::t_3802d6ff75adb1 1-32
+.github/review-ownership/check-approval.test.mjs
+  s_d4a17511be8a55::t_66542c2dbf8293 36,42
+.github/workflows/build-preview-cloudflare.yml
+  s_d4a17511be8a55::t_ce2a30573f0892 35
+.agents/notes/implemented/process/2026-09-28-task-profile-fork-ci-surface.i18n.yaml
+  s_d4a17511be8a55::t_ff50236616c932 1-6
+.github/workflows/node-addon-system.yml
+  s_d4a17511be8a55::t_76cb5066e15904 46
+scripts/run-gates.ts
+  s_d4a17511be8a55::t_c79f83b8ff9368 21-24
+  s_d4a17511be8a55::t_31d9173ed779fe 354-355,360
+  s_d4a17511be8a55::t_f02a8bd461f49f 231-316,318-353,356-359,361-363,370-372
+  s_d4a17511be8a55::t_d8ac16eae6a8f8 317
+scripts/ci-task-profile-surface.ts
+  s_d4a17511be8a55::t_a5bd3e416857b3 1-19,21-28,36-47
+  s_d4a17511be8a55::t_381cb7f7f5182b 20,29-35
+.github/workflows/release.yml
+  s_d4a17511be8a55::t_c31e6711b57937 91
+  s_d4a17511be8a55::t_ca24efcd2bc8dc 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0d5e8a8de50f1400207de19d80bd6293ba35c92a",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "gemini-3.8-flash"
+      },
+      "human_author": null
+    }
+  }
+}
