@@ -1,0 +1,70 @@
+scripts/ci-workflow.spec.ts
+  s_d4a17511be8a55::t_6721765e8dc1d4 335
+  s_d4a17511be8a55::t_c002e605fccd5b 409
+  s_d4a17511be8a55::t_f0ce541f4f7cdd 177
+  s_d4a17511be8a55::t_6348029532df4c 560
+scripts/ci-task-profile-surface.ts
+  s_d4a17511be8a55::t_a5bd3e416857b3 1-19,21-28,36-47
+  s_d4a17511be8a55::t_381cb7f7f5182b 20,29-35
+.github/workflows/release.yml
+  s_d4a17511be8a55::t_c31e6711b57937 91
+  s_d4a17511be8a55::t_ca24efcd2bc8dc 30
+package.json
+  s_d4a17511be8a55::t_f2acee9ecc9960 52
+scripts/run-gates.ts
+  s_d4a17511be8a55::t_d8ac16eae6a8f8 317
+  s_d4a17511be8a55::t_c79f83b8ff9368 21-24
+  s_d4a17511be8a55::t_f02a8bd461f49f 231-316,318-353,356-359,361-363,370-372
+  s_d4a17511be8a55::t_31d9173ed779fe 354-355,360
+.github/workflows/build-preview-cloudflare.yml
+  s_d4a17511be8a55::t_ce2a30573f0892 35
+.github/workflows/release-vendor.yml
+  s_d4a17511be8a55::t_a952717f8fd74e 31
+.agents/notes/implemented/process/2026-09-28-task-profile-fork-ci-surface.md
+  s_d4a17511be8a55::t_76a7149c1bc937 1-31
+scripts/ci-task-profile-surface.spec.ts
+  s_d4a17511be8a55::t_3802d6ff75adb1 1-32
+.github/review-ownership/check-approval.test.mjs
+  s_d4a17511be8a55::t_66542c2dbf8293 36,42
+snapshots/task/task.snapshot.ts
+  s_d4a17511be8a55::t_1b51193a47acd2 30-32
+.agents/notes/implemented/process/2026-09-28-task-profile-fork-ci-surface.i18n.yaml
+  s_d4a17511be8a55::t_ff50236616c932 1-6
+.github/workflows/ci.yml
+  s_d4a17511be8a55::t_d18d5f4dd42666 733,739
+  s_d4a17511be8a55::t_41720315c7c5e0 529
+  s_d4a17511be8a55::t_511891998fe002 447
+  s_d4a17511be8a55::t_d84789ea3e04dd 730
+  s_d4a17511be8a55::t_0b6d38ac8d3f61 5
+  s_d4a17511be8a55::t_6d72ceb173da73 655
+  s_d4a17511be8a55::t_80e58ed2fd8946 14
+  s_d4a17511be8a55::t_9ea76881e6f764 731-732,734-738,740-742
+  s_d4a17511be8a55::t_b64431b68bb0cf 358
+  s_d4a17511be8a55::t_10905d1912d475 468
+  s_d4a17511be8a55::t_582cffa55624c1 728
+  s_d4a17511be8a55::t_006f8c46097bc2 51,119,255
+  s_d4a17511be8a55::t_0abf16d788b6b2 326,339-342,344,350
+  s_d4a17511be8a55::t_ae6552f453f40c 484
+  s_d4a17511be8a55::t_6da3a0c20dd038 182,195-198,203
+  s_d4a17511be8a55::t_839188393dcc77 606
+.agents/notes/implemented/process/2026-09-28-task-profile-fork-ci-surface.zh.md
+  s_d4a17511be8a55::t_7d9de4711fd84b 1-31
+.github/workflows/node-addon-system.yml
+  s_d4a17511be8a55::t_76cb5066e15904 46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c5023931f7a9eae9d145d4fea2808eff418cf1a7",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "gemini-3.8-flash"
+      },
+      "human_author": null
+    }
+  }
+}
