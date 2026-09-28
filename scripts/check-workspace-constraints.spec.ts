@@ -1,8 +1,10 @@
 /** Experimental-package publication and dependency constraints. */
 
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   checkDshFamilyVersion,
+  checkWorkspaceManifest,
   checkExperimentalDependencyIsolation,
   checkExperimentalManifest,
   expectedDshPackageFiles,
@@ -141,5 +143,14 @@ describe('package payload constraints', () => {
       'cordis.patch.yml',
       'lib/types/**/*.d.ts',
     ])
+  })
+})
+
+
+describe('Task publication payload', () => {
+  it.each(['packages/bundle/task-app', 'packages/task/task-local', 'packages/task/task-api-gateway', 'packages/task/task-api-protocol', 'packages/task/task-agent-presets'])('rejects a missing published payload in %s', (dir) => {
+    const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
+    expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
+    expect(checkWorkspaceManifest({ dir, manifest: { ...manifest, files: [] } }).some(message => message.includes('files must be'))).toBe(true)
   })
 })

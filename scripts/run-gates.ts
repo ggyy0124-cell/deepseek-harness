@@ -18,6 +18,10 @@ import {
   coverageTestTimeoutArgs,
   parseCoveragePartitionCount,
 } from './coverage-partitions.ts'
+import {
+  isTaskProfileCiSurface,
+  TASK_PROFILE_SNAPSHOT_PATH,
+} from './ci-task-profile-surface.ts'
 import { pnpmInvocation } from './pnpm-invocation.ts'
 
 /** A named aggregate exposed by the gate runner. */
@@ -224,12 +228,148 @@ function pnpmExec(id: string, args: string[], options: Partial<Gate> = {}): Gate
   }
 }
 
+function gatesForTaskProfileMode(selected: Mode): Gate[] {
+  switch (selected) {
+    case 'ci-static':
+      return taskProfileStaticGates()
+    case 'ci-lint-contracts-ready':
+      return [
+        lintGate(),
+        pnpmScript('duplication', 'duplication:task-profile', { label: 'duplication' }),
+      ]
+    case 'ci-coverage':
+      return taskProfileCoverageGates()
+    case 'ci-bench':
+      return []
+    case 'ci-snapshot':
+      return [ciBuildGate(), taskProfileSnapshotGate()]
+    case 'ci-artifacts':
+      return [ciBuildGate(), builtPackageInvariantsGate(['build'])]
+    case 'ci-consumers':
+      return taskProfileConsumerGates()
+    case 'ci-windows-blocking':
+      return [ciBuildGate('windows-build', { label: 'build' })]
+    case 'ci-windows-complete':
+      return [ciBuildGate(), ...taskProfileCoverageGates()]
+    case 'ci-windows-observational':
+      return [
+        ciBuildGate(),
+        pnpmScript('duplication', 'duplication:task-profile', { label: 'duplication' }),
+      ]
+    case 'node-compat':
+    case 'ci-primary':
+    case 'ci-linux-primary':
+    case 'check-all':
+    case 'hygiene':
+    case 'doc-sync':
+    case 'doc-quick':
+      throw new Error(
+        `run-gates: mode ${JSON.stringify(selected)} is not used on the ${JSON.stringify('task-profile')} CI surface.`,
+      )
+  }
+}
+
+function taskProfileStaticGates(): Gate[] {
+  return [
+    pnpmScript('task-source-isolation', 'verify-task-source-isolation', { label: 'task source isolation' }),
+    pnpmScript('constraints', 'constraints'),
+    pnpmScript('package-dependencies', 'verify-package-dependencies', { label: 'package dependencies' }),
+    pnpmScript('cordis-config', 'verify-cordis-config', { label: 'Cordis config' }),
+    pnpmScript('package-invariants', 'verify-package-invariants', { label: 'package invariants' }),
+    pnpmScript('runtime-closure', 'verify-runtime-closure', { label: 'runtime closure' }),
+    pnpmScript('approval-policy', 'test:approval-policy', { label: 'Weighted approval policy' }),
+    typertContractsGate(),
+    pnpmScript('typecheck', 'typecheck:contracts-ready', { needs: ['typert-contracts'] }),
+    lintGate({ needs: ['typert-contracts'] }),
+    pnpmScript('duplication', 'duplication:task-profile', { label: 'duplication' }),
+    pnpmScript('module-graph', 'verify-module-graph', { label: 'module graph' }),
+  ]
+}
+
+function taskProfileCoverageGates(): Gate[] {
+  const coverageArgs = [
+    '--coverage.include=packages/task/task/src/**',
+    '--coverage.include=packages/task/task-session/src/**',
+    '--coverage.include=packages/task/task-session-persistence-jsonl/src/**',
+    '--coverage.include=packages/task/task-api-client/src/**',
+    '--coverage.include=packages/task/task-api-gateway/src/**',
+    '--coverage.include=packages/task/task-api-protocol/src/**',
+    '--coverage.include=packages/task/tool-task-dispatch/src/**',
+  ]
+  const coverageSuites = [
+    'packages/task/task',
+    'packages/task/task-session',
+    'packages/task/task-session-persistence-jsonl',
+    'packages/task/task-api-client',
+    'packages/task/task-api-gateway',
+    'packages/task/task-api-protocol',
+    'packages/task/tool-task-dispatch',
+  ]
+  const instrumented = pnpmExec('coverage', [
+    'vitest',
+    'run',
+    '--coverage',
+    ...coverageArgs,
+    ...coverageSuites,
+  ], {
+    label: 'test:coverage',
+  })
+  return [instrumented]
+}
+
+function taskProfileConsumerGates(): Gate[] {
+  const builtTree = ['build']
+  const validatedBuild = ['built-package-invariants']
+  return [
+    ciBuildGate(),
+    pnpmScript('lint-and-duplication', 'check:ci:lint:contracts-ready', {
+      label: 'lint and duplication',
+      needs: validatedBuild,
+    }),
+    taskProfileSnapshotGate(validatedBuild),
+    taskProfileE2eGate(validatedBuild),
+    builtPackageInvariantsGate(builtTree),
+  ]
+}
+
+function taskProfileSnapshotGate(needs: string[] = ['build']): Gate {
+  return pnpmExec('snapshot', [
+    'vitest',
+    'run',
+    '--config',
+    'vitest.snapshot.config.ts',
+    TASK_PROFILE_SNAPSHOT_PATH,
+  ], {
+    label: 'test:snapshot',
+    displayCommand: `DSH_EXAMPLE_MODE=lib vitest run --config vitest.snapshot.config.ts ${TASK_PROFILE_SNAPSHOT_PATH}`,
+    env: { DSH_EXAMPLE_MODE: 'lib' },
+    needs,
+  })
+}
+
+function taskProfileE2eGate(needs: string[] = ['build']): Gate {
+  return pnpmExec('task-e2e', [
+    'vitest',
+    'run',
+    '--config',
+    'vitest.e2e.config.ts',
+    'apps/cli/tests/profiles/task',
+  ], {
+    label: 'task-profile e2e',
+    needs,
+    env: { DSH_EXAMPLE_MODE: 'lib' },
+  })
+}
+
 /**
  * Construct the complete gate list for a named aggregate.
  * @param selected - aggregate mode to construct.
  * @returns the aggregate's gate graph.
  */
 export function gatesForMode(selected: Mode): Gate[] {
+  if (isTaskProfileCiSurface()) {
+    return gatesForTaskProfileMode(selected)
+  }
   switch (selected) {
     case 'ci-primary':
       return ciPrimaryGates()

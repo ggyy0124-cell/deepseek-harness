@@ -2611,6 +2611,198 @@ export interface Config {
 
 来源：[`packages/core/system-prompt/src/index.ts:242`](../packages/core/system-prompt/src/index.ts)
 
+<a id="deepseek-aidsh-task-agent-loop"></a>
+
+## `@deepseek-ai/dsh-task-agent-loop`
+
+需要： `agents` · `sessions` · `llm` · `tools` · `systemPrompt` · `sessionProjections`
+
+```ts config-catalog
+/** Agent-loop plugin configuration. */
+export interface Config {
+  /**
+   * Maximum parallel-safe calls in flight per agent step. `1` is serial;
+   * omission defaults to {@link DEFAULT_MAX_PARALLEL_TOOL_CALLS}.
+   */
+  maxParallelToolCalls?: number
+  /** Agents created or resumed at plugin startup. */
+  agents: (AgentOptions & {
+    /** Stable config label used in logs and as the fresh combined-id prefix. */
+    id: string
+    /** Optional stable identity; remounts resume its materialized history, while first use creates it fresh. */
+    sessionId?: SessionId
+    /** Optional workspace for a fresh session. */
+    cwd?: string
+    /** Persisted session to resume instead of creating a fresh session. */
+    resumeSessionId?: SessionId
+  })[]
+}
+```
+
+依赖： [`AgentOptions`](subsystems/core.zh.md) · [`SessionId`](subsystems/core.zh.md)
+
+来源： [`packages/task/task-agent-loop/src/index.ts:327`](../packages/task/task-agent-loop/src/index.ts)
+
+<a id="deepseek-aidsh-task-agent-presets"></a>
+
+## `@deepseek-ai/dsh-task-agent-presets`
+
+需要： `loader` · `sessionProjections`
+
+```ts config-catalog
+/** Plugin config: which preset is the default, and where presets live. */
+export interface Config {
+  /** Preset id mounted when a caller names none. Missing at mount time fails loud. */
+  default: string
+  /** Scanned roots in precedence order; an earlier root wins a duplicate id. */
+  roots: PresetRoot[]
+  /**
+   * Prepend this package's bundled shipped presets as a `system` root, before
+   * every configured root, so the shipped set always mounts and wins a
+   * duplicate id. The default survives a whole-`config` patch replacement;
+   * only an explicit `false` — a deployment supplying purely its own presets,
+   * or an embedder using the roster as bare machinery — drops the set.
+   */
+  includeShippedRoot: boolean
+  /**
+   * Append the harness home's `USER_PRESET_DIR` as a `user` root, after every
+   * configured root. False mounts a roster without the derived writable root.
+   */
+  includeUserRoot: boolean
+}
+
+/** One directory scanned for preset subdirectories. */
+export interface PresetRoot {
+  /** Directory holding one subdirectory per preset; a leading `~` expands. */
+  path: string
+  /** Trust recorded on every preset discovered under this root. */
+  trust: PresetTrust
+}
+```
+
+依赖： [`PresetTrust`](../packages/preset/agent-presets/src/index.ts)
+
+来源： [`packages/task/task-agent-presets/src/preset.ts:26`](../packages/task/task-agent-presets/src/preset.ts)
+
+<a id="deepseek-aidsh-task-api-gateway"></a>
+
+## `@deepseek-ai/dsh-task-api-gateway`
+
+Requires: `attachments` · `tasks` · `credentials` · `webServer` · `sessionPersistence` · `agentPresets` · `permissionPresets` · `llm`
+
+```ts config-catalog
+/** Gateway deployment limits and browser origin. */
+export interface Config {
+  /** Private immutable blob and upload receipt directory. */
+  readonly attachmentRoot: string
+  /** Maximum bytes per file. */
+  readonly attachmentFileLimitBytes: number
+  /** Maximum complete multipart request bytes. */
+  readonly attachmentUploadLimitBytes: number
+  /** Multipart body deadline in milliseconds. */
+  readonly attachmentUploadTimeoutMs: number
+  /** Maximum files in one upload. */
+  readonly attachmentFileLimit: number
+  /** Exact browser origin; empty selects HTTP loopback and the bound server port. */
+  readonly publicOrigin: string
+  /** Maximum bytes in one complete JSON request body. */
+  readonly bodyLimitBytes: number
+  /** Maximum bytes in one complete JSON response. */
+  readonly responseLimitBytes: number
+  /** Deadline in milliseconds for receiving a complete request body. */
+  readonly bodyTimeoutMs: number
+  /** Default number of runs returned per page, at most 200. */
+  readonly pageSize: number
+  /** Deadline for plugin configuration checks and option discovery. */
+  readonly configCheckTimeoutMs: number
+  /** Single-use browser launch lifetime in milliseconds. */
+  readonly launchTtlMs: number
+  /** Signed browser session lifetime in milliseconds. */
+  readonly sessionTtlMs: number
+  /** Maximum live entries in each credential category. */
+  readonly credentialLimit: number
+  /** Durable journal poll interval per SSE connection in milliseconds. */
+  readonly eventPollMs: number
+  /** Heartbeat interval checked between replay batches, in milliseconds. */
+  readonly eventHeartbeatMs: number
+  /** Maximum journal records loaded per replay batch. */
+  readonly eventBatchSize: number
+  /** Maximum queued socket bytes, including complete event frames. */
+  readonly eventBufferBytes: number
+  /** Maximum wait for a slow SSE socket to drain in milliseconds. */
+  readonly eventDrainTimeoutMs: number
+  /** Maximum concurrent Task SSE connections. */
+  readonly eventConnectionLimit: number
+}
+```
+
+来源： [`packages/task/task-api-gateway/src/index.ts:46`](../packages/task/task-api-gateway/src/index.ts)
+
+<a id="deepseek-aidsh-task-local"></a>
+
+## `@deepseek-ai/dsh-task-local`
+
+Requires: `subprocess` · `agents` · `sessions` · `sessionPersistence` · `agentPresets` · `agentDefaultModel` · `permissionPresets` · `workspaceRegistry` · `tools`
+
+```ts config-catalog
+/** Local daemon deployment choices. */
+export interface Config {
+  /** Minimum available disk fraction before diagnostics report pressure. */
+  readonly diskFreeRatio: number
+  /** SQLite database file owned by one host. */
+  readonly path: string
+  /** Private root for owned temporary directories and preserved worktrees. */
+  readonly resourceRoot: string
+  /** Grace for built-in resource subprocess termination. */
+  readonly resourceProcessGraceMs: number
+  /** Maximum collected bytes per built-in resource subprocess stream. */
+  readonly resourceOutputLimitBytes: number
+  /** Directory retaining immutable preset assets. */
+  readonly revisionRoot: string
+  /** Maximum simultaneously admitted stages across all plugins. */
+  readonly concurrency: number
+  /** Maximum live foreground child Agents per Task Run. */
+  readonly childConcurrency: number
+  /** Capacity of named resources; keys without an override remain exclusive. */
+  readonly resourceCapacities: Record<string, number>
+  /** Scheduler wake interval in milliseconds. */
+  readonly tickMs: number
+  /** Maximum calendar occurrences scanned per definition per tick. */
+  readonly catchupLimit: number
+  /** Calendar catch-up horizon in milliseconds; older occurrences are recorded as skipped. */
+  readonly catchupHorizonMs: number
+  /** Maximum unfinished scheduled runs per definition. */
+  readonly pendingLimit: number
+  /** Waiting interval that adds one scheduling priority point. */
+  readonly priorityAgingIntervalMs: number
+  /** Maximum priority points contributed by waiting. */
+  readonly priorityAgingCap: number
+  /** Notification journal records delivered per scheduler wake. */
+  readonly notificationBatchSize: number
+  /** Cancellation grace before recording an overdue drain. */
+  readonly cancellationGraceMs: number
+  /** Cleanup deadline; locks remain held until successful cleanup. */
+  readonly cleanupTimeoutMs: number
+  /** Shutdown deadline before recording an overdue host drain. */
+  readonly shutdownTimeoutMs: number
+}
+```
+
+来源： [`packages/task/task-local/src/index.ts:43`](../packages/task/task-local/src/index.ts)
+
+<a id="deepseek-aidsh-task-session-persistence-jsonl"></a>
+
+## `@deepseek-ai/dsh-task-session-persistence-jsonl`
+
+```ts config-catalog
+/** Task JSONL configuration, identical to the shared provider configuration. */
+export interface Config extends JsonlConfig {}
+```
+
+依赖： [`JsonlConfig`](#deepseek-aidsh-session-persistence-jsonl)
+
+来源： [`packages/task/task-session-persistence-jsonl/src/index.ts:9`](../packages/task/task-session-persistence-jsonl/src/index.ts)
+
 <a id="deepseek-aidsh-terminal-bash"></a>
 
 ## `@deepseek-ai/dsh-terminal-bash`
@@ -3519,11 +3711,15 @@ export interface Config {
 - `@deepseek-ai/dsh-storage`（[`packages/storage/storage/src/index.ts`](../packages/storage/storage/src/index.ts)）
 - `@deepseek-ai/dsh-subagent`（[`packages/subagent/subagent/src/index.ts`](../packages/subagent/subagent/src/index.ts)）
 - `@deepseek-ai/dsh-subprocess-local`（[`packages/subprocess/subprocess-local/src/index.ts`](../packages/subprocess/subprocess-local/src/index.ts)）
+- `@deepseek-ai/dsh-task-agent` ([`packages/task/task-agent/src/index.ts`](../packages/task/task-agent/src/index.ts))
+- `@deepseek-ai/dsh-task-app` — 依赖 `webServer` · `taskGateway` ([`packages/bundle/task-app/src/index.ts`](../packages/bundle/task-app/src/index.ts))
+- `@deepseek-ai/dsh-task-session` ([`packages/task/task-session/src/index.ts`](../packages/task/task-session/src/index.ts))
 - `@deepseek-ai/dsh-terminal`（[`packages/terminal/terminal/src/index.ts`](../packages/terminal/terminal/src/index.ts)）
 - `@deepseek-ai/dsh-tool-ask-user` — 需要 `tools` · `userInteraction`（[`packages/interaction/tool-ask-user/src/index.ts`](../packages/interaction/tool-ask-user/src/index.ts)）
 - `@deepseek-ai/dsh-tool-call-timeout-policy` — 需要 `tools`（[`packages/guard/timeout-policy/src/index.ts`](../packages/guard/timeout-policy/src/index.ts)）
 - `@deepseek-ai/dsh-tool-cordis` — 需要 `tools` · `systemPrompt` · `dynamicCordisRunner` · `cordisInspect`（[`packages/extensions/tool-cordis/src/index.ts`](../packages/extensions/tool-cordis/src/index.ts)）
 - `@deepseek-ai/dsh-tool-subagent-control` — 需要 `tools` · `subagents`（[`packages/subagent/tool-subagent-control/src/index.ts`](../packages/subagent/tool-subagent-control/src/index.ts)）
+- `@deepseek-ai/dsh-tool-task-dispatch` — 需要 `tasks` · `tools` ([`packages/task/tool-task-dispatch/src/index.ts`](../packages/task/tool-task-dispatch/src/index.ts))
 - `@deepseek-ai/dsh-user-questions`（[`packages/interaction/user-questions/src/index.ts`](../packages/interaction/user-questions/src/index.ts)）
 - `@deepseek-ai/dsh-webhook` — 需要 `agents` · `agentDefaultModel` · `agentPresets` · `permissionPresets` · `sessionTitle` · `workspaceRegistry`（[`packages/webhook/webhook/src/index.ts`](../packages/webhook/webhook/src/index.ts)）
 - `@deepseek-ai/dsh-workspace` — 需要 `storageDomain` · `sessionPersistence`（[`packages/workspace/workspace/src/index.ts`](../packages/workspace/workspace/src/index.ts)）
@@ -3547,6 +3743,7 @@ export interface Config {
 - `@deepseek-ai/dsh-shell` — 抽象 `ShellExecutor`（[`packages/shell/shell/src/index.ts`](../packages/shell/shell/src/index.ts)）
 - `@deepseek-ai/dsh-spill` — 抽象 `SpillStore`（[`packages/spill/spill/src/index.ts`](../packages/spill/spill/src/index.ts)）
 - `@deepseek-ai/dsh-subprocess` — 抽象 `SubprocessRuntime`（[`packages/subprocess/subprocess/src/index.ts`](../packages/subprocess/subprocess/src/index.ts)）
+- `@deepseek-ai/dsh-task` — 抽象 `TaskService` ([`packages/task/task/src/index.ts`](../packages/task/task/src/index.ts))
 - `@deepseek-ai/dsh-workflow` — 抽象 `WorkflowEngine`（[`packages/workflow/workflow/src/index.ts`](../packages/workflow/workflow/src/index.ts)）
 ## 库包（无插件入口）
 
@@ -3595,6 +3792,8 @@ export interface Config {
 - `@deepseek-ai/dsh-session-telemetry`（[`packages/session/session-telemetry/src/index.ts`](../packages/session/session-telemetry/src/index.ts)）
 - `@deepseek-ai/dsh-session-title-llm`（[`packages/session/session-title-llm/src/index.ts`](../packages/session/session-title-llm/src/index.ts)）
 - `@deepseek-ai/dsh-subagent-in-process-driver`（[`packages/subagent/subagent-in-process-driver/src/index.ts`](../packages/subagent/subagent-in-process-driver/src/index.ts)）
+- `@deepseek-ai/dsh-task-api-client` ([`packages/task/task-api-client/src/index.ts`](../packages/task/task-api-client/src/index.ts))
+- `@deepseek-ai/dsh-task-api-protocol` ([`packages/task/task-api-protocol/src/index.ts`](../packages/task/task-api-protocol/src/index.ts))
 - `@deepseek-ai/dsh-timeout`（[`packages/util/timeout/src/index.ts`](../packages/util/timeout/src/index.ts)）
 - `@deepseek-ai/dsh-typert-generator`（[`packages/typert/generator/src/index.ts`](../packages/typert/generator/src/index.ts)）
 - `@deepseek-ai/dsh-typert-protocol`（[`packages/typert/protocol/src/index.ts`](../packages/typert/protocol/src/index.ts)）

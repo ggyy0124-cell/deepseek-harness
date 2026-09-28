@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+
 permissions:
   contents: read
 
@@ -10,6 +11,7 @@ env:
   # CI runs must never report to the production telemetry endpoint baked
   # into apps/cli/cordis.yml (AppCLIEntry disables the row when set).
   DSH_TELEMETRY_DISABLED: '1'
+  DSH_CI_SURFACE: ${{ github.repository != 'deepseek-ai/deepseek-harness' && 'task-profile' || '' }}
 
 # Cancel a superseded pull-request run on a new push so a fresh head does not
 # queue a second full 9-job run behind a stale one (paid enterprise runners
@@ -46,6 +48,7 @@ jobs:
           || vars.DSH_CI_FAILOVER_LINUX == 'selfhosted'
           && github.event.pull_request.user.login != 'dependabot[bot]'
           && fromJSON('["self-hosted", "linux", "x64", "vm-backup"]')
+          || github.repository != 'deepseek-ai/deepseek-harness' && 'ubuntu-24.04'
           || 'dsh-ubuntu-24-04-16core' }}
     name: node 24 / static
     env:
@@ -113,6 +116,7 @@ jobs:
           || vars.DSH_CI_FAILOVER_LINUX == 'selfhosted'
           && github.event.pull_request.user.login != 'dependabot[bot]'
           && fromJSON('["self-hosted", "linux", "x64", "vm-backup"]')
+          || github.repository != 'deepseek-ai/deepseek-harness' && 'ubuntu-24.04'
           || 'dsh-ubuntu-24-04-16core' }}
     name: node 24 / coverage
     env:
@@ -175,6 +179,7 @@ jobs:
             ${{ runner.os }}-node-${{ env.PRIMARY_NODE_VERSION }}-pnpm-
 
       - name: Install dependencies and prepare bubblewrap
+        if: env.DSH_CI_SURFACE != 'task-profile'
         run: |
           pnpm install --frozen-lockfile &
           install_pid=$!
@@ -187,11 +192,17 @@ jobs:
           if (( install_status != 0 )); then exit "$install_status"; fi
           exit "$sandbox_status"
 
+      - name: Install dependencies
+        if: env.DSH_CI_SURFACE == 'task-profile'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir native/system run build:native --host-addon-only
+
       - name: Run exhaustive coverage
         run: pnpm run check:ci:coverage
 
   node-24-bench:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     runs-on: ubuntu-24.04
     name: node 24 / benchmarks
     # Wall-clock budgets need an otherwise idle runner, so this job runs the
@@ -243,6 +254,7 @@ jobs:
           || vars.DSH_CI_FAILOVER_LINUX == 'selfhosted'
           && github.event.pull_request.user.login != 'dependabot[bot]'
           && fromJSON('["self-hosted", "linux", "x64", "vm-backup"]')
+          || github.repository != 'deepseek-ai/deepseek-harness' && 'ubuntu-24.04'
           || 'dsh-ubuntu-24-04-16core' }}
     name: node 24 / snapshots and artifacts
     env:
@@ -313,6 +325,7 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install dependencies and prepare bubblewrap
+        if: env.DSH_CI_SURFACE != 'task-profile'
         run: |
           pnpm install --frozen-lockfile &
           install_pid=$!
@@ -325,14 +338,20 @@ jobs:
           if (( install_status != 0 )); then exit "$install_status"; fi
           exit "$sandbox_status"
 
+      - name: Install dependencies
+        if: env.DSH_CI_SURFACE == 'task-profile'
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir native/system run build:native --host-addon-only
+
       - name: Install Playwright Chromium and hosted dependencies
-        if: vars.DSH_CI_FAILOVER_LINUX != 'selfhosted' || github.event.pull_request.user.login == 'dependabot[bot]'
+        if: env.DSH_CI_SURFACE != 'task-profile' && (vars.DSH_CI_FAILOVER_LINUX != 'selfhosted' || github.event.pull_request.user.login == 'dependabot[bot]')
         run: pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install --with-deps chromium
 
       # The persistent VM image owns Playwright's Linux system packages; do
       # not mutate the shared host with apt on every failover run.
       - name: Install Playwright Chromium on the failover VM
-        if: vars.DSH_CI_FAILOVER_LINUX == 'selfhosted' && github.event.pull_request.user.login != 'dependabot[bot]'
+        if: env.DSH_CI_SURFACE != 'task-profile' && vars.DSH_CI_FAILOVER_LINUX == 'selfhosted' && github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install chromium
 
       - name: Run compatibility, snapshot, and artifact gates
@@ -340,7 +359,7 @@ jobs:
 
 
   node-compat:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     # Under the selfhosted leg this job admits only repository-owned PR code
     # to the persistent shared VM; the blacksmith branch targets ephemeral
     # runners and carries none of those predicates.
@@ -429,7 +448,7 @@ jobs:
         run: pnpm exec vitest run packages/boot/app-boot/tests/loader-shape.compat.spec.ts
 
   python-sdk:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     runs-on: ubuntu-latest
     name: python 3.10 / keyless SDK
     steps:
@@ -450,7 +469,7 @@ jobs:
   # keyless black-box, and trusted real-API path. Linux/Windows x64 block PRs;
   # Linux ARM64 and both macOS architectures run in ci-master.yml.
   python-runtime:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     name: python runtime / release-shaped matrix
     uses: ./.github/workflows/build-exe-for-python-sdk.yml
     with:
@@ -466,7 +485,7 @@ jobs:
   # Dependabot PRs are excluded from the self-hosted pool and stay queued for
   # the hosted runner.
   windows-build:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     runs-on: >-
       ${{ vars.DSH_CI_FAILOVER_WINDOWS == 'blacksmith' && 'blacksmith-16vcpu-windows-2025'
           || vars.DSH_CI_FAILOVER_WINDOWS == 'selfhosted'
@@ -511,7 +530,7 @@ jobs:
         run: pnpm run check:ci:windows-blocking
 
   windows-coverage:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     runs-on: >-
       ${{ vars.DSH_CI_FAILOVER_WINDOWS == 'blacksmith' && 'blacksmith-16vcpu-windows-2025'
           || vars.DSH_CI_FAILOVER_WINDOWS == 'selfhosted'
@@ -588,7 +607,7 @@ jobs:
           key: coverage-times-${{ github.run_id }}
 
   windows-native-tests:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     runs-on: >-
       ${{ vars.DSH_CI_FAILOVER_WINDOWS == 'blacksmith' && 'blacksmith-16vcpu-windows-2025'
           || vars.DSH_CI_FAILOVER_WINDOWS == 'selfhosted'
@@ -637,7 +656,7 @@ jobs:
           packages/subprocess/subprocess-local/tests/process-exit.spec.ts
 
   windows-observational:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.repository == 'deepseek-ai/deepseek-harness'
     continue-on-error: true
     runs-on: >-
       ${{ vars.DSH_CI_FAILOVER_WINDOWS == 'blacksmith' && 'blacksmith-16vcpu-windows-2025'
@@ -710,9 +729,20 @@ jobs:
     if: ${{ !cancelled() && github.event_name == 'pull_request' }}
     steps:
       - name: Fail if any needed job did not succeed
-        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        shell: bash
         run: |
-          echo "::error::Needed job results: ${{ join(needs.*.result, ', ') }}"
-          exit 1
+          surface="${{ env.DSH_CI_SURFACE }}"
+          if [ "$surface" = "task-profile" ]; then
+            if [ "${{ needs.node-24.result }}" != "success" ] || [ "${{ needs.node-24-coverage.result }}" != "success" ] || [ "${{ needs.node-24-consumers.result }}" != "success" ]; then
+              echo "Needed job results: node-24=${{ needs.node-24.result }}, coverage=${{ needs.node-24-coverage.result }}, consumers=${{ needs.node-24-consumers.result }}"
+              exit 1
+            fi
+          else
+            results="${{ join(needs.*.result, ', ') }}"
+            if echo "$results" | grep -qE "failure|cancelled|skipped"; then
+              echo "Needed job results: $results"
+              exit 1
+            fi
+          fi
       - name: All checks passed
         run: echo "All needed jobs succeeded (${{ join(needs.*.result, ', ') }})"

@@ -44,6 +44,16 @@ const NO_MODEL_EXPERIENCE_SECTION: Readonly<Record<string, string>> = {
  * blocks. A package moves on or off this list with its context behavior.
  */
 const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
+  'packages/task/task-api-protocol': { kind: 'none', reason: 'Pure HTTP schemas and OpenAPI generation do not construct model messages.' },
+  'packages/task/task-api-gateway': { kind: 'indirect', reason: 'HTTP mutations delegate model-visible input to Task providers.' },
+  'packages/task/task-api-client': { kind: 'none', reason: 'Fetch transport validates records; Task providers own model-visible delivery.' },
+  'packages/task/task-session': { kind: 'none', reason: 'The replacement store only enforces Task Session lifecycle authorization and delegates model history to Session consumers.' },
+  'packages/task/task-agent': { kind: 'indirect', reason: 'The replacement registry authorizes Task Agent creation and resume while the driver owns model requests.' },
+  'packages/task/task-session-persistence-jsonl': { kind: 'none', reason: 'The replacement persistence backend changes write authorization without changing persisted model content.' },
+  'packages/task/task-agent-presets': { kind: 'indirect', reason: 'The replacement mount installs a retained preset whose plugins own each model-facing registration.' },
+  'packages/task/task': { kind: 'indirect', reason: 'The service delegates model instructions to business plugins and model delivery to the provider.' },
+  'packages/bundle/task-app': { kind: 'indirect', reason: 'The bundle composes providers and consumers that own their model-visible behavior.' },
+
   'packages/attachment/attachment': { kind: 'indirect', reason: 'The storage seam delegates model request rendering to provider adapters.' },
   'packages/attachment/attachment-local': { kind: 'indirect', reason: 'The local backend delegates model request rendering to provider adapters.' },
   'packages/shell/shell': { kind: 'indirect', reason: 'The service interface delegates all model rendering to dsh-tool-bash.' },

@@ -1,0 +1,105 @@
+---
+description: "Authenticated Task REST operations and browser/device credential management."
+kind: "package-reference"
+---
+
+# @deepseek-ai/dsh-task-api-gateway
+
+English | [中文](README.zh.md)
+
+## Summary
+
+Control Task definitions and executions over authenticated HTTP without exposing internal checkpoints. Browser clients use a one-time launch exchange and CSRF-protected cookies; native clients use revocable bearer credentials. These routes support future Task Web UI and native clients; the profile currently serves the backend only.
+
+## Table of Contents
+
+- [Use this package](#use-this-package)
+- [Understand the implementation](#understand-the-implementation)
+- [Further Exploration](#further-exploration)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
+
+-----
+
+<a id="use-this-package"></a>
+## Use this package
+
+The Task application mounts this package at `/api/task/v1` using the unmodified Host WebServer, Task service and Credentials provider. Local application code provisions credentials through `createLaunchToken()` or `createDeviceToken()` on `ctx.taskGateway`; `revokeDeviceToken()` invalidates future device requests. These methods are not public HTTP provisioning routes. A caller may display an issued secret once through its local application interface; it must not put secrets in diagnostic logs.
+
+Exchange a launch secret with `POST /auth/exchange`, an exact Origin header and JSON `{ "token": "..." }`. The response sets an HttpOnly, SameSite Strict cookie and returns the CSRF value. `GET /auth/session` recovers that value from an authenticated browser. Cookie writes require the same Origin and `X-CSRF-Token`; bearer requests use `Authorization`. All Task mutations require `Idempotency-Key`. Authenticated `GET /openapi.json` describes the mounted JSON operations and browser exchange.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `publicOrigin` | Empty | Exact browser origin; empty resolves to HTTP loopback and the actual server port |
+| `bodyLimitBytes` / `responseLimitBytes` | 1048576 / 4194304 | Complete JSON byte limits |
+| `bodyTimeoutMs` | 30000 | Deadline for reading a request body |
+| `pageSize` | 50 | Default Run page size, bounded by 200 |
+| `launchTtlMs` / `sessionTtlMs` | 60000 / 2592000000 | Bootstrap and browser credential lifetimes |
+| `credentialLimit` | 100 | Maximum retained live entries per credential category |
+| `eventPollMs` / `eventHeartbeatMs` | 1000 / 15000 | Journal poll and heartbeat intervals |
+| `eventBatchSize` / `eventBufferBytes` | 512 / 2097152 | Replay page count and complete socket buffer limit |
+| `eventDrainTimeoutMs` / `eventConnectionLimit` | 15000 / 32 | Slow-socket deadline and simultaneous stream limit |
+
+Set `publicOrigin` explicitly when using a reverse proxy or non-loopback browser address. Forwarded headers do not change trust decisions. HTTPS origins set Secure cookies; TLS termination remains the deployment's responsibility.
+
+-----
+
+<a id="understand-the-implementation"></a>
+
+`POST /definitions/{definitionId}/retirement` accepts the current revision and an idempotency key, closes admission and returns 202 with a durable operation identity. Poll `GET` on the same URL until `state` is `complete` before removing or replacing the installed package. `blocked` retains cleanup evidence for repair and retry. `GET /diagnostics` returns scheduler, queue, persistence, resource and disk counters without business payloads.
+
+## Understand the implementation
+
+<details>
+<summary>Implementation details</summary>
+
+The [authentication store](src/auth.ts) serializes grant changes through Credentials and stores device and launch digests. Signed browser cookies refer to expiring persisted sessions. Authorization rereads the grant for every request, so device revocation does not depend on gateway reload.
+
+The [HTTP consumer](src/index.ts) applies Host/Origin checks, bounded JSON parsing, runtime protocol validation and value-free request diagnostics. [Operation dispatch](src/operations.ts) uses the engine's atomic command receipts; replay returns the original admission projection. Run pages retain an insertion high-water mark, excluding later inserts. Status filtering reflects current state, and a changed continuation membership returns `cursor_stale` so the client restarts pagination.
+
+The [projection](src/projection.ts) excludes private execution fields. Definitions without forms expose schema version zero and a JSON editor; declared forms use validated Draft 2020-12 schemas, optimistic configuration revisions and explicit migrations. Business waits project their durable identity and revision. Gateway disposal removes routes, closes active requests and awaits handler completion. No invariant companion is published: the Task package owns record/Session comparisons; this consumer validates HTTP ingress and DTOs directly.
+
+`GET /events` publishes a `ready` cursor followed by committed Task journal notifications. Fresh clients subscribe before acquiring their REST baseline; reconnecting clients pass the last delivered cursor in `Last-Event-ID` or the `cursor` query parameter. The cursor contains the database identity, and incompatible or future positions return 409 before streaming. Payloads contain event names, run identities and UTC times, never journal details. Notifications prompt clients to refetch affected resources. Bounded SQLite pages and socket buffers prevent an offline client from accumulating an in-memory replay queue. Slow drains, expired authorization and plugin unload close the connection; clients reconnect and repair from the journal. The gateway checks authorization before each replay batch.
+
+`GET /runs/{runId}/transcript` reads existing Session persistence through a read-only handle without activating an Agent. `limit` bounds source events, so internal-only pages may be empty while their cursor advances. Follow `nextCursor` while `hasMore` is true; retain the final cursor for later appends. A missing or changed anchor returns `cursor_stale`. Only original user, assistant and tool-result messages are public; model-only replacements, replay state and private tool metadata are excluded. Image and file blocks expose display metadata. `/runs/{runId}/session-attachments/{sequence}/{index}` verifies the visible message reference before streaming bytes through the attachment provider. A Session that is not yet persisted returns `409 session_unavailable`; a missing visible attachment returns 404. Gateway disposal and premature client disconnects abort downloads and await read-handle closure; a completed response closes normally. Storage may materialize more data internally than the requested window.
+
+
+Session SSE at `/runs/{runId}/events` has its own transcript cursor and never activates an Agent. Business waits, tool approvals and model questions share the interaction API; cancelled or interrupted runtime requests are withdrawn. A restarted plugin must ask for a new tool approval. Model/preset/permission discovery uses `/catalog`; optional plugin checks and option discovery receive a cancellation signal.
+
+`/runs/{runId}/attachments` accepts authenticated multipart `files`, persists an immutable SHA-256 blob and a principal-scoped retry receipt, and rejects new uploads after termination. Scoped downloads support one byte range. Configure `attachmentRoot` (required), `attachmentFileLimitBytes` (52428800), `attachmentUploadLimitBytes` (209715200), `attachmentUploadTimeoutMs` (120000), and `attachmentFileLimit` (20). Configuration checks use `configCheckTimeoutMs` (60000). Plugins must honor their cancellation signal.
+
+`GET /credentials/{reference}` returns only configured/writable booleans; `PUT` replaces a shared credential value and never echoes it. Credential replacement is an idempotent assignment, separate from Task command receipts. Cookie writes require CSRF. `/health` and `/ready` require authentication; `/ready` returns 200 only after successful launcher startup and Task recovery with a running scheduler, otherwise 503. `/auth/logout` revokes the browser session.
+
+</details>
+
+-----
+
+<a id="further-exploration"></a>
+## Further Exploration
+
+[Task subsystem](../../../docs/subsystems/task.md), [protocol](../task-api-protocol/README.md), [Fetch client](../task-api-client/README.md), [Task application](../../bundle/task-app/README.md).
+
+-----
+
+<a id="model-experience"></a>
+## Model Experience
+
+Indirectly, through Task commands; business plugins and the Session adapter own model-visible delivery.
+
+#### KV Cache effect
+
+No direct changes; the owning Task Session retains its conversation prefix.
+
+## Known Limitations and Deferred Work
+
+<a id="known-limitations-and-deferred-work"></a>
+
+- Session SSE contains persisted messages rather than transient token deltas. Session attachment downloads stream whole objects; Run upload downloads also support a single byte range.
+- Run pagination uses indexed SQL filters and bounded pages. Attachment listings scan retained upload receipts; blob retention remains an operator responsibility.
+- Plugin checks must honor cancellation. Arbitrary business JSON is not a secret-detection mechanism.
+
+<a id="dev-note"></a>
+### Dev Note
+
+None.

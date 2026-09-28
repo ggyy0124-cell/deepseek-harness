@@ -8,6 +8,7 @@
     "src"
   ],
   "references": [
+    { "path": "../../packages/bundle/task-app" },
     {
       "path": "../../vendor/cordis"
     },

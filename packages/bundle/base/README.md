@@ -25,7 +25,7 @@ Every base-backed `dsh --profile` surface runs on `dsh-base`, so those surfaces 
 <a id="use-this-package"></a>
 ## Use this package
 
-You get the dsh core automatically: the shipped `web`, `headless`, `sdk`, and `acp` profiles already include it, and a custom profile names it as its first bundle. After that, everything works with no further configuration.
+You get the dsh core automatically: the shipped `web`, `task`, `headless`, `sdk`, and `acp` profiles already include it, and a custom profile names it as its first bundle. After that, everything works with no further configuration.
 
 ### A minimal custom profile
 
@@ -43,11 +43,13 @@ To build a profile on the shared core, create a profile with a `package.json` th
 }
 ```
 
-Run `dsh --profile my-profile "your task"` and you get a working agent with model access, tools, persistence, and the default permission policy. The shipped `web`, `headless`, `sdk`, and `acp` profiles are created for you on first use. To add more bundles, run `dsh plugin --profile <name> add <package>`; in-box bundles resolve from the dsh installation. The profile contract is documented in the [app-boot profile section](../../boot/app-boot/README.md).
+Run `dsh --profile my-profile "your task"` and you get a working agent with model access, tools, persistence, and the default permission policy. The shipped `web`, `task`, `headless`, `sdk`, and `acp` profiles are created for you on first use. To add more bundles, run `dsh plugin --profile <name> add <package>`; in-box bundles resolve from the dsh installation. The profile contract is documented in the [app-boot profile section](../../boot/app-boot/README.md).
 
 ### What you get
 
-Out of the box, every profile built on this core provides: a DeepSeek model connection (the provider and model are configurable, and you can enable extra providers from your settings), the full tool set — file editing, shell commands, web search, public HTTP(S) fetch, subagents, task and goal tracking — durable sessions that survive restarts, and the default permission policy that confines file writes to your workspace and asks before risky actions. Web fetch runs without per-call approval; its provider rejects non-public destinations. Feedback stays in the Session log. [OTel session upload](../../session/session-telemetry-otel/README.md) defaults to `FEEDBACK_ONLY` for all users, including `deepseek-official`: new text feedback, message ratings, edits, and withdrawals release the complete canonical prefix through that event, including context. Later records wait for the next explicit feedback; sending an authorized batch needs no further interaction or model call. `DISABLED` prevents OTel capture. The opt-in [DeepSeek session-log contributor](../../session/session-log-deepseek/README.md) remains a separate request path.
+Out of the box, Base contributes: a DeepSeek model connection (the provider and model are configurable, and you can enable extra providers from your settings), the full tool set — file editing, shell commands, web search, public HTTP(S) fetch, subagents, task and goal tracking — durable sessions that survive restarts, and the default permission policy that confines file writes to your workspace and asks before risky actions. Web fetch runs without per-call approval; its provider rejects non-public destinations. Feedback stays in the Session log. [OTel session upload](../../session/session-telemetry-otel/README.md) defaults to `FEEDBACK_ONLY` for all users, including `deepseek-official`: new text feedback, message ratings, edits, and withdrawals release the complete canonical prefix through that event, including context. Later records wait for the next explicit feedback; sending an authorized batch needs no further interaction or model call. `DISABLED` prevents OTel capture. The opt-in [DeepSeek session-log contributor](../../session/session-log-deepseek/README.md) remains a separate request path.
+
+An application bundle may replace these providers or select a different tool set; [Task App](../task-app/README.md) replaces the Session and Agent providers and mounts tools through its task presets.
 
 Default file editing uses `read`, `write`, and `edit`. The `str_replace_editor` tool remains available as an explicit opt-in. To add it to a base-backed profile, put this entry in the profile, home, or invocation patch:
 
@@ -109,7 +111,7 @@ Read these pages when you want to go deeper into profiles, the surfaces built on
 
 - [app-boot profile section](../../boot/app-boot/README.md) — how profiles are resolved, layered, and customized.
 - [Bundle package map](../README.md) — the surfaces built on this core.
-- [Generated composition graph](../../../apps/cli/composition.md) — the exact plugin set each shipped profile uses.
+- [Generated composition graph](../../../apps/cli/composition.md) — the shared Base patch before application layers apply.
 - [Profile plugin bundles note](../../../.agents/notes/implemented/architecture/2026-08-05-profile-plugin-bundles.md) — the profile and bundle composition design.
 - [Codex and Claude Code provider bundles](../../subagent/README.md) — optional provider bundles you can install on top.
 

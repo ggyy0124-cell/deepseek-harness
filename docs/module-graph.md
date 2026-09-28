@@ -132,6 +132,7 @@ flowchart TD
     pkg_headless["headless"]
     pkg_sdk_app["sdk-app"]
     pkg_sdk_minimal["sdk-minimal"]
+    pkg_task_app["task-app"]
     pkg_web_app["web-app"]
   end
   subgraph group_client["packages/client"]
@@ -342,6 +343,19 @@ flowchart TD
     pkg_subprocess_local["subprocess-local"]
     pkg_win32_process["win32-process"]
   end
+  subgraph group_task["packages/task"]
+    pkg_task["task"]
+    pkg_task_agent["task-agent"]
+    pkg_task_agent_loop["task-agent-loop"]
+    pkg_task_agent_presets["task-agent-presets"]
+    pkg_task_api_client["task-api-client"]
+    pkg_task_api_gateway["task-api-gateway"]
+    pkg_task_api_protocol["task-api-protocol"]
+    pkg_task_local["task-local"]
+    pkg_task_session["task-session"]
+    pkg_task_session_persistence_jsonl["task-session-persistence-jsonl"]
+    pkg_tool_task_dispatch["tool-task-dispatch"]
+  end
   subgraph group_terminal["packages/terminal"]
     pkg_terminal["terminal"]
     pkg_terminal_bash["terminal-bash"]
@@ -404,6 +418,7 @@ flowchart TD
   pkg_storage_json --> pkg_storage
   pkg_storage_sqlite --> pkg_storage
   pkg_subprocess --> pkg_http_proxy
+  pkg_task --> pkg_invariants
   pkg_typert_loader --> pkg_typert_registry
   pkg_session --> pkg_scope
   pkg_system_prompt --> pkg_invariants
@@ -874,6 +889,27 @@ flowchart TD
   pkg_tool_pwsh_persistent --> pkg_terminal
   pkg_tool_pwsh_persistent --> pkg_timeout
   pkg_tool_pwsh_persistent --> pkg_tools
+  pkg_task_agent_loop --> pkg_agent
+  pkg_task_agent_loop --> pkg_invariants
+  pkg_task_agent_loop --> pkg_llm
+  pkg_task_agent_loop --> pkg_scope
+  pkg_task_agent_loop --> pkg_session
+  pkg_task_agent_loop --> pkg_session_persistence
+  pkg_task_agent_loop --> pkg_session_projection
+  pkg_task_agent_loop --> pkg_settings
+  pkg_task_agent_loop --> pkg_system_prompt
+  pkg_task_agent_loop --> pkg_tools
+  pkg_task_agent_presets --> pkg_agent
+  pkg_task_agent_presets --> pkg_atomic_write
+  pkg_task_agent_presets --> pkg_home_paths
+  pkg_task_agent_presets --> pkg_invariants
+  pkg_task_agent_presets --> pkg_scope
+  pkg_task_agent_presets --> pkg_session
+  pkg_task_agent_presets --> pkg_session_projection
+  pkg_task_agent_presets --> pkg_settings
+  pkg_task_agent_presets --> pkg_system_prompt
+  pkg_task_agent_presets --> pkg_tools
+  pkg_task_agent_presets --> pkg_typert_protocol
   pkg_tool_terminal --> pkg_agent
   pkg_tool_terminal --> pkg_jobs
   pkg_tool_terminal --> pkg_llm
@@ -1210,6 +1246,7 @@ flowchart TD
 | [`base`](../packages/bundle/base) | `bundle` | — |
 | [`sdk-app`](../packages/bundle/sdk-app) | `bundle` | — |
 | [`sdk-minimal`](../packages/bundle/sdk-minimal) | `bundle` | — |
+| [`task-app`](../packages/bundle/task-app) | `bundle` | — |
 | [`client-connection`](../packages/client/connection) | `client` | — |
 | [`client-hmr`](../packages/client/hmr) | `client` | — |
 | [`client-locale`](../packages/client/locale) | `client` | — |
@@ -1279,6 +1316,14 @@ flowchart TD
 | [`session-format-v2-to-v3`](../packages/session/session-format-v2-to-v3) | `session` | — |
 | [`storage`](../packages/storage/storage) | `storage` | — |
 | [`win32-process`](../packages/subprocess/win32-process) | `subprocess` | — |
+| [`task-agent`](../packages/task/task-agent) | `task` | — |
+| [`task-api-client`](../packages/task/task-api-client) | `task` | — |
+| [`task-api-gateway`](../packages/task/task-api-gateway) | `task` | — |
+| [`task-api-protocol`](../packages/task/task-api-protocol) | `task` | — |
+| [`task-local`](../packages/task/task-local) | `task` | — |
+| [`task-session`](../packages/task/task-session) | `task` | — |
+| [`task-session-persistence-jsonl`](../packages/task/task-session-persistence-jsonl) | `task` | — |
+| [`tool-task-dispatch`](../packages/task/tool-task-dispatch) | `task` | — |
 | [`llm-mock-server`](../packages/test-support/llm-mock-server) | `test-support` | — |
 | [`remote-mock`](../packages/test-support/remote-mock) | `test-support` | — |
 | [`typert-generator`](../packages/typert/generator) | `typert` | — |
@@ -1300,6 +1345,7 @@ flowchart TD
 | [`storage-json`](../packages/storage/storage-json) | `storage` | [`storage`](../packages/storage/storage) |
 | [`storage-sqlite`](../packages/storage/storage-sqlite) | `storage` | [`storage`](../packages/storage/storage) |
 | [`subprocess`](../packages/subprocess/subprocess) | `subprocess` | [`http-proxy`](../packages/util/http-proxy) |
+| [`task`](../packages/task/task) | `task` | [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`typert-loader`](../packages/typert/loader) | `typert` | [`typert-registry`](../packages/typert/registry) |
 | [`session`](../packages/core/session) | `core` | [`scope`](../packages/core/scope) |
 | [`system-prompt`](../packages/core/system-prompt) | `core` | [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`scope`](../packages/core/scope) |
@@ -1412,6 +1458,8 @@ flowchart TD
 | [`shell-env`](../packages/shell/shell-env) | `shell` | [`home-paths`](../packages/util/home-paths), [`shell`](../packages/shell/shell), [`tools`](../packages/core/tools) |
 | [`tool-bash-persistent`](../packages/shell/tool-bash-persistent) | `shell` | [`agent`](../packages/core/agent), [`terminal`](../packages/terminal/terminal), [`timeout`](../packages/util/timeout), [`tools`](../packages/core/tools) |
 | [`tool-pwsh-persistent`](../packages/shell/tool-pwsh-persistent) | `shell` | [`agent`](../packages/core/agent), [`terminal`](../packages/terminal/terminal), [`timeout`](../packages/util/timeout), [`tools`](../packages/core/tools) |
+| [`task-agent-loop`](../packages/task/task-agent-loop) | `task` | [`agent`](../packages/core/agent), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools) |
+| [`task-agent-presets`](../packages/task/task-agent-presets) | `task` | [`agent`](../packages/core/agent), [`atomic-write`](../packages/util/atomic-write), [`home-paths`](../packages/util/home-paths), [`invariants`](../packages/runtime-diagnostics/invariants), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`typert-protocol`](../packages/typert/protocol) |
 | [`tool-terminal`](../packages/terminal/tool-terminal) | `terminal` | [`agent`](../packages/core/agent), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`output-retention`](../packages/util/output-retention), [`system-prompt`](../packages/core/system-prompt), [`terminal`](../packages/terminal/terminal), [`tools`](../packages/core/tools) |
 | [`llm-replay`](../packages/test-support/llm-replay) | `test-support` | [`compaction`](../packages/compaction/compaction), [`deepseek-llm-api-extensions`](../packages/llm/deepseek-llm-api-extensions), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`tool-workflow`](../packages/workflow/tool-workflow) | `workflow` | [`agent`](../packages/core/agent), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`workflow`](../packages/workflow/workflow) |

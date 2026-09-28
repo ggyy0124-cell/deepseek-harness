@@ -18,8 +18,8 @@ packages/    @deepseek-ai/dsh-<pkg> workspaces at packages/<group>/<pkg>/
   typert/      type graph generator, loader, and runtime registry
   llm/         LLM capability: Service Definition/Consumer + DeepSeek providers
   e2b/         E2B POC: sandbox + FS/subprocess adapters
-  shell/        bash capability: Service Definition + local/pwsh providers + shell Consumers
-  subprocess/  subprocess capability + local process-tree provider + shared Win32 library
+  shell/        bash definition, local/pwsh providers, consumers
+  subprocess/  process-tree provider + shared Win32 library
   terminal/         persistent sessions
   fs/          filesystem capability + policy
   lsp/         language-server capability
@@ -29,6 +29,7 @@ packages/    @deepseek-ai/dsh-<pkg> workspaces at packages/<group>/<pkg>/
   context/     request-context plugins
   subagent/    subagent capability: Service Definition + providers + delegation Consumers
   bundle/      installable dsh --profile patch-layer bundles
+  task/        durable business tasks: engine, scheduling, API gateway
   workflow/    workflow capability + worker-thread provider + tool Consumer
   webhook/     webhook ingress
   todo/        todo_write tool

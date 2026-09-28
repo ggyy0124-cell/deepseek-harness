@@ -25,7 +25,7 @@ kind: "package-bundle"
 <a id="use-this-package"></a>
 ## 使用本包
 
-你会自动获得 dsh 核心：随发行版交付的 `web`、`headless`、`sdk` 与 `acp` profile 已包含它，自定义 profile 则把它列为第一个组合包。之后一切无需任何额外配置即可工作。
+你会自动获得 dsh 核心：随发行版交付的 `web`、`task`、`headless`、`sdk` 与 `acp` profile 已包含它，自定义 profile 则把它列为第一个组合包。之后一切无需任何额外配置即可工作。
 
 ### 最小自定义 profile
 
@@ -43,11 +43,13 @@ kind: "package-bundle"
 }
 ```
 
-运行 `dsh --profile my-profile "your task"`，你就得到一个可用的 agent（智能体），带模型访问、工具、持久化与默认权限策略。随发行版交付的 `web`、`headless`、`sdk` 与 `acp` profile 会在首次使用时为你创建。要添加更多组合包，运行 `dsh plugin --profile <name> add <package>`；内置组合包从 dsh 安装目录解析。profile 约定见 [app-boot 的 profile 章节](../../boot/app-boot/README.zh.md)。
+运行 `dsh --profile my-profile "your task"`，你就得到一个可用的 agent（智能体），带模型访问、工具、持久化与默认权限策略。随发行版交付的 `web`、`task`、`headless`、`sdk` 与 `acp` profile 会在首次使用时为你创建。要添加更多组合包，运行 `dsh plugin --profile <name> add <package>`；内置组合包从 dsh 安装目录解析。profile 约定见 [app-boot 的 profile 章节](../../boot/app-boot/README.zh.md)。
 
 ### 你得到什么
 
-开箱即用，基于本核心构建的每个 profile 都提供：DeepSeek 模型连接（提供方与模型可配置，你还可以在设置中启用额外提供方）、完整工具集——文件编辑、shell 命令、web 搜索、公开 HTTP(S) 抓取、subagent、任务与目标跟踪——可跨重启存活的持久会话，以及默认权限策略：把文件写入限制在工作区内，危险操作前征询许可。Web 抓取无需逐次审批，其提供方会拒绝非公开目的地址。反馈保存在会话日志中。[OTel 会话上传](../../session/session-telemetry-otel/README.zh.md)对所有用户默认使用 `FEEDBACK_ONLY`，包括 `deepseek-official`：新的文本反馈、消息评分、编辑与撤回会释放截至该事件的完整规范会话日志前缀，包含上下文。后续记录等待下一次显式反馈；发送已授权批次无需进一步交互或模型调用。`DISABLED` 阻止 OTel 捕获。需主动开启的 [DeepSeek 会话日志贡献器](../../session/session-log-deepseek/README.zh.md)仍是独立的请求路径。
+开箱即用，Base 提供：DeepSeek 模型连接（提供方与模型可配置，你还可以在设置中启用额外提供方）、完整工具集——文件编辑、shell 命令、web 搜索、公开 HTTP(S) 抓取、subagent、任务与目标跟踪——可跨重启存活的持久会话，以及默认权限策略：把文件写入限制在工作区内，危险操作前征询许可。Web 抓取无需逐次审批，其提供方会拒绝非公开目的地址。反馈保存在会话日志中。[OTel 会话上传](../../session/session-telemetry-otel/README.zh.md)对所有用户默认使用 `FEEDBACK_ONLY`，包括 `deepseek-official`：新的文本反馈、消息评分、编辑与撤回会释放截至该事件的完整规范会话日志前缀，包含上下文。后续记录等待下一次显式反馈；发送已授权批次无需进一步交互或模型调用。`DISABLED` 阻止 OTel 捕获。需主动开启的 [DeepSeek 会话日志贡献器](../../session/session-log-deepseek/README.zh.md)仍是独立的请求路径。
+
+[Task App](../task-app/README.zh.md) 等应用组合包可以替换这些提供方或选择不同工具；Task App 替换 Session 与 Agent 提供方，并通过任务 preset 挂载工具。
 
 默认文件编辑使用 `read`、`write` 和 `edit`。`str_replace_editor` 工具仍可显式启用。要将它加入基于 base 的 profile，请在 profile、home 或逐次调用 patch 中添加以下条目：
 
@@ -109,7 +111,7 @@ patch 在自身上按平台门控两个 shell 栈：`bash-sandbox` 与 `tool-bas
 
 - [app-boot 的 profile 章节](../../boot/app-boot/README.zh.md)——profile 如何解析、分层与定制。
 - [组合包索引](../README.zh.md)——基于本核心构建的表层。
-- [生成组合图](../../../apps/cli/composition.md)——随发行版交付的每个 profile 使用的确切插件集合。
+- [生成组合图](../../../apps/cli/composition.md)——应用层叠加前的共享 Base patch。
 - [Profile 组合包设计笔记](../../../.agents/notes/implemented/architecture/2026-08-05-profile-plugin-bundles.zh.md)——profile 与组合包的组合设计。
 - [Codex 与 Claude Code 提供方组合包](../../subagent/README.zh.md)——可叠加安装的可选提供方组合包。
 

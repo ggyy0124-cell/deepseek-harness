@@ -210,6 +210,15 @@ export default defineConfig({
         'packages/*/*/src/types.ts',
         'packages/*/*/src/bin.ts',
         'packages/*/*/src/worker.ts',
+        // Canonical providers own coverage; reviewed source parity pins these
+        // Task-specific copies and their immutable preset assets.
+        'packages/task/task-agent-loop/src/**/*.ts',
+        'packages/task/task-agent-presets/src/**/*.ts',
+        // The supported dsh launcher owns application entry and asset serving.
+        // Profile subprocess tests exercise these paths outside this V8 process.
+        'packages/bundle/task-app/src/administration.ts',
+        'packages/bundle/task-app/src/index.ts',
+        'packages/bundle/task-app/src/startup.ts',
         // Dynamic Host/Client composition is covered by its focused lifecycle
         // tests and assembled application checks rather than per-file coverage.
         'packages/self-modification/*/src/**/*.{ts,tsx}',

@@ -1,0 +1,128 @@
+# Independent Task application over the unchanged Base bundle.
+- id: session
+  disabled: true
+- id: agent
+  disabled: true
+- id: session-persistence-jsonl
+  disabled: true
+- id: agent-loop
+  disabled: true
+- id: typert-loader
+  config:
+    packages:
+      - '@deepseek-ai/dsh-agent-presets'
+
+- insert:
+    - id: task-administration
+      name: '@deepseek-ai/dsh-task-app/administration'
+      inject: [taskStartup]
+      disabled: !!js "!(ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '='))))"
+      config:
+        root: !!js ctx.dshHomePath('tasks')
+    - id: task-startup
+      name: '@deepseek-ai/dsh-task-app/startup'
+    - id: webserver
+      name: '@deepseek-ai/dsh-host-webserver'
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      inject: [taskStartup]
+      config:
+        host: !!js ctx.taskStartup.host
+        port: !!js ctx.taskStartup.port
+        compression: gzip
+        compressionLevel: 1
+        compressionThresholdBytes: 1024
+    - id: task-runtime
+      inject: [taskStartup]
+      name: '@deepseek-ai/dsh-task-app'
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+    - id: subagent-model-selection-settings
+      name: '@deepseek-ai/dsh-tool-subagent/model-selection-settings'
+    - id: code-runtime
+      name: '@deepseek-ai/dsh-code-runtime-worker-thread'
+    - id: workspace
+      name: '@deepseek-ai/dsh-workspace'
+    - id: task-session
+      name: '@deepseek-ai/dsh-task-session'
+    - id: task-agent
+      name: '@deepseek-ai/dsh-task-agent'
+    - id: task-session-persistence-jsonl
+      name: '@deepseek-ai/dsh-task-session-persistence-jsonl'
+      config:
+        root: !!js "ctx.dshHomePath(ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '='))) ? 'task-administration/sessions' : 'tasks/sessions')"
+    - id: task-agent-loop
+      name: '@deepseek-ai/dsh-task-agent-loop'
+      config:
+        agents: []
+    - id: task-agent-presets
+      name: '@deepseek-ai/dsh-task-agent-presets'
+      config:
+        default: standard
+    - id: task-local
+      inject: [taskStartup]
+      name: '@deepseek-ai/dsh-task-local'
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      config:
+        path: !!js ctx.dshHomePath('tasks/tasks.sqlite')
+        revisionRoot: !!js ctx.dshHomePath('tasks/preset-revisions')
+        resourceRoot: !!js ctx.dshHomePath('tasks/resources')
+        concurrency: 4
+        childConcurrency: 4
+        tickMs: 1000
+        catchupLimit: 10000
+    - id: task-api-gateway
+      inject: [taskStartup]
+      name: '@deepseek-ai/dsh-task-api-gateway'
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      config:
+        attachmentRoot: !!js ctx.dshHomePath('tasks/attachments')
+    - id: tool-task-dispatch
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      name: '@deepseek-ai/dsh-tool-task-dispatch'
+
+# Per-Agent tools are contributed by each captured Task preset.
+- id: tool-bash
+  disabled: true
+- id: tool-pwsh
+  disabled: true
+- id: tool-jobs
+  disabled: true
+- id: tool-fs
+  disabled: true
+- id: tool-fs-search
+  disabled: true
+- id: skill-filesystem
+  disabled: true
+- id: tool-skill
+  disabled: true
+- id: command-goal
+  disabled: true
+- id: tool-goal
+  disabled: true
+- id: plan-mode
+  disabled: true
+- id: compaction-basic
+  disabled: true
+- id: command-compact
+  disabled: true
+- id: tool-result-pruner
+  disabled: true
+- id: tool-subagent-control
+  disabled: true
+- id: tool-subagent-list-agents
+  disabled: true
+- id: tool-subagent
+  disabled: true
+- id: tool-subagent-fork
+  disabled: true
+- id: workflow-worker-thread
+  disabled: true
+- id: tool-workflow
+  disabled: true
+- id: tool-ralph
+  disabled: true
+- id: agent-instructions
+  disabled: true
+- id: tool-todo
+  disabled: true
+- id: tool-web
+  disabled: true
