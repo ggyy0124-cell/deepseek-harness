@@ -1,0 +1,19 @@
+packages/task/task-local/tests/resources.spec.ts
+  s_d4a17511be8a55::t_df4aba50dc3582 189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "05644bd3747f865a28a6312f78bddb9d40bc5f53",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "gemini-3.8-flash"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
