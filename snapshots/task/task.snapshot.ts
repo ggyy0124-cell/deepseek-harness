@@ -27,14 +27,17 @@ it.skipIf(process.env['DSH_SNAPSHOT'] === 'record')('replays two model stages wi
     { id: 'llm-deepseek', disabled: true },
     { id: 'task-session-persistence-jsonl', config: { root: join(home, 'tasks', 'sessions'), compression: 'none' } },
     { insert: [
-      { id: 'llm-replay', name: '@deepseek-ai/dsh-llm-replay', config: { file: fixture, providers: [{ id: 'task-snapshot', models: [{ id: 'task-model' }] }] } },
+      { id: 'llm-replay', name: process.env['DSH_EXAMPLE_MODE'] === 'lib'
+        ? join(repository, 'packages/test-support/llm-replay/lib/index.js')
+        : '@deepseek-ai/dsh-llm-replay', config: { file: fixture, providers: [{ id: 'task-snapshot', models: [{ id: 'task-model' }] }] } },
       { id: 'gateway-smoke', name: join(repository, 'apps/cli/tests/profiles/task/fixtures/gateway.mjs'), config: { workspace: root, output } },
       { id: 'model-wait', name: join(scenario, 'model-business.mjs'), config: { workspace: root, fixture } },
     ] },
   ]))
   const launch = taskProfileLaunch(['--patch', patch, '--port', '0'])
   const child = execa(launch.command, launch.args, { cwd: repository, env: { ...launch.env,
-    DSH_HOME: home, DSH_TELEMETRY_DISABLED: '1', DEEPSEEK_API_KEY: 'keyless-replay' }, timeout: 90000, reject: false })
+    HOME: home, USERPROFILE: home, DSH_HOME: home, DSH_AGENTS_HOME: join(home, '.agents'),
+    DSH_TELEMETRY_DISABLED: '1', DEEPSEEK_API_KEY: 'keyless-replay' }, timeout: 90000, reject: false })
   let diagnostic = ''
   child.stdout.on('data', (chunk: Buffer) => { diagnostic += chunk.toString() })
   child.stderr.on('data', (chunk: Buffer) => { diagnostic += chunk.toString() })
