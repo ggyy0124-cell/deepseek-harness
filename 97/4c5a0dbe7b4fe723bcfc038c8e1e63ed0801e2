@@ -1,0 +1,29 @@
+packages/task/task-local/src/owned-files.ts
+  s_d4a17511be8a55::t_4340541cf3d3b0 14-19
+  s_d4a17511be8a55::t_99330b2ab1f85a 139,141
+  s_d4a17511be8a55::t_44c6130e916b1f 116,118
+packages/terminal/terminal-bash/src/index.ts
+  s_d4a17511be8a55::t_ca1cd4a875ba47 131,135-136,139,143-148
+packages/task/task-local/src/index.ts
+  s_d4a17511be8a55::t_c52e0f02ef6828 179,186
+packages/task/task-local/src/maintenance.ts
+  s_d4a17511be8a55::t_5ba9c364d4f45c 52,54
+  s_d4a17511be8a55::t_3f1bfa2584998d 121,128
+  s_d4a17511be8a55::t_59fac7dd1e271e 28,30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "974c5a0dbe7b4fe723bcfc038c8e1e63ed0801e2",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "gemini-3.8-flash"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
