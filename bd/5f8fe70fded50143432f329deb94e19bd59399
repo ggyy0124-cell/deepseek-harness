@@ -1,0 +1,60 @@
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.zh.md
+  s_d4a17511be8a55::t_1d4ab0568de86a 19-20
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.i18n.yaml
+  s_d4a17511be8a55::t_a74e3acc4a486b 5-6
+scripts/ci-workflow.spec.ts
+  s_d4a17511be8a55::t_e33dd54625a994 22-28
+package.json
+  s_d4a17511be8a55::t_6fd023c076023f 52
+scripts/ci-task-profile-surface.spec.ts
+  s_d4a17511be8a55::t_381ed425324a70 10-21,24-25
+  s_d4a17511be8a55::t_b76d331f72104a 1-9,22-23,26-32
+scripts/ci-task-profile-surface.ts
+  s_d4a17511be8a55::t_9d08186a8f1181 1-56
+scripts/run-gates.ts
+  s_d4a17511be8a55::t_2db0492664e1b8 21-25
+  s_d4a17511be8a55::t_edafd214ef4a0d 238
+  s_d4a17511be8a55::t_12d0c8c64e98a3 304-407
+.github/workflows/node-addon-system.yml
+  s_d4a17511be8a55::t_f2962a185b89ac 60
+  s_d4a17511be8a55::t_3014012cce6b14 48
+  s_d4a17511be8a55::t_6b79194a41baed 39
+.github/workflows/release.yml
+  s_d4a17511be8a55::t_e0fd5dd8b98b97 32
+  s_d4a17511be8a55::t_9b19aa10549668 93
+  s_d4a17511be8a55::t_eeaa4e03b9008f 27
+scripts/run-gates.spec.ts
+  s_d4a17511be8a55::t_f42c04c2fba412 533-547
+.agents/notes/implemented/process/2026-09-25-repository-workflow-controls.md
+  s_d4a17511be8a55::t_d6f977a69c1d76 19-20
+.github/workflows/ci.yml
+  s_d4a17511be8a55::t_7e70600f4bd7ab 197
+  s_d4a17511be8a55::t_bea6f70c14e46e 651
+  s_d4a17511be8a55::t_912460309d9136 321-324,337,343,351
+  s_d4a17511be8a55::t_a6c862f04453e6 601
+  s_d4a17511be8a55::t_e262ff489c3d3e 461
+  s_d4a17511be8a55::t_c368a2bdfe400a 725-728
+  s_d4a17511be8a55::t_db1906a15c3be9 13-14
+  s_d4a17511be8a55::t_a72a71e22dfae6 440
+vitest.config.ts
+  s_d4a17511be8a55::t_9184b269a10ee8 215-217
+  s_d4a17511be8a55::t_b785c149930be0 126-132
+  s_d4a17511be8a55::t_0465b65dfbb9a6 7-11
+  s_d4a17511be8a55::t_8a6e091b86b1a1 154-165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bd5f8fe70fded50143432f329deb94e19bd59399",
+  "prompts": {},
+  "sessions": {
+    "s_d4a17511be8a55": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0581c2c3-6a5a-4e7e-a940-fdbd98c9af25",
+        "model": "composer-2.5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
