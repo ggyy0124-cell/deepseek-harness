@@ -6,7 +6,7 @@ Status: implemented
 
 ## 问题
 
-fork 合并了上游 `deepseek-ai/deepseek-harness` 直至 `dsh-v0.1.7-rc.2`。上游删除了 `@deepseek-ai/dsh-agent-presets`，即 Task preset 提供方副本的规范来源，并以声明式的 `dsh-agent-preset-registry` 取代。上游还把 `agent/created` 改为串行等待的事件并删除 `agent/session-start`，用可变 Config 字段取代 settings 分区，把代码运行时重命名为 `ptcRuntime`，并将 Session 写入格式推进到 V4。每项变化都影响到某个 Task 替换提供方、Task preset 或 Task 应用 patch。
+fork 合并了上游 `deepseek-ai/deepseek-harness` 直至 `dsh-v0.1.7-rc.2`，随后合并至 `dsh-v0.2.0-rc.1`；后者的新增变化只要求提升 Task 包版本。上游删除了 `@deepseek-ai/dsh-agent-presets`，即 Task preset 提供方副本的规范来源，并以声明式的 `dsh-agent-preset-registry` 取代。上游还把 `agent/created` 改为串行等待的事件并删除 `agent/session-start`，用可变 Config 字段取代 settings 分区，把代码运行时重命名为 `ptcRuntime`，并将 Session 写入格式推进到 V4。每项变化都影响到某个 Task 替换提供方、Task preset 或 Task 应用 patch。
 
 ## 决策
 

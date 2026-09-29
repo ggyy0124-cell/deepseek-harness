@@ -6,7 +6,7 @@ English | [中文](2026-09-29-task-profile-upstream-0-1-7-merge.zh.md)
 
 ## Problem
 
-The fork merged upstream `deepseek-ai/deepseek-harness` through `dsh-v0.1.7-rc.2`. Upstream deleted `@deepseek-ai/dsh-agent-presets`, the canonical source of the copied Task preset provider, and replaced it with the declarative `dsh-agent-preset-registry`. It also made `agent/created` a serial, awaited event and removed `agent/session-start`, replaced settings sections with volatile Config fields, renamed the code runtime to `ptcRuntime`, and advanced the Session writer to format V4. Each change reached a Task replacement provider, a Task preset, or the Task application patch.
+The fork merged upstream `deepseek-ai/deepseek-harness` through `dsh-v0.1.7-rc.2`, then through `dsh-v0.2.0-rc.1`, whose further changes required only the Task package version bump. Upstream deleted `@deepseek-ai/dsh-agent-presets`, the canonical source of the copied Task preset provider, and replaced it with the declarative `dsh-agent-preset-registry`. It also made `agent/created` a serial, awaited event and removed `agent/session-start`, replaced settings sections with volatile Config fields, renamed the code runtime to `ptcRuntime`, and advanced the Session writer to format V4. Each change reached a Task replacement provider, a Task preset, or the Task application patch.
 
 ## Decision
 
