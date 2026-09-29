@@ -6,7 +6,7 @@ describe('Task protected source policy', () => {
   it.each([
     'packages/bundle/base/src/index.ts', 'packages/bundle/web-app/cordis.patch.yml', 'apps/web/src/main.ts',
     'packages/core/session/src/index.ts', 'packages/core/agent/src/index.ts', 'packages/core/agent-loop/src/index.ts',
-    'packages/session/session-persistence-jsonl/src/index.ts', 'packages/preset/agent-presets/src/index.ts',
+    'packages/session/session-persistence-jsonl/src/index.ts', 'packages/preset/agent-preset-registry/src/index.ts', 'packages/preset/agent-preset/src/index.ts',
     'packages/host/webserver/src/index.ts', 'packages/credentials/credentials-local/src/index.ts',
     'packages/client/ui-primitives/src/Button.tsx', 'packages/client/web/src/index.ts',
   ])('rejects original module changes: %s', (path) => {

@@ -27,6 +27,8 @@ import { evaluate } from '@deepseek-ai/cordis-plugin-loader'
 import z from '@deepseek-ai/schemastery'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { bindScopeParent, createScope, scopeOf, type Scope, type ScopeKey, type ScopeParentBinding } from '@deepseek-ai/dsh-scope'
+// Type-only: types the shared `agentPresets` service key this provider occupies.
+import type {} from '@deepseek-ai/dsh-agent-preset-registry'
 // Type-only: resolves the `agent/created` lifecycle event this service watches.
 import type {} from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent'
@@ -34,8 +36,8 @@ import type { AgentPresetDocument, AgentPresetRoster } from './types.ts'
 import type {} from '@deepseek-ai/dsh-session-projection'
 // Type-only: resolves the registry notification emitted after scope reparenting.
 import type {} from '@deepseek-ai/dsh-tools'
-import type SettingsService from '@deepseek-ai/dsh-settings'
-import type { SettingsScope } from '@deepseek-ai/dsh-settings'
+// Type-only: resolves the optional `configEditor` service that clears a deleted selected default.
+import type {} from '@deepseek-ai/dsh-config-editor'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import { discoverPresets, SHIPPED_PRESET_ROOT, USER_PRESET_DIR } from './discovery.ts'
 import { copyComposition, deleteComposition, presetExists, readComposition } from './authoring.ts'
@@ -44,15 +46,12 @@ import {
   fileComposition, mountedCompositionRows,
   type AgentPresetComposition,
 } from './composition-inventory.ts'
-import type { AgentPreset, Config, PresetRoot } from './preset.ts'
+import type { AgentPreset, Config, ConfigInput, PresetRoot } from './preset.ts'
 import { agentPresetProjectionDefinition } from './session.ts'
 export type * from './types.ts'
 export type {
   AgentPresetComposition, AgentPresetCompositionRow, CompositionRowEnablement,
 } from './composition-inventory.ts'
-
-/** Settings namespace carrying the user's preset-picker preference and chosen default. */
-export const SETTINGS_NAMESPACE = 'agent-presets'
 
 /** Refuse an empty preset id before invoking a domain operation. */
 function validatePresetId(value: string, field: 'agentPreset' | 'from'): void {
@@ -60,20 +59,6 @@ function validatePresetId(value: string, field: 'agentPreset' | 'from'): void {
     throw new RemoteError('gateway/bad-request', `${field} must be a non-empty string`, {})
   }
 }
-
-/** Resolved preset-selection settings; the registration base supplies both fields. */
-export interface AgentPresetSettings {
-  /** Saved default used when mode selection is enabled. */
-  default: string
-  /** Whether visible mode selection and the saved user default govern unnamed new sessions. */
-  modeSelectionEnabled: boolean
-}
-
-/** Runtime schema for the user-writable slice. */
-export const AgentPresetSettingsSchema: z<AgentPresetSettings> = z.object({
-  default: z.string(),
-  modeSelectionEnabled: z.boolean(),
-})
 
 export { COMPOSITION_FILE, discoverPresets, scanRoot, SHIPPED_PRESET_ROOT } from './discovery.ts'
 export {
@@ -85,7 +70,7 @@ export {
 } from './mount.ts'
 export { copyComposition, deleteComposition, readComposition, writableRoot } from './authoring.ts'
 export { agentPresetProjectionDefinition } from './session.ts'
-export type { AgentPreset, Config, PresetRoot, PresetTrust } from './preset.ts'
+export type { AgentPreset, Config, ConfigInput, PresetRoot, PresetTrust } from './preset.ts'
 
 /**
  * Registry over the deployment's agent presets.
@@ -98,15 +83,17 @@ export class AgentPresets extends TypertRemoteService {
   static inject = ['loader', 'sessionProjections']
 
   /** Runtime schema for the preset roster. */
-  static Config = z.object({
+  static Config: z<ConfigInput, Config> = z.object({
     default: z.string().required(),
+    selectedDefault: z.string().volatile(),
+    modeSelectionEnabled: z.boolean().default(true).volatile(),
     roots: z.array(z.object({
       path: z.string().required(),
       trust: z.union(['system', 'user'] as const).default('user'),
     })).default([]),
     includeShippedRoot: z.boolean().default(true),
     includeUserRoot: z.boolean().default(true),
-  }) as z<Config>
+  }) as z<ConfigInput, Config>
 
   /**
    * The roots discovery and authoring actually scan: the package's shipped
@@ -133,19 +120,6 @@ export class AgentPresets extends TypertRemoteService {
    * base here is what lets health answer the question before a session does.
    */
   private readonly harnessBase: string
-
-  /**
-   * The user layer over `config.default`, present only while a settings
-   * provider is composed. Held rather than snapshotted so a hot-reloaded
-   * document takes effect without a restart.
-   */
-  private settings: SettingsScope<AgentPresetSettings> | undefined
-
-  /**
-   * The settings service behind {@link settings}, held for the one write this
-   * service makes: clearing a user default it has just deleted.
-   */
-  private settingsService: SettingsService | undefined
 
   /**
    * The service's own untraced context. Methods invoked through the traceable
@@ -177,24 +151,6 @@ export class AgentPresets extends TypertRemoteService {
       ...config.roots,
       ...config.includeUserRoot ? [{ path: dshHomePath(USER_PRESET_DIR), trust: 'user' } satisfies PresetRoot] : [],
     ]
-    // Deliberately not `settings.installSection`: that method exists to re-judge
-    // what a consumer DERIVED from the source — memoized resolutions,
-    // registration-level facts — across attach, detach, and change. Nothing
-    // here is derived. `defaultId` reads through on every call, so both of its
-    // hooks would be no-ops and the source thunk would restate this field.
-    ctx.inject(['settings'], (settingsCtx) => {
-      this.settings = settingsCtx.settings.register(
-        SETTINGS_NAMESPACE,
-        AgentPresetSettingsSchema,
-        { base: { default: config.default, modeSelectionEnabled: true } },
-      )
-      this.settingsService = settingsCtx.settings
-      settingsCtx.effect(() => () => {
-        this.settings = undefined
-        this.settingsService = undefined
-      }, 'agentPresets.settings()')
-    })
-
     ctx.sessionProjections.register(agentPresetProjectionDefinition)
 
     // Advisory, not fatal: a synchronous `agent/created` listener that throws
@@ -230,7 +186,7 @@ export class AgentPresets extends TypertRemoteService {
   /**
    * The preset id mounted when a caller names none.
    *
-   * Read per call rather than cached: the settings document is hot-reloaded, so
+   * Read per call rather than cached: the volatile selection fields change live, so
    * changing the default takes effect on the next session created and leaves
    * every running session on the preset it was composed from.
    */
@@ -243,12 +199,10 @@ export class AgentPresets extends TypertRemoteService {
 
   /** Read one internally consistent snapshot of the selection policy. */
   private selectionPolicy(): { enabled: boolean; defaultId: string } {
-    const settings = this.settings?.get()
-    if (settings === undefined) return { enabled: true, defaultId: this.config.default }
-    const enabled = settings.modeSelectionEnabled
+    const enabled = this.config.modeSelectionEnabled.get()
     return {
       enabled,
-      defaultId: enabled ? settings.default : this.config.default,
+      defaultId: enabled ? this.config.selectedDefault.get() ?? this.config.default : this.config.default,
     }
   }
 
@@ -271,8 +225,8 @@ export class AgentPresets extends TypertRemoteService {
    */
   @Remote('list')
   async remoteExportList(): Promise<AgentPresetRoster> {
-    // Keep the visible policy and marked default from the same settings
-    // snapshot even when discovery yields while settings are hot-reloaded.
+    // Keep the visible policy and marked default from the same selection
+    // snapshot even when discovery yields while the volatile fields change.
     const policy = this.selectionPolicy()
     const presets = await this.list()
     return {
@@ -618,11 +572,11 @@ export class AgentPresets extends TypertRemoteService {
     // not that case: nothing will ever supply it again, and left in place every
     // session created without an explicit pick would fail to start. Clearing it
     // exposes the deployment's own default underneath, which is the layering.
-    if (this.settings?.get().default !== id) return
-    await this.settingsService?.mutate(
-      SETTINGS_NAMESPACE,
-      [{ op: 'unset', path: ['default'] }],
-    )
+    if (this.config.selectedDefault.get() !== id) return
+    const entry = this.selfCtx.fiber.entry
+    const editor = this.selfCtx.get('configEditor')
+    if (entry === undefined || editor === undefined) return
+    await editor.edit(entry, ({ selectedDefault: _removed, ...current }) => current)
   }
 
   /**

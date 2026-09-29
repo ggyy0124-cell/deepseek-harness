@@ -4,7 +4,6 @@ import { cp, mkdir, readFile, readdir, rename, rm } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import type { AgentHandle } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-agent-presets'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import { MessageId, createUserMessage, type UserMessage } from '@deepseek-ai/dsh-llm'
 import { Session, SESSION_FORMAT_VERSION, type SessionEvent } from '@deepseek-ai/dsh-session'
@@ -15,6 +14,13 @@ import type { TaskRun, TaskRunId } from '@deepseek-ai/dsh-task'
 import { taskAgentPresets } from '@deepseek-ai/dsh-task-agent-presets'
 import { wakeTaskAgent } from '@deepseek-ai/dsh-task-agent-loop'
 import { z } from 'zod'
+
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    /** A stage instruction a Task business plugin submitted through `TaskStage.model()`. */
+    'task': { kind: 'task' }
+  }
+}
 import type { TaskSessions } from './engine.ts'
 import type { TaskDatabase } from './database.ts'
 import type { TaskSessionAccess } from './access.ts'
@@ -103,7 +109,7 @@ export class AgentTaskSessions implements TaskSessions {
       if (await directoryDigest(dirname(saved.path)) !== saved.digest) throw new Error('task preset revision assets are missing or changed')
       return saved.path
     }
-    const source = await this.ctx.agentPresets.resolve(run.config.preset)
+    const source = await taskAgentPresets(this.ctx).resolve(run.config.preset)
     const target = join(this.revisionRoot, createHash('sha256').update(key).digest('hex'))
     const staging = `${target}.${randomUUID()}`
     await mkdir(this.revisionRoot, { recursive: true, mode: 0o700 })
@@ -176,7 +182,7 @@ export class AgentTaskSessions implements TaskSessions {
         throw new TaskChildRecoveryError('task child Agent outcome is uncertain; reconcile its Session before starting another model turn')
     }
     const id = MessageId(`task:${run.id}:${key}`)
-    const message: UserMessage = { ...createUserMessage({ content: [{ type: 'text', text: prompt }], source: { kind: 'plugin', plugin: 'task-local' } }), id }
+    const message: UserMessage = { ...createUserMessage({ content: [{ type: 'text', text: prompt }], source: { kind: 'task' } }), id }
     const events = await this.persistedEvents(run.sessionId)
     const inserted = events.some(event => event.type === 'agent/inbox/spliced' && event.data.inserted.some(input => input.id === id))
     const consumed = events.some(event => event.type === 'user/message' && event.data.id === id)

@@ -27,9 +27,6 @@
       "path": "../../core/agent"
     },
     {
-      "path": "../../preset/agent-presets"
-    },
-    {
       "path": "../../core/scope"
     },
     {
@@ -55,6 +52,12 @@
     },
     {
       "path": "../../util/home-paths"
+    },
+    {
+      "path": "../../preset/agent-preset-registry"
+    },
+    {
+      "path": "../../boot/config-editor"
     }
   ]
 }

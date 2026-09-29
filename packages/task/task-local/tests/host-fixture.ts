@@ -52,7 +52,7 @@ export async function taskHost(beforeTask?: (ctx: Context) => void | Promise<voi
     await ctx.plugin(TaskAgentPresets, { default: 'minimal', roots: [{ path: join(directory, 'presets'), trust: 'user' }],
       includeShippedRoot: false, includeUserRoot: false })
     // Workspaces and permission selections have no external operations in these business stages.
-    ctx.provide('permissionPresets', { set() {}, names: [] } as unknown as Context['permissionPresets'])
+    ctx.provide('permissionPresets', { set() {}, names: [], current: () => 'default' } as unknown as Context['permissionPresets'])
     ctx.provide('workspaceRegistry', { create: async () => ({ attachSession: async () => {} }) } as unknown as Context['workspaceRegistry'])
     // Schemastery's input type includes fields supplied by its runtime defaults.
     const config = LocalTaskService.Config({ path: join(directory, 'tasks.sqlite'), revisionRoot: join(directory, 'revisions'),

@@ -1,8 +1,31 @@
 /** Agent-preset vocabulary shared by discovery, mounting, and consumers. */
 
-import type { PresetTrust } from '@deepseek-ai/dsh-agent-presets'
+import type { Volatile } from '@deepseek-ai/cordis'
+import type { PresetTrust } from './types.ts'
 
-export type { AgentPreset, PresetTrust } from '@deepseek-ai/dsh-agent-presets'
+export type { PresetTrust } from './types.ts'
+
+/** One preset directory that carries a mountable agent composition. */
+export interface AgentPreset {
+  /** Stable identifier; the preset directory's name. */
+  readonly id: string
+  /** Trust recorded from the root this preset was discovered under. */
+  readonly trust: PresetTrust
+  /** Absolute path of the preset's agent composition file. */
+  readonly path: string
+  /** Display name from the preset's own metadata; absent falls back to {@link id}. */
+  readonly name?: string
+  /** One sentence on what this preset is for, when it published one. */
+  readonly description?: string
+  /** Declared position within its group; absent sorts after those that declare one. */
+  readonly order?: number
+  /**
+   * Why the preset cannot be mounted; absent when the discovery-time checks
+   * passed. A broken preset is listed so a client can explain the problem, but
+   * resolving it for a mount refuses.
+   */
+  readonly broken?: string
+}
 
 /**
  * Ids a preset directory may use.
@@ -26,6 +49,10 @@ export interface PresetRoot {
 export interface Config {
   /** Preset id mounted when a caller names none. Missing at mount time fails loud. */
   default: string
+  /** User-selected default over {@link default}; applies only while {@link modeSelectionEnabled} is true. */
+  selectedDefault: Volatile<string | undefined>
+  /** Whether the user-selected default governs unnamed new sessions. */
+  modeSelectionEnabled: Volatile<boolean>
   /** Scanned roots in precedence order; an earlier root wins a duplicate id. */
   roots: PresetRoot[]
   /**
@@ -41,4 +68,20 @@ export interface Config {
    * configured root. False mounts a roster without the derived writable root.
    */
   includeUserRoot: boolean
+}
+
+/** Plugin config as `cordis.yml` supplies it, before schema defaults and volatile wrapping. */
+export interface ConfigInput {
+  /** Preset id mounted when a caller names none. */
+  default: string
+  /** Scanned roots in precedence order. */
+  roots?: PresetRoot[]
+  /** Prepend the bundled shipped presets as a `system` root. */
+  includeShippedRoot?: boolean
+  /** Append the harness home's user preset root. */
+  includeUserRoot?: boolean
+  /** User-selected default over {@link default}. */
+  selectedDefault?: string
+  /** Whether the user-selected default governs unnamed new sessions. */
+  modeSelectionEnabled?: boolean
 }

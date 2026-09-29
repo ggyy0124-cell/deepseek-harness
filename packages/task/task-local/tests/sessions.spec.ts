@@ -53,7 +53,7 @@ async function harness() {
   await ctx.plugin(TaskAgentLoop, { agents: [] })
   await ctx.plugin(AgentDefaultModel, { provider: 'mock', model: 'mock' })
   await ctx.plugin(TaskAgentPresets, { default: 'test', roots: [{ path: join(directory, 'presets'), trust: 'user' }], includeShippedRoot: false, includeUserRoot: false })
-  ctx.provide('permissionPresets', { set() {} } as unknown as Context['permissionPresets'])
+  ctx.provide('permissionPresets', { set() {}, current: () => 'default' } as unknown as Context['permissionPresets'])
   ctx.provide('workspaceRegistry', { create: async () => ({ attachSession: async () => {} }) } as unknown as Context['workspaceRegistry'])
   const adapter = new MockAdapter([textResponse('first answer'), textResponse('second answer')])
   ctx.llm.registerAdapter(['mock'], adapter)

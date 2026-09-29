@@ -1,7 +1,7 @@
 /** Scoped tool admission and plugin disposal through the real tool registry. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
+import { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
@@ -34,11 +34,11 @@ async function setup() {
       for (const id of ['special', 'ordinary', 'unmanaged']) {
         const agent = { id: SessionId(id) } as Agent
         Object.assign(agent, { ctx: createScope(inner, agent).ctx })
-        ctx.emit('agent/created', { agent })
         agents.push(agent)
       }
     },
   })
+  for (const agent of agents) await agentEvents(ctx, agent).serial('agent/created', { source: 'startup' })
   return { ctx, dispatch, fiber, agents }
 }
 

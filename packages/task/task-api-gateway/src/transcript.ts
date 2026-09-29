@@ -54,7 +54,7 @@ export function taskTranscriptContent(event: SessionEvent): readonly ContentBloc
   switch (event.type) {
     case 'user/message': return event.data.content
     case 'assistant/message': return event.data.message.content
-    case 'tool/result': return event.data.message.content[0].content
+    case 'tool/result': return event.data.message.content
     default: return []
   }
 }
@@ -71,7 +71,7 @@ function project(event: SessionEvent): Entry | undefined {
         : undefined
     case 'tool/result': {
       if (!isAppendSurfaceEvent(event)) return undefined
-      const result = event.data.message.content[0]
+      const result = event.data.message
       return {
         ...common,
         role: 'tool',

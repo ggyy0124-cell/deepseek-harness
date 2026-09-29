@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-09-29-task-profile-upstream-0-1-7-merge.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-29-task-profile-upstream-0-1-7-merge.md
+/agent-note-task-profile-adaptation-to-the-upstream-0-1-7-merge:
+  en: 79f4bb7a35b82d3b
+  zh: 30bc4790cba79ed2
+/agent-note-task-profile-adaptation-to-the-upstream-0-1-7-merge/problem:
+  en: 18a92534e214bc6a
+  zh: da40588eb070f561
+/agent-note-task-profile-adaptation-to-the-upstream-0-1-7-merge/decision:
+  en: 7698cabf3680afa8
+  zh: 8d5c023d6d2621eb
+/agent-note-task-profile-adaptation-to-the-upstream-0-1-7-merge/alternatives-considered:
+  en: aca6d09540266876
+  zh: 0bbb3110ada918fd
+/agent-note-task-profile-adaptation-to-the-upstream-0-1-7-merge/consequences:
+  en: 2e2cb443c49eb35f
+  zh: 8ad52ecc9f2d09b3

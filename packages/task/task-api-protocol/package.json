@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-task-api-protocol",
   "description": "Cordis-free Task HTTP request schemas and OpenAPI generation",
-  "version": "0.1.5-rc.2",
+  "version": "0.1.7-rc.2",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -22,13 +22,13 @@
   "license": "MIT",
   "dependencies": {
     "zod": "^4.3.6",
-    "@deepseek-ai/dsh-task": "workspace:^"
+    "@deepseek-ai/dsh-task": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:~"
   },
   "publishConfig": {
     "access": "public"

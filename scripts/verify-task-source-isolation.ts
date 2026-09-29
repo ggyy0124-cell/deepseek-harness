@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url'
 const protectedPrefixes = [
   'packages/bundle/base/', 'packages/bundle/web-app/', 'apps/web/',
   'packages/core/session/', 'packages/core/agent/', 'packages/core/agent-loop/',
-  'packages/session/session-persistence-jsonl/', 'packages/preset/agent-presets/',
+  'packages/session/session-persistence-jsonl/', 'packages/preset/agent-preset-registry/', 'packages/preset/agent-preset/',
   'packages/host/webserver/', 'packages/credentials/', 'packages/client/',
 ]
 

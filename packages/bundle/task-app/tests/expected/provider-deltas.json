@@ -3,8 +3,8 @@
     "original": "packages/core/agent-loop/src",
     "copy": "packages/task/task-agent-loop/src",
     "path": "agent.ts",
-    "originalSha256": "bbc3c4f34076e81596af855eddb1bf66f6362278730f7c4db24ea96a990e3cb3",
-    "copySha256": "e270d1f9269c026777ff9da1248091642f2587b03ef2eb19244f81f96828c153"
+    "originalSha256": "9c985dd5ce3612b0a6f1833cb592930e4e390d4249821accea53064d8e42015c",
+    "copySha256": "2370bfba3f2a7e1b192cbbf0c2b148ae9ffe166c11972f9b5aafbcf791bf34a2"
   },
   {
     "original": "packages/core/agent-loop/src",
@@ -17,8 +17,8 @@
     "original": "packages/core/agent-loop/src",
     "copy": "packages/task/task-agent-loop/src",
     "path": "index.ts",
-    "originalSha256": "9cbee4cdf159df1a6562edfaaf47a41aea055224fc6a67fbc7e07029a91aeca1",
-    "copySha256": "2482404a742e104238ad5b4ca26e5322a385ad2549e0069af08b090316a742fb"
+    "originalSha256": "853e76aef2eecafe5526a5267c3d386780b5c59e3c79c2448532fada7285a605",
+    "copySha256": "448b0f8a45072f3219bdef80f74907c065915d8f47c597efe43adb0ebc14d0ff"
   },
   {
     "original": "packages/core/agent-loop/src",
@@ -31,70 +31,7 @@
     "original": "packages/core/agent-loop/src",
     "copy": "packages/task/task-agent-loop/src",
     "path": "tool-calls.ts",
-    "originalSha256": "1f8984127d4245b6a08c1e4b0c8b9d8fa7ce30ffcf08184187f16dc1bf57ae6d",
-    "copySha256": "37b791f91d4a2164fe627bbd7f205fde3dde0db816a9673458cefb285b2bd5da"
-  },
-  {
-    "original": "packages/preset/agent-presets/src",
-    "copy": "packages/task/task-agent-presets/src",
-    "path": "composition-inventory.ts",
-    "originalSha256": "670afacbf05ac729a1fc1f0c4a2344aa28be5e4b84d687ea7183d314c82d602f",
-    "copySha256": "c937ae76413f7c8532738a0c2e09e7c846911b0880fbc2276369f30b809bc839"
-  },
-  {
-    "original": "packages/preset/agent-presets/src",
-    "copy": "packages/task/task-agent-presets/src",
-    "path": "index.ts",
-    "originalSha256": "5880c7b87ba8cb2f4649c55cf2fadde966602e2c9b3c2f96ec377ac32d263fbc",
-    "copySha256": "3235e5f2833ce9269adef35a2a3f3ed018146bfad24b5dcfd74e0f1b5721250e"
-  },
-  {
-    "original": "packages/preset/agent-presets/src",
-    "copy": "packages/task/task-agent-presets/src",
-    "path": "invariant.ts",
-    "originalSha256": "9f5f416859f41d25ef097d42006acc51c7d13cbe267d658e2db3a7443465c7ec",
-    "copySha256": null
-  },
-  {
-    "original": "packages/preset/agent-presets/src",
-    "copy": "packages/task/task-agent-presets/src",
-    "path": "preset.ts",
-    "originalSha256": "127aa4947ad05c0157e7a3ff5e6e1501cb1807c3f707debca445c4350ad4d843",
-    "copySha256": "2ba7bfacd8d4216c6677aa14da77e27ac723e8795703b23a57aae30e1cedfbfb"
-  },
-  {
-    "original": "packages/preset/agent-presets/src",
-    "copy": "packages/task/task-agent-presets/src",
-    "path": "session.ts",
-    "originalSha256": "a8d74b5b6cefedd859dd90d9298afd5c469b069b5b2611d4d7ac895c8d2c83f2",
-    "copySha256": "f0e9ee77a4c58d43e6534f78faebc09d2ff607148bd745af037ad37b8fa09f94"
-  },
-  {
-    "original": "packages/preset/agent-presets/src",
-    "copy": "packages/task/task-agent-presets/src",
-    "path": "types.ts",
-    "originalSha256": "fec972d2ea5474c863724877035481f705924adac40d0714bc9078483ca9104f",
-    "copySha256": "a44e760d6334219675922559e8f5902f942465f9e747ed612a21d9622c7278a7"
-  },
-  {
-    "original": "packages/preset/agent-presets/presets",
-    "copy": "packages/task/task-agent-presets/presets",
-    "path": "cordis/agent.cordis.yml",
-    "originalSha256": "2b8d89c3137ce685f3d97f65aea5bd1c5099e08bba6c16815768245f8fb61d2d",
-    "copySha256": "0962493520ba04752d21ecf3435a292acc2ff7e82799f67235f288f16056241b"
-  },
-  {
-    "original": "packages/preset/agent-presets/presets",
-    "copy": "packages/task/task-agent-presets/presets",
-    "path": "ptc/agent.cordis.yml",
-    "originalSha256": "2a62e2dd692e65b86c792519a6d6f617404be59d9878acf0727c6b92dd077134",
-    "copySha256": "5c93f7e37336d0189d598a6beef15a15eeb82faeca460e11e7f8befe4484eaa0"
-  },
-  {
-    "original": "packages/preset/agent-presets/presets",
-    "copy": "packages/task/task-agent-presets/presets",
-    "path": "standard/agent.cordis.yml",
-    "originalSha256": "08a029c64fdeaabe415a5627ef73ce6f6c6bc61dadaf9989d11f9e15608907f6",
-    "copySha256": "548c935c3ab9f5098cb8a01b7c6010a3e59285a36fc3108e6a8d05595d5e5182"
+    "originalSha256": "5c7e8d8ff0028b436efdd13e5dffa4801d2311c211c3af039e7dab705f87b303",
+    "copySha256": "d58b74cfbe207ad4e04380d5858dd81725a2e6f7b04a1b081ab9a759d3b49407"
   }
 ]

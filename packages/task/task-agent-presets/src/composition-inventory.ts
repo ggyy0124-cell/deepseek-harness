@@ -14,12 +14,45 @@ import { readFile } from 'node:fs/promises'
 import { load } from 'js-yaml'
 import { isJsExpr, type EntryTree } from '@deepseek-ai/cordis-plugin-loader'
 import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
-import type { AgentPresetCompositionRow } from '@deepseek-ai/dsh-agent-presets'
+import type { FiberState } from '@deepseek-ai/cordis'
 import { entryListProblem } from './discovery.ts'
+import type { PresetTrust } from './types.ts'
 
-export type {
-  AgentPresetComposition, AgentPresetCompositionRow, CompositionRowEnablement,
-} from '@deepseek-ai/dsh-agent-presets'
+/** Whether a composition row loads; `'conditional'` defers the answer to a live mount's `!!js` evaluation. */
+export type CompositionRowEnablement = boolean | 'conditional'
+
+/** One plugin row a preset composition names. */
+export interface AgentPresetCompositionRow {
+  /**
+   * The Loader-tree entry id when read from a live mount, else the id the
+   * composition file declares; null when the file row declares none.
+   */
+  readonly entryId: string | null
+  /** Module specifier the row names. */
+  readonly moduleName: string
+  /** Effective enablement, including disabled ancestor groups. */
+  readonly enabled: CompositionRowEnablement
+  /** The row's own `!!js` disabled expression, when it carries one. */
+  readonly condition?: string
+  /** Root-fiber state, present only when read from a live mount. */
+  readonly fiberState?: FiberState
+}
+
+/** One preset's composition rows as a plugin-listing surface reads them. */
+export interface AgentPresetComposition {
+  /** Stable preset id. */
+  readonly id: string
+  /** Whether the deployment ships the preset or the user owns it. */
+  readonly trust: PresetTrust
+  /** Display name the preset published. */
+  readonly name?: string
+  /** Whether a session naming no preset composes this one. */
+  readonly isDefault: boolean
+  /** Why this preset's rows cannot be read; absent when {@link rows} answers. */
+  readonly broken?: string
+  /** Composition rows in composition order; empty when the preset is broken. */
+  readonly rows: readonly AgentPresetCompositionRow[]
+}
 
 /**
  * Evaluate one `!!js` disabled expression the way the Loader would at a mount

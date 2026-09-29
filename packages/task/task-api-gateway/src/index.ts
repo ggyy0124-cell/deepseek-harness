@@ -14,7 +14,7 @@ import {
 } from '@deepseek-ai/dsh-task'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import type {} from '@deepseek-ai/dsh-agent-presets'
+import { taskAgentPresets } from '@deepseek-ai/dsh-task-agent-presets'
 import type {} from '@deepseek-ai/dsh-permission-presets'
 import {
   idSchema,
@@ -277,7 +277,7 @@ export class TaskApiGateway extends Service {
             }),
           )
         ).flat(),
-        presets: (await this.ctx.agentPresets.list()).map(item => ({ id: item.id, title: item.id })),
+        presets: (await taskAgentPresets(this.ctx).list()).map(item => ({ id: item.id, title: item.id })),
         permissions: this.ctx.permissionPresets.names.map(id => ({
           id,
           title: this.ctx.permissionPresets.optionOf(id).name,

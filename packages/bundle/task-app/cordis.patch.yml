@@ -10,7 +10,7 @@
 - id: typert-loader
   config:
     packages:
-      - '@deepseek-ai/dsh-agent-presets'
+      - '@deepseek-ai/dsh-agent-preset-registry'
 
 - insert:
     - id: task-administration
@@ -37,8 +37,6 @@
       disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
     - id: subagent-model-selection-settings
       name: '@deepseek-ai/dsh-tool-subagent/model-selection-settings'
-    - id: code-runtime
-      name: '@deepseek-ai/dsh-code-runtime-worker-thread'
     - id: workspace
       name: '@deepseek-ai/dsh-workspace'
     - id: task-session
@@ -114,7 +112,7 @@
   disabled: true
 - id: tool-subagent-fork
   disabled: true
-- id: workflow-worker-thread
+- id: workflow-ptc
   disabled: true
 - id: tool-workflow
   disabled: true
@@ -125,4 +123,6 @@
 - id: tool-todo
   disabled: true
 - id: tool-web
+  disabled: true
+- id: mcp-resources
   disabled: true
