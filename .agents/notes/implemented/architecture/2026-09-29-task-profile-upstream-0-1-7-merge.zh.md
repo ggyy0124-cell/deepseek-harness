@@ -12,19 +12,23 @@ fork 合并了上游 `deepseek-ai/deepseek-harness` 直至 `dsh-v0.1.7-rc.2`，�
 
 `dsh-task-agent-loop` 以 fork 基点做三方合并，接入上游 Agent Loop。带有 Task 改动的四个文件保留这些改动；其余文件在模块标识归一化后与上游一致。源码副本测试固定刷新后的摘要对，因此 Agent Loop 一致性仍受检查。
 
-`dsh-task-agent-presets` 改由 Task 持有。其原始包已不存在，因此移除其源码与随附 preset 的一致性配对。此包在本地声明 preset 词汇、Remote 错误详情、投影映射项、选择事件与 Session 事件，因为仅类型导入会从生成的声明文件中消失。它保留 `agentPresets` 服务键，因为 `dsh-subagent` 通过该键按父 Agent 的 preset 组合子 Agent。上游 registry 为该键声明了 Context 类型，因此 Task 代码通过 `taskAgentPresets(ctx)` 访问 Task API。已移除包的单元测试迁入 Task 包。
+Task preset 沿用上游在移除 `@deepseek-ai/dsh-agent-presets` 时采用的声明式模型。Task 组合包以从 Web 声明复制的 `dsh-agent-preset` 行声明 `standard`、`ptc`、`minimal` 与 `cordis`；subagent 调用保持前台一次性、深度为 1，workflow 行保持禁用。一致性测试只允许这些差异。`dsh-task-agent-preset-registry` 在相同的 `agentPresets` 键下继承 `dsh-agent-preset-registry`，`dsh-subagent` 通过该键按父 Agent 的 preset 组合子 Agent。Task 代码通过 `taskAgentPresetRegistry(ctx)` 访问 Task API。
 
-Task preset 默认值读取可变字段 `selectedDefault` 与 `modeSelectionEnabled`。删除当前选中的 preset 时，通过 `configEditor` 从提供方自身条目中移除 `selectedDefault`。Task Agent Loop 随上游合并将 `maxParallelToolCalls` 作为可变字段。
+共享注册表只在内存中保留版本，重启后的 Session 会按当前声明解析 preset。Task 执行必须保持启动时的组合，因此 Task 注册表记录声明的子插件列表、声明行的解析基址与摘要；Task Local 把该记录存入操作回执，而不再复制 preset 目录。与当前声明一致的已记录版本绑定该声明的运行中插件树。其他版本通过共享注册表公开的 `register` 与 `mount` 操作，以保留的 `task-revision:` id 注册私有定义；记录了该版本的 Agent 共享它，最后一个 Agent 离开时撤回该定义，而共享注册表会为继承它的子 Agent 保留已退役的插件树。名册读取会省略私有定义，组合 preset 的读取报告声明的 id。
 
-当某行的导入或激活被拒绝时，Loader 现在仍会让子树完成结算。Task preset 挂载会等待每个启用行，并拒绝失败的行、等待缺失服务的行，以及向根 realm 发布服务的行。Task 挂载仍拒绝等待中的行，因为 Task 执行没有之后的重新审计时点。
+默认 preset 沿用共享注册表在 `agent-preset-registry` 条目上的 `default` 与可变字段 `selectedDefault`。Task Agent Loop 随上游合并将 `maxParallelToolCalls` 作为可变字段。
 
-Task 应用 patch 删除自身的 `code-runtime` 行，因为 Base 现在挂载 `ptc-runtime`。它与其他按 Agent 提供的行一起禁用 `workflow-ptc` 与 `mcp-resources`，并为共享的 `agentPresets` 命名空间加载 `dsh-agent-preset-registry` 的 Typert 贡献。Task preset 将已禁用的 workflow 行重命名为 `workflow-ptc`。
+Task 应用 patch 删除自身的 `code-runtime` 行，因为 Base 现在挂载 `ptc-runtime`。它与其他按 Agent 提供的行一起禁用 `workflow-ptc` 与 `mcp-resources`，并为共享的 `agentPresets` 命名空间加载 `dsh-agent-preset-registry` 的 Typert 贡献。
 
 Task 阶段提示使用 Session V4 要求的生产方自有消息来源 kind `task`。转录投影读取 V4 的 tool 角色结果消息。
 
 ## 考虑过的替代方案
 
-**把 Task preset 移植到声明式 registry。** 本次合并不采用，因为 Task 执行按内容摘要捕获不可变的 preset 目录，而 registry 在 profile patch 中声明 preset。将版本捕获改为基于声明会改变 Task 的持久恢复，需要单独设计。
+**保留 Task 自有的目录式 preset 名册。** 不采用，因为它会在源码一致性检查之外保留已移除包的副本、第二种 preset 声明格式，以及与共享协议不一致的 Remote 接口。
+
+**像 Web 一样按当前声明解析重启后的执行。** 不采用，因为两次等待之间的 profile 修改会改变正在运行的业务执行所用的工具与提示。
+
+**为共享注册表增加版本钩子。** 不采用，因为 Task Profile 保持共享提供方源码不变，而公开的 `register` 与 `mount` 操作足以表达私有版本。
 
 **重命名 Task preset 服务。** 不采用，因为进程内 subagent 将无法继承父 Agent 的 preset。派发通过 `ctx.get('agentPresets')` 解析共享键。
 
@@ -32,7 +36,7 @@ Task 阶段提示使用 Session V4 要求的生产方自有消息来源 kind `ta
 
 ## 影响
 
-- 合并前捕获的 preset 版本引用 `@deepseek-ai/dsh-workflow-worker-thread`，无法重新挂载。需要跨升级继续的执行必须先完成，或使用新的版本。
-- Task preset 提供方的 Remote `copy` 与 `deletePreset` 方法无法经网关调用，因为所加载的 registry 协议未声明它们。
-- 在迁入的测试达到逐文件阈值之前，覆盖率门禁继续排除 Task preset 源码。
+- 已记录的版本只列出包与解析基址，不含代码；恢复要求这些包仍安装在该基址可解析的位置。早期 Task 构建记录的目录式版本会作为无效回执被拒绝。
+- 与 Web preset 一样，每个已声明的 Task preset 都在启动时激活。声明变化后，每个仍在使用的不同已记录版本会增加一棵私有插件树。
+- Task preset 声明需要跟随兼容的 Web 声明变更；preset 一致性测试会使意外漂移在本地失败。
 - 已保存的 `agent-presets` 与 `agent-loop` settings 分区不再被读取；运维人员需在 Task profile patch 中以可变字段重新声明这些值。

@@ -1,6 +1,19 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for 2026-09-28-task-profile-fork-ci-surface.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-09-28-task-profile-fork-ci-surface.md
-2026-09-28-task-profile-fork-ci-surface.md: e21bc1e859ef2f7ab3ffa63e3ef561e853e5e93c
-2026-09-28-task-profile-fork-ci-surface.zh.md: d5a0a3ab9a245aac6bad8410a0bf67d91bbb5c67
+/agent-note-task-profile-ci-surface-for-fork-pull-requests:
+  en: bf4c7c9967842320
+  zh: 3901b23653b35749
+/agent-note-task-profile-ci-surface-for-fork-pull-requests/problem:
+  en: f2488d8d7a7d384f
+  zh: b61df1e184d5d608
+/agent-note-task-profile-ci-surface-for-fork-pull-requests/decision:
+  en: ce019b823294518f
+  zh: c14bc2a4fd5e2d2d
+/agent-note-task-profile-ci-surface-for-fork-pull-requests/alternatives-considered:
+  en: cfd8105ae43264f3
+  zh: 62a354d81633db07
+/agent-note-task-profile-ci-surface-for-fork-pull-requests/consequences:
+  en: 8a87931476ec30d1
+  zh: 8c926fa00f2218ab

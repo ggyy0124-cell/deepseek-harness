@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-内置 `task` profile 将此提供者与Task API 网关组合。直接挂载时必须配置 SQLite 的 `path`、不可变预设的 `revisionRoot` 和 Task 自有文件的 `resourceRoot`。同一数据库拒绝第二个宿主同时写入。
+内置 `task` profile 将此提供者与Task API 网关组合。直接挂载时必须配置 SQLite 的 `path` 和 Task 自有文件的 `resourceRoot`；已记录的 preset 版本保存在该数据库中。同一数据库拒绝第二个宿主同时写入。
 
 等待阶段每经过 `priorityAgingIntervalMs`（默认 60,000 毫秒）增加 1 点优先级，上限由 `priorityAgingCap`（默认 100）指定。等待时长从 Run 最近一次持久化更新开始计算；有效优先级相同时按创建时间排序。资源受阻的阶段不占用并发名额。
 
@@ -112,7 +112,7 @@ Forms 在注册和命令入口校验，schema 变化要求显式迁移，已有�
 
 - 本地 SQLite 数据库由一个可写服务进程独占；此提供方不协调分布式工作进程。
 - 插件必须停止子进程并核对结果不确定的外部写入。插件若始终无法完成取消，会延迟服务关闭或卸载。
-- preset 文件在本地保留；恢复仍需要对应外部服务及已安装的插件代码。
+- 已记录的 preset 版本只列出插件包，不复制其代码；恢复仍需要对应外部服务及已安装的插件代码。
 
 <a id="dev-note"></a>
 ### 开发备注

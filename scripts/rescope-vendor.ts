@@ -98,10 +98,6 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'apps/cli/tests/profiles/web/tests/fixtures/creator-plugin-manager.mjs', upstream: ['cordis'] },
   { file: 'apps/web/tests/agent-preset-authoring.e2e.ts', upstream: ['cordis'] },
   { file: 'packages/preset/agent-preset-registry/tests/session.spec.ts', upstream: ['cordis'] },
-  // Task's parity-pinned copy preserves the same preset id and model prompt.
-  { file: 'packages/task/task-agent-presets/presets/cordis/agent.cordis.yml', upstream: ['cordis'] },
-  // Source-copy digests preserve the `cordis` preset path, not a package specifier.
-  { file: 'packages/bundle/task-app/tests/expected/provider-deltas.json', upstream: ['cordis'] },
   // The preset-roster loop names the `cordis` preset id, not a package.
   { file: 'apps/cli/tests/windows-shell.spec.ts', upstream: ['cordis'] },
   // GROUP_ORDER holds `packages/<group>/` directory names, not package names.

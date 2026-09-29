@@ -209,7 +209,7 @@
     { "path": "./packages/task/task-agent" },
     { "path": "./packages/task/task-session-persistence-jsonl" },
     { "path": "./packages/task/task-agent-loop" },
-    { "path": "./packages/task/task-agent-presets" },
+    { "path": "./packages/task/task-agent-preset-registry" },
     { "path": "./packages/task/task-local" },
     { "path": "./packages/task/tool-task-dispatch" },
     { "path": "./packages/bundle/task-app" },

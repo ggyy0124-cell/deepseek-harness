@@ -32,7 +32,7 @@ Build business workflows from polling, calendar, and manual tasks. Special tasks
 | [task-agent](task-agent/README.md) | Task Profile Agent creation authorization |
 | [task-session-persistence-jsonl](task-session-persistence-jsonl/README.md) | Task Profile JSONL write authorization |
 | [task-agent-loop](task-agent-loop/README.md) | Authorized Agent commands and durable inbox wake |
-| [task-agent-presets](task-agent-presets/README.md) | Immutable preset revision mounts for task recovery |
+| [task-agent-preset-registry](task-agent-preset-registry/README.md) | Preset registry that retains recorded revisions for task recovery |
 | [task-local](task-local/README.md) | SQLite scheduling, recovery, resource admission, and owned Agent Sessions |
 | [tool-task-dispatch](tool-task-dispatch/README.md) | Special-task model dispatch |
 

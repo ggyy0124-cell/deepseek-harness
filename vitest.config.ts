@@ -215,9 +215,6 @@ export default defineConfig({
         'packages/*/*/src/worker.ts',
         // The canonical Agent Loop owns coverage; reviewed source parity pins this Task copy.
         'packages/task/task-agent-loop/src/**/*.ts',
-        // The Task-owned directory roster outlived its retired canonical source; its ported
-        // suite runs in the unit lane but has not been brought to the per-file coverage gate.
-        'packages/task/task-agent-presets/src/**/*.ts',
         // The supported dsh launcher owns application entry and asset serving.
         // Profile subprocess tests exercise these paths outside this V8 process.
         'packages/bundle/task-app/src/administration.ts',

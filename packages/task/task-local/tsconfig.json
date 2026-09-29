@@ -30,7 +30,7 @@
       "path": "../task-agent-loop"
     },
     {
-      "path": "../task-agent-presets"
+      "path": "../task-agent-preset-registry"
     },
     {
       "path": "../../core/agent"

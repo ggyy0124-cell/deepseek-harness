@@ -51,7 +51,7 @@
       "path": "../../attachment/attachment"
     },
     {
-      "path": "../task-agent-presets"
+      "path": "../../preset/agent-preset-registry"
     }
   ]
 }

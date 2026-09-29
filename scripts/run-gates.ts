@@ -323,6 +323,7 @@ function taskProfileStaticGates(): Gate[] {
 function taskProfileCoverageGates(): Gate[] {
   const coverageArgs = [
     '--coverage.include=packages/task/task/src/**',
+    '--coverage.include=packages/task/task-agent-preset-registry/src/**',
     '--coverage.include=packages/task/task-session/src/**',
     '--coverage.include=packages/task/task-session-persistence-jsonl/src/**',
     '--coverage.include=packages/task/task-api-client/src/**',
@@ -332,6 +333,7 @@ function taskProfileCoverageGates(): Gate[] {
   ]
   const coverageSuites = [
     'packages/task/task',
+    'packages/task/task-agent-preset-registry',
     'packages/task/task-session',
     'packages/task/task-session-persistence-jsonl',
     'packages/task/task-api-client',

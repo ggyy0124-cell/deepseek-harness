@@ -51,7 +51,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/task/task-session': { kind: 'none', reason: 'The replacement store only enforces Task Session lifecycle authorization and delegates model history to Session consumers.' },
   'packages/task/task-agent': { kind: 'indirect', reason: 'The replacement registry authorizes Task Agent creation and resume while the driver owns model requests.' },
   'packages/task/task-session-persistence-jsonl': { kind: 'none', reason: 'The replacement persistence backend changes write authorization without changing persisted model content.' },
-  'packages/task/task-agent-presets': { kind: 'indirect', reason: 'The replacement mount installs a retained preset whose plugins own each model-facing registration.' },
+  'packages/task/task-agent-preset-registry': { kind: 'indirect', reason: 'The replacement registry mounts recorded preset revisions whose plugins own each model-facing registration.' },
   'packages/task/task': { kind: 'indirect', reason: 'The service delegates model instructions to business plugins and model delivery to the provider.' },
   'packages/bundle/task-app': { kind: 'indirect', reason: 'The bundle composes providers and consumers that own their model-visible behavior.' },
   'packages/client/product-analytics': { kind: 'none', reason: 'Desktop analytics observes selected interactions without contributing model context or Session events.' },

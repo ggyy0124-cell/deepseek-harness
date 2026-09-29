@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/task/task-agent-preset-registry/README.md
+/:
+  en: 25044f11dd13b783
+  zh: 171cd8e87b306b94
+/deepseek-ai-dsh-task-agent-preset-registry:
+  en: 5a10edd0cb9a5f79
+  zh: d62774d00723fcdb
+/deepseek-ai-dsh-task-agent-preset-registry/summary:
+  en: e66f3b8cf2e3dca9
+  zh: 3938a03d63c853cf
+/deepseek-ai-dsh-task-agent-preset-registry/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9f0336825ccdaacd
+/deepseek-ai-dsh-task-agent-preset-registry/use-this-package:
+  en: a4cce5e76c063f6f
+  zh: 8a40c67b0c732760
+/deepseek-ai-dsh-task-agent-preset-registry/understand-the-implementation:
+  en: d7a78515f4fb3935
+  zh: 49e540f9130c754a
+/deepseek-ai-dsh-task-agent-preset-registry/further-exploration:
+  en: 03091bee7ec23841
+  zh: ec4eae9f52f2bf49
+/deepseek-ai-dsh-task-agent-preset-registry/model-experience:
+  en: 685f9932efa9bf44
+  zh: 57b083d2678a693f
+/deepseek-ai-dsh-task-agent-preset-registry/model-experience/kv-cache-effect:
+  en: cf6dfdef7dbba80f
+  zh: 3f805f3c8fb83334
+/deepseek-ai-dsh-task-agent-preset-registry/known-limitations-and-deferred-work:
+  en: 05405f8f9db15e1e
+  zh: eaa652f6309652d8
+/deepseek-ai-dsh-task-agent-preset-registry/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: ce96645b3e75874e

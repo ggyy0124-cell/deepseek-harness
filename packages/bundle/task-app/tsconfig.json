@@ -33,7 +33,7 @@
       "path": "../../task/task-agent-loop"
     },
     {
-      "path": "../../task/task-agent-presets"
+      "path": "../../task/task-agent-preset-registry"
     },
     {
       "path": "../../task/tool-task-dispatch"

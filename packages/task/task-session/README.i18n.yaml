@@ -1,6 +1,40 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/task/task-session/README.md
-README.md: 7e1b18ae85c58d559b3e085a023a3d9933c5161d
-README.zh.md: fb39fdbd7214ca0cb5012eed7de0774ef261d96d
+/:
+  en: 572d8c29326ec068
+  zh: 354bd36ab2ea39e5
+/deepseek-ai-dsh-task-session:
+  en: ee4f458dd2febcb7
+  zh: be76c32f75601afc
+/deepseek-ai-dsh-task-session/summary:
+  en: 1aa0ce9ab1d9e01c
+  zh: 2d5d5a3e01804e28
+/deepseek-ai-dsh-task-session/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9f0336825ccdaacd
+/deepseek-ai-dsh-task-session/use-this-package:
+  en: 506b153d6060956e
+  zh: 6b89bce4fbc60c88
+/deepseek-ai-dsh-task-session/understand-the-implementation:
+  en: 952ce90e7fbf02d8
+  zh: 3beeb6ca881ba853
+/deepseek-ai-dsh-task-session/no-runtime-invariant-companion-is-published-guard-registration-and-disposal-update-one-private-set-through-the-same-service:
+  en: 94454f62c1b07cb9
+  zh: 28e74e6dbde07190
+/deepseek-ai-dsh-task-session/further-exploration:
+  en: 1f9b062951a4dec7
+  zh: 49fd0869a59552f1
+/deepseek-ai-dsh-task-session/model-experience:
+  en: f639269972bdbf9b
+  zh: 214d00020da3ad46
+/deepseek-ai-dsh-task-session/model-experience/kv-cache-effect:
+  en: eacb551c6a444bb0
+  zh: 891b43ea3d41345d
+/deepseek-ai-dsh-task-session/known-limitations-and-deferred-work:
+  en: e8af19fcf18e40be
+  zh: 667b9e16ec7e2f43
+/deepseek-ai-dsh-task-session/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: ce96645b3e75874e

@@ -17,7 +17,7 @@ describe('Task REST gateway', () => {
     const patch = join(directory, 'gateway.patch.yml')
     let diagnostics = ''
     await writeFile(patch, JSON.stringify([
-      { id: 'task-local', config: { path: join(directory, 'tasks.sqlite'), revisionRoot: join(directory, 'revisions'), resourceRoot: join(directory, 'resources'), concurrency: 2, tickMs: 20, catchupLimit: 100 } },
+      { id: 'task-local', config: { path: join(directory, 'tasks.sqlite'), resourceRoot: join(directory, 'resources'), concurrency: 2, tickMs: 20, catchupLimit: 100 } },
       { id: 'task-api-gateway', config: { attachmentRoot: join(directory, 'attachments'), bodyLimitBytes: 4096, bodyTimeoutMs: 2000, eventPollMs: 20, eventHeartbeatMs: 100, eventBatchSize: 2 } },
       { insert: [{ id: 'gateway-smoke', name: fixture, config: { workspace: directory, output } }] },
     ]))

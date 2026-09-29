@@ -12,19 +12,23 @@ The fork merged upstream `deepseek-ai/deepseek-harness` through `dsh-v0.1.7-rc.2
 
 `dsh-task-agent-loop` takes the upstream Agent Loop through a three-way merge against the fork base. The four files carrying Task changes keep those changes; the other files match upstream after module identity normalization. The source-copy test pins the refreshed digest pairs, so Agent Loop parity stays enforced.
 
-`dsh-task-agent-presets` becomes Task-owned. Its original no longer exists, so the parity pairs for its source and shipped presets are removed. The package declares the preset vocabulary, Remote error details, projection map entry, selection event, and Session event locally, because a type-only import disappears from emitted declarations. It keeps the `agentPresets` service key because `dsh-subagent` reads that key to compose a child from its parent's preset. The upstream registry declares the Context type for that key, so Task code reaches the Task API through `taskAgentPresets(ctx)`. The unit suite of the retired package moves into the Task package.
+Task presets follow the declarative model upstream adopted when it retired `@deepseek-ai/dsh-agent-presets`. The Task bundle declares `standard`, `ptc`, `minimal`, and `cordis` with `dsh-agent-preset` rows copied from the Web declarations; subagent calls stay one-shot in the foreground with depth 1, and workflow rows stay disabled. A parity test admits only those differences. `dsh-task-agent-preset-registry` subclasses `dsh-agent-preset-registry` under the same `agentPresets` key, which `dsh-subagent` reads to compose a child from its parent's preset. Task code reaches the Task API through `taskAgentPresetRegistry(ctx)`.
 
-The Task preset default reads the volatile `selectedDefault` and `modeSelectionEnabled` fields. Deleting the selected preset removes `selectedDefault` from the provider's own entry through `configEditor`. Task Agent Loop takes `maxParallelToolCalls` as a volatile field from the upstream merge.
+The shared registry keeps revisions in memory and resolves a restarted Session's preset against the current declaration. A Task run must keep the composition it started with, so the Task registry records the declared child plugin list, the declaring row's resolution base, and a digest; Task Local stores that record in its operation receipts instead of copying preset directories. A recorded revision equal to the current declaration binds that declaration's live tree. Any other revision registers a private definition under a reserved `task-revision:` id through the shared registry's public `register` and `mount` operations; the Agents that recorded it share it, and it is withdrawn when the last one leaves while the shared registry keeps the retired tree for inherited children. Roster reads omit private definitions, and composed-preset reads report the declared id.
 
-The Loader now settles a subtree when a row's import or activation rejects. The Task preset mount awaits each enabled row and rejects failed rows, rows waiting for a missing service, and rows that publish root-realm services. Task mounts keep rejecting pending rows because a Task run has no later re-audit point.
+The default preset follows the shared registry's `default` and volatile `selectedDefault` fields on the `agent-preset-registry` entry. Task Agent Loop takes `maxParallelToolCalls` as a volatile field from the upstream merge.
 
-The Task application patch removes its own `code-runtime` row because Base now mounts `ptc-runtime`. It disables `workflow-ptc` and `mcp-resources` beside the other per-Agent rows, and it loads the `dsh-agent-preset-registry` Typert contribution for the shared `agentPresets` namespace. Task presets rename their disabled workflow row to `workflow-ptc`.
+The Task application patch removes its own `code-runtime` row because Base now mounts `ptc-runtime`. It disables `workflow-ptc` and `mcp-resources` beside the other per-Agent rows, and it loads the `dsh-agent-preset-registry` Typert contribution for the shared `agentPresets` namespace.
 
 Task stage prompts use the producer-owned `task` message source kind required by Session V4. The transcript projection reads V4 tool-role result messages.
 
 ## Alternatives considered
 
-**Port Task presets to the declarative registry.** Rejected for this merge because Task runs capture immutable preset directories by content digest, and the registry declares presets inside profile patches. Moving revision capture to declarations changes durable Task recovery and needs its own design.
+**Keep a Task-owned directory preset roster.** Rejected because it kept a copy of the retired package outside source parity, a second preset declaration format, and a Remote surface that diverged from the shared protocol.
+
+**Resolve a restarted run against the current declaration, as Web does.** Rejected because a profile edit between waits would change the tools and prompt of a running business execution.
+
+**Add revision hooks to the shared registry.** Rejected because Task Profile keeps shared provider sources unchanged, and the public `register` and `mount` operations express private revisions.
 
 **Rename the Task preset service.** Rejected because in-process subagents would stop inheriting the parent's preset. Delegation resolves the shared key through `ctx.get('agentPresets')`.
 
@@ -32,7 +36,7 @@ Task stage prompts use the producer-owned `task` message source kind required by
 
 ## Consequences
 
-- Preset revisions captured before this merge name `@deepseek-ai/dsh-workflow-worker-thread` and cannot be remounted. Runs that must continue across the upgrade need a finished run or a fresh revision.
-- The Remote `copy` and `deletePreset` methods of the Task preset provider are not reachable through the gateway, because the loaded registry protocol does not declare them.
-- The coverage gate keeps excluding the Task preset source until its moved suite reaches the per-file threshold.
+- A recorded revision names packages and a resolution base, not code; recovery requires those packages to remain installed where that base resolves them. Directory revisions recorded by earlier Task builds are refused as invalid receipts.
+- Every declared Task preset activates at startup, as Web presets do. A declaration change adds one private tree per distinct recorded revision still in use.
+- Task preset declarations must follow compatible Web declaration changes; the preset parity test makes unexpected drift fail locally.
 - Stored `agent-presets` and `agent-loop` settings sections are no longer read; operators restate those values as volatile fields in the Task profile patch.

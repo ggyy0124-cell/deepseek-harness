@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 export const inject = ['tasks']
 export function apply(ctx, config) {
   const prompts = readFileSync(config.fixture, 'utf8').trim().split('\n').map(line => JSON.parse(line))
-    .filter(event => event.type === 'user/message' && event.data.source.plugin === 'task-local')
+    .filter(event => event.type === 'user/message' && event.data.source.kind === 'task')
     .map(event => event.data.content.filter(block => block.type === 'text').map(block => block.text).join(''))
   ctx.tasks.register(ctx, {
     id: 'model-wait', title: 'Model wait', codeVersion: '1',

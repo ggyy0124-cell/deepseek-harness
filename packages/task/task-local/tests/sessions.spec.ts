@@ -1,6 +1,6 @@
 /** Real AgentLoop and JSONL persistence behind the task Session adapter. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mkdtemp, mkdir, writeFile, rm, symlink } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { DatabaseSync } from 'node:sqlite'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -20,9 +20,9 @@ import ToolRuntime from '@deepseek-ai/dsh-tools'
 import TaskSessionStore, { taskSessionStore } from '@deepseek-ai/dsh-task-session'
 import TaskAgentRegistry from '@deepseek-ai/dsh-task-agent'
 import TaskAgentLoop from '@deepseek-ai/dsh-task-agent-loop'
-import TaskAgentPresets, { taskAgentPresets } from '@deepseek-ai/dsh-task-agent-presets'
+import TaskAgentPresetRegistry, { taskAgentPresetRegistry } from '@deepseek-ai/dsh-task-agent-preset-registry'
+import { livePresetMounts, type PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
 import { createScope } from '@deepseek-ai/dsh-scope'
-import { livePresetMounts } from '../../task-agent-presets/src/mount.ts'
 import TaskJsonlPersistence from '@deepseek-ai/dsh-task-session-persistence-jsonl'
 import { TaskDatabase } from '../src/database.ts'
 import { TaskEngine } from '../src/engine.ts'
@@ -35,10 +35,8 @@ afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await c
 async function harness() {
   const directory = await mkdtemp(join(tmpdir(), 'dsh-task-session-'))
   cleanup.push(() => rm(directory, { recursive: true, force: true }))
-  const preset = join(directory, 'presets', 'test')
-  await mkdir(preset, { recursive: true })
-  await writeFile(join(preset, 'agent.cordis.yml'), '- name: ./fixture.mjs\n')
-  await writeFile(join(preset, 'fixture.mjs'), 'export function apply() {}\n')
+  await mkdir(join(directory, 'presets'), { recursive: true })
+  await writeFile(join(directory, 'presets', 'fixture.mjs'), 'export function apply() {}\n')
   const ctx = new Context()
   ctx.baseUrl = pathToFileURL(directory).href + '/'
   await ctx.plugin(Loader)
@@ -52,7 +50,17 @@ async function harness() {
   await ctx.plugin(TaskJsonlPersistence, { root: join(directory, 'sessions'), compression: 'none' })
   await ctx.plugin(TaskAgentLoop, { agents: [] })
   await ctx.plugin(AgentDefaultModel, { provider: 'mock', model: 'mock' })
-  await ctx.plugin(TaskAgentPresets, { default: 'test', roots: [{ path: join(directory, 'presets'), trust: 'user' }], includeShippedRoot: false, includeUserRoot: false })
+  await ctx.plugin(TaskAgentPresetRegistry, { default: 'test' })
+  const declare = (plugins: PresetDefinition['plugins']) => ctx.plugin({
+    inject: ['agentPresets'],
+    async* apply(declaring: Context) { yield await declaring.agentPresets.register({ id: 'test', plugins }) },
+  })
+  let declaring = await declare([{ name: './presets/fixture.mjs' }])
+  /** Replace the `test` declaration, as a profile edit reloading its declaring row does. */
+  const redeclare = async (plugins: PresetDefinition['plugins']): Promise<void> => {
+    await declaring.dispose()
+    declaring = await declare(plugins)
+  }
   ctx.provide('permissionPresets', { set() {}, current: () => 'default' } as unknown as Context['permissionPresets'])
   ctx.provide('workspaceRegistry', { create: async () => ({ attachSession: async () => {} }) } as unknown as Context['workspaceRegistry'])
   const adapter = new MockAdapter([textResponse('first answer'), textResponse('second answer')])
@@ -60,7 +68,7 @@ async function harness() {
   const db = new TaskDatabase(join(directory, 'tasks.sqlite'))
   const access = new TaskSessionAccess()
   const removePolicy = taskSessionStore(ctx).guardMutations(id => db.forSession(id) !== undefined, (id) => { access.assert(id) })
-  const sessions = new AgentTaskSessions(ctx, db, join(directory, 'revisions'), access)
+  const sessions = new AgentTaskSessions(ctx, db, access)
   const engine = new TaskEngine(db, sessions, { concurrency: 2,
     cancellationGraceMs: 30000, cleanupTimeoutMs: 120000, shutdownTimeoutMs: 120000,
     catchupLimit: 100, catchupHorizonMs: 2592000000, pendingLimit: 100,
@@ -73,7 +81,7 @@ async function harness() {
     runSpecial: async stage => ({ kind: 'succeed', result: await stage.model('analysis', 'Analyze this task.') }),
     priority: () => 0, resources: () => [], classifyError: (error, run) => ({ kind: 'block', checkpoint: run.checkpoint, reason: String(error) }), cleanup: async () => {},
   }
-  return { ctx, db, engine, sessions, adapter, definition, directory, removePolicy, access }
+  return { ctx, db, engine, sessions, adapter, definition, directory, removePolicy, access, redeclare }
 }
 
 describe('task Session integration', () => {
@@ -93,9 +101,7 @@ describe('task Session integration', () => {
     } finally { raw.close() }
   })
   it('shares pending preparations and retries workspace attachment without leaking an Agent', async () => {
-    const { ctx, engine, db, sessions, definition, directory, access } = await harness()
-    await mkdir(join(directory, 'presets/test/nested'))
-    await writeFile(join(directory, 'presets/test/nested/asset'), 'retained')
+    const { ctx, engine, db, sessions, definition, access, redeclare } = await harness()
     engine.register(definition)
     const run = engine.triggerManual(definition.id, brandString<TaskRequestId>('prepare-retry'), null)
     const create = vi.spyOn(ctx.workspaceRegistry, 'create').mockRejectedValueOnce(new Error('workspace unavailable'))
@@ -107,16 +113,19 @@ describe('task Session integration', () => {
     expect(ctx.agents.get(run.sessionId)).toBeDefined()
     expect(create).toHaveBeenCalledTimes(2)
     await sessions.close(run.id)
-    const restored = new AgentTaskSessions(ctx, db, join(directory, 'revisions'), access)
+    const receiptKey = `@preset:${run.definitionId}:${run.configRevision}:${run.codeVersion}`
+    const recorded = db.operation(run.id, receiptKey)!
+    // A restarted provider reuses the recorded revision even after the declaration changes.
+    await redeclare([{ name: './presets/fixture.mjs', config: { changed: true } }])
+    const restored = new AgentTaskSessions(ctx, db, access)
     await restored.ensure(run, signal)
+    expect(db.operation(run.id, receiptKey)).toEqual(recorded)
+    expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
     await restored.close(run.id)
-    const receipt = db.operation(run.id, `@preset:${run.definitionId}:${run.configRevision}:${run.codeVersion}`)!
-    const path = (receipt.value as { path: string }).path
-    await writeFile(join(path, '../nested/asset'), 'changed')
-    const tampered = new AgentTaskSessions(ctx, db, join(directory, 'revisions'), access)
-    await expect(tampered.ensure(run, signal)).rejects.toThrow('assets are missing or changed')
-    await symlink(join(directory, 'presets/test/nested'), join(path, '../redirect'), 'junction')
-    await expect(tampered.ensure(run, signal)).rejects.toThrow('only regular files and directories')
+    expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+    db.putOperation(run.id, receiptKey, 'confirmed', { ...recorded.value as object, plugins: '- name: ./elsewhere.mjs\n' })
+    const tampered = new AgentTaskSessions(ctx, db, access)
+    await expect(tampered.ensure(run, signal)).rejects.toThrow('does not match its digest')
     create.mockRestore()
   })
 
@@ -175,28 +184,32 @@ describe('task Session integration', () => {
   })
 
   it('releases a revision after its last Agent, including inherited child compositions', async () => {
-    const { ctx, directory } = await harness()
+    const { ctx, redeclare } = await harness()
+    const registry = taskAgentPresetRegistry(ctx)
+    const revision = await registry.captureRevision('test')
+    await redeclare([{ name: './presets/fixture.mjs', config: {} }])
     const parent = createScope(ctx, {})
     const child = createScope(ctx, {})
     try {
-      await taskAgentPresets(ctx).mountRevision(parent.ctx, 'test', join(directory, 'presets/test/agent.cordis.yml'))
-      taskAgentPresets(ctx).composeFrom(child.ctx, parent.ctx)
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+      expect(await registry.mountRevision(parent.ctx, revision)).toEqual({ id: 'test' })
+      expect(registry.composeFrom(child.ctx, parent.ctx)).toBe('test')
+      expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
       await parent.dispose()
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+      expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
       await child.dispose()
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(0)
+      expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
     } finally { await child.dispose(); await parent.dispose() }
   })
 
   it('releases replaced compositions only after their joined Agents leave', async () => {
-    const { ctx, directory } = await harness()
+    const { ctx, redeclare } = await harness()
+    const registry = taskAgentPresetRegistry(ctx)
     const first = createScope(ctx, {})
     const second = createScope(ctx, {})
     try {
-      await taskAgentPresets(ctx).mount(first.ctx, 'test')
-      await writeFile(join(directory, 'presets/test/agent.cordis.yml'), '- name: ./fixture.mjs\n  config: {}\n')
-      await taskAgentPresets(ctx).mount(second.ctx, 'test')
+      await registry.mountRevision(first.ctx, await registry.captureRevision('test'))
+      await redeclare([{ name: './presets/fixture.mjs', config: {} }])
+      await registry.mountRevision(second.ctx, await registry.captureRevision('test'))
       expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
       await first.dispose()
       expect(livePresetMounts(ctx.fiber)).toHaveLength(1)

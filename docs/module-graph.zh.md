@@ -404,7 +404,7 @@ flowchart TD
     pkg_task["task"]
     pkg_task_agent["task-agent"]
     pkg_task_agent_loop["task-agent-loop"]
-    pkg_task_agent_presets["task-agent-presets"]
+    pkg_task_agent_preset_registry["task-agent-preset-registry"]
     pkg_task_api_client["task-api-client"]
     pkg_task_api_gateway["task-api-gateway"]
     pkg_task_api_protocol["task-api-protocol"]
@@ -1104,19 +1104,7 @@ flowchart TD
   pkg_subprocess_ssh --> pkg_ssh
   pkg_subprocess_ssh --> pkg_subprocess
   pkg_subprocess_ssh --> pkg_subprocess_local
-  pkg_task_agent_presets --> pkg_agent
-  pkg_task_agent_presets --> pkg_agent_preset_registry
-  pkg_task_agent_presets --> pkg_atomic_write
-  pkg_task_agent_presets --> pkg_config_editor
-  pkg_task_agent_presets --> pkg_home_paths
-  pkg_task_agent_presets --> pkg_invariants
-  pkg_task_agent_presets --> pkg_scope
-  pkg_task_agent_presets --> pkg_session
-  pkg_task_agent_presets --> pkg_session_projection
-  pkg_task_agent_presets --> pkg_settings
-  pkg_task_agent_presets --> pkg_system_prompt
-  pkg_task_agent_presets --> pkg_tools
-  pkg_task_agent_presets --> pkg_typert_protocol
+  pkg_task_api_gateway --> pkg_agent_preset_registry
   pkg_agent_loop_testkit --> pkg_agent
   pkg_agent_loop_testkit --> pkg_agent_loop
   pkg_agent_loop_testkit --> pkg_llm
@@ -1205,7 +1193,6 @@ flowchart TD
   pkg_experimental_browser_use_runtime --> pkg_scope
   pkg_experimental_browser_use_runtime --> pkg_system_prompt
   pkg_experimental_browser_use_runtime --> pkg_tools
-  pkg_task_api_gateway --> pkg_task_agent_presets
   pkg_webhook_github --> pkg_credentials
   pkg_webhook_github --> pkg_host_webserver
   pkg_webhook_github --> pkg_session
@@ -1525,6 +1512,7 @@ flowchart TD
 | [`storage`](../packages/storage/storage) | `storage` | — |
 | [`win32-process`](../packages/subprocess/win32-process) | `subprocess` | — |
 | [`task-agent`](../packages/task/task-agent) | `task` | — |
+| [`task-agent-preset-registry`](../packages/task/task-agent-preset-registry) | `task` | — |
 | [`task-api-client`](../packages/task/task-api-client) | `task` | — |
 | [`task-api-protocol`](../packages/task/task-api-protocol) | `task` | — |
 | [`task-local`](../packages/task/task-local) | `task` | — |
@@ -1706,7 +1694,7 @@ flowchart TD
 | [`fs-ssh`](../packages/ssh/fs-ssh) | `ssh` | [`fs`](../packages/fs/fs), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`ssh`](../packages/ssh/ssh) |
 | [`sandbox-ssh`](../packages/ssh/sandbox-ssh) | `ssh` | [`sandbox`](../packages/sandbox/sandbox), [`ssh`](../packages/ssh/ssh) |
 | [`subprocess-ssh`](../packages/ssh/subprocess-ssh) | `ssh` | [`ssh`](../packages/ssh/ssh), [`subprocess`](../packages/subprocess/subprocess), [`subprocess-local`](../packages/subprocess/subprocess-local) |
-| [`task-agent-presets`](../packages/task/task-agent-presets) | `task` | [`agent`](../packages/core/agent), [`agent-preset-registry`](../packages/preset/agent-preset-registry), [`atomic-write`](../packages/util/atomic-write), [`config-editor`](../packages/boot/config-editor), [`home-paths`](../packages/util/home-paths), [`invariants`](../packages/runtime-diagnostics/invariants), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`typert-protocol`](../packages/typert/protocol) |
+| [`task-api-gateway`](../packages/task/task-api-gateway) | `task` | [`agent-preset-registry`](../packages/preset/agent-preset-registry) |
 | [`agent-loop-testkit`](../packages/test-support/agent-loop-testkit) | `test-support` | [`agent`](../packages/core/agent), [`agent-loop`](../packages/core/agent-loop), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools) |
 | [`webhook`](../packages/webhook/webhook) | `webhook` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`agent-preset-registry`](../packages/preset/agent-preset-registry), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`permission-presets`](../packages/interaction/permission-presets), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`workspace`](../packages/workspace/workspace) |
 | [`subagent`](../packages/subagent/subagent) | `subagent` | [`agent`](../packages/core/agent), [`agent-preset-registry`](../packages/preset/agent-preset-registry), [`attachment`](../packages/attachment/attachment), [`invariants`](../packages/runtime-diagnostics/invariants), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`permission-presets`](../packages/interaction/permission-presets), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`session-query`](../packages/session-query/session-query), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`typert-protocol`](../packages/typert/protocol), [`user-approval`](../packages/interaction/user-approval), [`util-time`](../packages/util/time), [`workspace`](../packages/workspace/workspace) |
@@ -1718,7 +1706,6 @@ flowchart TD
 | [`headless`](../packages/bundle/headless) | `bundle` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`fs`](../packages/fs/fs), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-query`](../packages/session-query/session-query) |
 | [`compaction-tool-result-pruner`](../packages/compaction/compaction-tool-result-pruner) | `compaction` | [`compaction`](../packages/compaction/compaction), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`token-meter`](../packages/llm/token-meter) |
 | [`experimental-browser-use-runtime`](../packages/experimental/browser-use-runtime) | `experimental` | [`agent`](../packages/core/agent), [`browser-use`](../packages/browser-use/browser-use), [`mcp-client`](../packages/mcp/mcp-client), [`scope`](../packages/core/scope), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools) |
-| [`task-api-gateway`](../packages/task/task-api-gateway) | `task` | [`task-agent-presets`](../packages/task/task-agent-presets) |
 | [`webhook-github`](../packages/webhook/webhook-github) | `webhook` | [`credentials`](../packages/credentials/credentials), [`host-webserver`](../packages/host/webserver), [`session`](../packages/core/session), [`webhook`](../packages/webhook/webhook) |
 | [`subagent-acp`](../packages/subagent/subagent-acp) | `subagent` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout) |
 | [`subagent-claude-code`](../packages/subagent/subagent-claude-code) | `subagent` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout) |

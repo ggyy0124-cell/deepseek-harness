@@ -41,11 +41,11 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-task-agent-presets": "workspace:*"
+    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-task-agent-presets": "workspace:*"
+    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

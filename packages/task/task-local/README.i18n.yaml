@@ -1,6 +1,49 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/task/task-local/README.md
-README.md: 76eb1f40850ded4c05da09c67001d4f612c8bb03
-README.zh.md: d58b0a8d9bf76891c146f76c938a8f1fec8c009f
+/:
+  en: 4f4c74b69a0a17fe
+  zh: 766f920d39b2aac5
+/deepseek-ai-dsh-task-local:
+  en: f6b54a4fcc02c9ea
+  zh: a996671f4fadf01f
+/deepseek-ai-dsh-task-local/summary:
+  en: 233fcceb113b660c
+  zh: 01d8764b1b0aad8c
+/deepseek-ai-dsh-task-local/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9f0336825ccdaacd
+/deepseek-ai-dsh-task-local/use-this-package:
+  en: c2b90a47330da24d
+  zh: 52743db72c98e58a
+/deepseek-ai-dsh-task-local/understand-the-implementation:
+  en: 3e414f32a9cdc0ab
+  zh: 508eaeaed84b2cde
+/deepseek-ai-dsh-task-local/no-runtime-invariant-companion-is-published-the-task-service-companion-compares-sqlite-execution-records-with-session-persistence-while-the-provider-enforces-transaction-and-lock-rules-before-admission:
+  en: c0c53e9278bea5b2
+  zh: 7ee7bc33d40ee71e
+/deepseek-ai-dsh-task-local/further-exploration:
+  en: 58dce19d087bd87d
+  zh: 96ff10670caee62a
+/deepseek-ai-dsh-task-local/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-task-local/model-experience/business-model-stage:
+  en: aaa97797ce47b11b
+  zh: 70557c18eea05734
+/deepseek-ai-dsh-task-local/model-experience/business-model-stage/what-the-model-sees:
+  en: f08f8caf3c7f8894
+  zh: 02bbb1dba4c43c5b
+/deepseek-ai-dsh-task-local/model-experience/business-model-stage/token-effect:
+  en: 8380c6e534ac3fa1
+  zh: 6ac273e8ad15cb88
+/deepseek-ai-dsh-task-local/model-experience/business-model-stage/kv-cache-effect:
+  en: b8a807c2d056401a
+  zh: 8b851f4c92b5f7d3
+/deepseek-ai-dsh-task-local/known-limitations-and-deferred-work:
+  en: 7143650b4b3873b0
+  zh: d81fe82ef0be33af
+/deepseek-ai-dsh-task-local/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: ce96645b3e75874e

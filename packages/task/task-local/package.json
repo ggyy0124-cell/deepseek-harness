@@ -28,7 +28,7 @@
     "@deepseek-ai/dsh-task-session": "workspace:*",
     "@deepseek-ai/dsh-task-agent": "workspace:*",
     "@deepseek-ai/dsh-task-agent-loop": "workspace:*",
-    "@deepseek-ai/dsh-task-agent-presets": "workspace:*",
+    "@deepseek-ai/dsh-task-agent-preset-registry": "workspace:*",
     "@deepseek-ai/dsh-agent": "workspace:*",
     "@deepseek-ai/dsh-session": "workspace:*",
     "@deepseek-ai/dsh-session-persistence": "workspace:*",

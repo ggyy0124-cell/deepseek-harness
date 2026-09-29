@@ -25,7 +25,7 @@ Run durable tasks on one continuously running local host. SQLite retains schedul
 <a id="use-this-package"></a>
 ## Use this package
 
-The shipped `task` profile composes this provider with the Task API gateway. Direct mounts require `path` for SQLite, `revisionRoot` for immutable presets, and `resourceRoot` for Task-owned files. A second host using the same database is rejected.
+The shipped `task` profile composes this provider with the Task API gateway. Direct mounts require `path` for SQLite and `resourceRoot` for Task-owned files; recorded preset revisions live in that database. A second host using the same database is rejected.
 
 Waiting stages gain one priority point per `priorityAgingIntervalMs` (default 60,000 ms), capped by `priorityAgingCap` (default 100). Waiting age starts at the last durable Run update; equal effective priorities retain creation-time order. Resource-blocked stages do not consume concurrency slots.
 
@@ -112,7 +112,7 @@ A run retains its Session and preset across stages, preserving reusable conversa
 
 - One writable host owns a local SQLite database. This provider does not coordinate distributed workers.
 - Plugins must stop subprocesses and reconcile uncertain external writes. A plugin that never settles its cancellation can delay shutdown or removal.
-- Preset files are retained locally; external services and installed plugin code must remain available for recovery.
+- Recorded preset revisions name plugin packages rather than copying their code; external services and installed plugin code must remain available for recovery.
 
 <a id="dev-note"></a>
 ### Dev Note

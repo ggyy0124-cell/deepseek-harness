@@ -21,7 +21,7 @@ describe('shipped Task Profile', () => {
     let diagnostics = ''
     const start = async (resume: boolean): Promise<void> => {
       await writeFile(patch, JSON.stringify([
-        { id: 'task-local', config: { path: join(directory, 'tasks.sqlite'), revisionRoot: join(directory, 'revisions'), resourceRoot: join(directory, 'resources'), concurrency: 2, tickMs: 20, catchupLimit: 100 } },
+        { id: 'task-local', config: { path: join(directory, 'tasks.sqlite'), resourceRoot: join(directory, 'resources'), concurrency: 2, tickMs: 20, catchupLimit: 100 } },
         { insert: [{ id: 'task-smoke-secondary', name: fixture, config: { id: 'profile-secondary', title: 'Secondary', workspace: directory, removeAfterMs: 50, removedOutput } }] },
         { insert: [{ id: 'task-smoke', name: fixture, config: { workspace: directory, output, resume } }] },
       ]))

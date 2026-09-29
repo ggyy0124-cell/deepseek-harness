@@ -42,8 +42,6 @@
       "@deepseek-ai/dsh-task-api-gateway/auth-store": ["./packages/task/task-api-gateway/src/auth.ts"],
       "@deepseek-ai/dsh-task-local/maintenance": ["./packages/task/task-local/src/maintenance.ts"],
       "@deepseek-ai/dsh-task/types": ["./packages/task/task/src/types.ts"],
-      "@deepseek-ai/dsh-task-agent-presets/types": ["./packages/task/task-agent-presets/src/types.ts"],
-      "@deepseek-ai/dsh-task-agent-presets/display": ["./packages/task/task-agent-presets/src/display.ts"],
 
       "@deepseek-ai/dsh-client-product-analytics": ["./packages/client/product-analytics/src/index.ts"],
       "@deepseek-ai/dsh-client-product-analytics/types": ["./packages/client/product-analytics/src/events.ts"],
@@ -520,7 +518,7 @@
       "@deepseek-ai/dsh-system-prompt/invariant": ["./packages/core/system-prompt/src/invariant.ts"],
       "@deepseek-ai/dsh-task-agent": ["./packages/task/task-agent/src"],
       "@deepseek-ai/dsh-task-agent-loop": ["./packages/task/task-agent-loop/src"],
-      "@deepseek-ai/dsh-task-agent-presets": ["./packages/task/task-agent-presets/src"],
+      "@deepseek-ai/dsh-task-agent-preset-registry": ["./packages/task/task-agent-preset-registry/src"],
       "@deepseek-ai/dsh-task-session": ["./packages/task/task-session/src"],
       "@deepseek-ai/dsh-task-session-persistence-jsonl": ["./packages/task/task-session-persistence-jsonl/src"],
       "@deepseek-ai/dsh-terminal": ["./packages/terminal/terminal/src"],

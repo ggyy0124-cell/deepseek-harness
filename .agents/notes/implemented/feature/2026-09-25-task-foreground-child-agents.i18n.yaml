@@ -1,6 +1,19 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for 2026-09-25-task-foreground-child-agents.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-25-task-foreground-child-agents.md
-2026-09-25-task-foreground-child-agents.md: 6371d9c88cc7aec9c9cd6f0acff8fc2c8dc663b9
-2026-09-25-task-foreground-child-agents.zh.md: 6b203e90d7ab86fb8810fb82a82728ec7e3df220
+/agent-note-foreground-child-agents-inside-task-model-turns:
+  en: 4edf732327f306ae
+  zh: 5cf97425004cd94d
+/agent-note-foreground-child-agents-inside-task-model-turns/problem:
+  en: bf9a33ea01ff6795
+  zh: 8628822f030d4014
+/agent-note-foreground-child-agents-inside-task-model-turns/decision:
+  en: a51982e2fa345797
+  zh: ea8969eddab4bdf7
+/agent-note-foreground-child-agents-inside-task-model-turns/alternatives-considered:
+  en: d4e9a8ad89972df3
+  zh: 2223901a8744c62e
+/agent-note-foreground-child-agents-inside-task-model-turns/consequences:
+  en: 537b5bea945b27e1
+  zh: c6823f45595bc124

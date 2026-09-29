@@ -1,6 +1,25 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/task/README.md
-README.md: 7e214c172ed463f56c7eb6601a3e892777dc61f2
-README.zh.md: f193868c4a5cacf54e283d7f3f501011008f72d1
+/:
+  en: 9f27f4e65e424156
+  zh: d888c35b0955cd81
+/task-durable-business-tasks:
+  en: af75f908f0cfcb58
+  zh: 8ecc909092ba8e50
+/task-durable-business-tasks/summary:
+  en: 20e87b1c54dfdebb
+  zh: da478033ec801734
+/task-durable-business-tasks/table-of-contents:
+  en: 1eb35b015a6c423f
+  zh: a8a3dceee2c9e943
+/task-durable-business-tasks/packages:
+  en: f02e917d434cca88
+  zh: 8cb383bf4b07431b
+/task-durable-business-tasks/related-documentation:
+  en: b8ab123dab801bd4
+  zh: 6c1ab60ae2cc2b19
+/task-durable-business-tasks/dev-note:
+  en: b75c8458928b72b9
+  zh: 2eb6c49ce58a850d

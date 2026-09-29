@@ -27,6 +27,7 @@ export const TASK_PROFILE_TEST_INCLUDES = [
 /** Per-file coverage scope for Task Profile owned runtime source. */
 export const TASK_PROFILE_COVERAGE_INCLUDES = [
   'packages/task/task/src/**',
+  'packages/task/task-agent-preset-registry/src/**',
   'packages/task/task-session/src/**',
   'packages/task/task-session-persistence-jsonl/src/**',
   'packages/task/task-api-client/src/**',

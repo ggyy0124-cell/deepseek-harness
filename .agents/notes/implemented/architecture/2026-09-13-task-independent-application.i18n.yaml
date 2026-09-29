@@ -1,6 +1,22 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for 2026-09-13-task-independent-application.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-13-task-independent-application.md
-2026-09-13-task-independent-application.md: 47afc4966f684642e28c825e222d8c75f537cb4f
-2026-09-13-task-independent-application.zh.md: d18f390c063181761f551f4b0efae7fdf3505145
+/agent-note-independent-task-application:
+  en: 5063c38157d77bdf
+  zh: caaf3e0c7da6d78a
+/agent-note-independent-task-application/problem:
+  en: 863e38c574c37ae5
+  zh: 0170946230cb30b3
+/agent-note-independent-task-application/decision:
+  en: 9d145d78b959cdec
+  zh: f0780df818e86493
+/agent-note-independent-task-application/validation:
+  en: ffb55525cb90b4aa
+  zh: bce0f7b9aa7e8a3d
+/agent-note-independent-task-application/alternatives-considered:
+  en: f876518e75952407
+  zh: f140a808c20b9d4d
+/agent-note-independent-task-application/consequences:
+  en: 03f23500310e49c2
+  zh: d6d97d7c0eae6380
