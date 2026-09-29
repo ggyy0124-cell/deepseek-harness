@@ -28,6 +28,7 @@ import { TaskDatabase } from '../src/database.ts'
 import { TaskEngine } from '../src/engine.ts'
 import { AgentTaskSessions, TaskChildRecoveryError, modelAnswer } from '../src/sessions.ts'
 import { TaskSessionAccess } from '../src/access.ts'
+import { stub } from './stub.ts'
 
 const cleanup: (() => Promise<void>)[] = []
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close() })
@@ -61,8 +62,8 @@ async function harness() {
     await declaring.dispose()
     declaring = await declare(plugins)
   }
-  ctx.provide('permissionPresets', { set() {}, current: () => 'default' } as unknown as Context['permissionPresets'])
-  ctx.provide('workspaceRegistry', { create: async () => ({ attachSession: async () => {} }) } as unknown as Context['workspaceRegistry'])
+  ctx.provide('permissionPresets', stub<Context['permissionPresets']>({ set() {}, current: () => 'default' }))
+  ctx.provide('workspaceRegistry', stub<Context['workspaceRegistry']>({ create: async () => ({ attachSession: async () => {} }) }))
   const adapter = new MockAdapter([textResponse('first answer'), textResponse('second answer')])
   ctx.llm.registerAdapter(['mock'], adapter)
   const db = new TaskDatabase(join(directory, 'tasks.sqlite'))

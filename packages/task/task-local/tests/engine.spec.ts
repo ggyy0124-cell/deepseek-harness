@@ -16,6 +16,7 @@ import { TaskEngine, type TaskSessions, type TaskEngineOptions } from '../src/en
 import { nextCalendar } from '../src/calendar.ts'
 import { RuntimeInteractions } from '../src/interactions.ts'
 import { TaskPluginCode } from '../src/plugin-code.ts'
+import { stub } from './stub.ts'
 
 vi.mock('node:fs', async (importOriginal) => {
   const original = await importOriginal<typeof import('node:fs')>()
@@ -1212,7 +1213,7 @@ describe('Task plugin code recovery', () => {
     const code = new TaskPluginCode(ctx, db, engine)
     const resolve = vi.fn(() => ({ url: module, format: 'module' }))
     // Node's internal loader is the external dependency; Cordis owns the real entry and fiber.
-    ctx.loader.internal = { version, resolveSync: resolve, import: async () => ({ apply() {} }) } as unknown as ModuleLoader
+    ctx.loader.internal = stub<ModuleLoader>({ version, resolveSync: resolve, import: async () => ({ apply() {} }) })
     const config = version === 'v1' ? null : { enabled: true }
     const id = await ctx.loader.root.create({ name: './business.mjs', config })
     const owner = ctx.loader.resolve(id).fiber!.ctx
@@ -1253,7 +1254,7 @@ describe('Task plugin code recovery', () => {
       engine.register(definition({ cleanup }))
       owner.effect(() => disposed)
     } }))
-    ctx.loader.internal = { version: 'v2', import: imported } as unknown as ModuleLoader
+    ctx.loader.internal = stub<ModuleLoader>({ version: 'v2', import: imported })
     if (mode === 'changed') fs.writeFileSync(new URL(module), 'changed')
     if (mode === 'missing-loader') ctx.loader.internal = undefined
     if (mode === 'invalid-source') db.putPluginSource(definitionId, {})

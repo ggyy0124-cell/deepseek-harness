@@ -13,7 +13,7 @@ import { taskProfileLaunch } from '../../apps/cli/tests/profiles/task/launch.ts'
 
 const repository = fileURLToPath(new URL('../../', import.meta.url))
 const scenario = fileURLToPath(new URL('./model-wait/', import.meta.url))
-const records = (text: string): unknown[] => text.trim().split('\n').map(line => JSON.parse(line) as unknown)
+const records = (text: string): unknown[] => text.trim().split('\n').map(line => JSON.parse(line))
 
 it.skipIf(process.env['DSH_SNAPSHOT'] === 'record')('replays two model stages with a business confirmation through dsh --profile task', async () => {
   const root = await mkdtemp(join(tmpdir(), 'task-session-snapshot-'))

@@ -13,9 +13,9 @@
 引入由 `DSH_CI_SURFACE=task-profile` 控制的收窄 CI 门禁表面，在目标为 Fork 仓库（`ggyy0124-cell/deepseek-harness`）的 pull request 中自动激活。
 
 当 `DSH_CI_SURFACE=task-profile` 激活时：
-1. `node-24`（静态检查）：执行 `pnpm run check:ci:static`，涵盖任务代码隔离、约束规范、包依赖、Cordis 配置、包不变性、运行时闭包、加权审批策略验证、Typert 契约、类型检查、Oxlint 规范，以及针对 Task Profile 目录的专用克隆代码检测 `duplication:task-profile`。
+1. `node-24`（静态检查）：执行 `pnpm run check:ci:static`，涵盖任务代码隔离、上游全部共享静态门禁（`ciSharedStaticGates()`，包括 unknown 断言、许可证、包元数据与入口点检查）、快速文档标准门禁（`docQuickLeafGates()`）、Typert 契约、类型检查、Oxlint 规范、模块图，以及针对 Task Profile 目录的专用克隆代码检测 `duplication:task-profile`。上游新增共享门禁或快速文档门禁而 Task 表面缺少时，测试会失败。
 2. `node-24-coverage`（单测与覆盖率）：执行直接限定于 `packages/task/*/src` 及任务组合包的 `pnpm run check:ci:coverage`，在数秒内达成并强制要求 100% 单文件分支、语句和函数覆盖率。
-3. `node-24-consumers`（构建与快照回放）：在 `DSH_EXAMPLE_MODE=lib` 条件下回放 Task Profile 的录制会话快照（`snapshots/task/task.snapshot.ts`），执行 Task Profile 验收测试集（`apps/cli/tests/profiles/task`），并验证构建产物与包不变性。
+3. `node-24-consumers`（构建与快照回放）：在 `DSH_EXAMPLE_MODE=lib` 条件下回放 Task Profile 的录制会话快照（`snapshots/task/task.snapshot.ts`），执行 Task Profile 验收测试集（`apps/cli/tests/profiles/task`），并验证构建产物、publint、NodeNext 声明与包不变性。
 4. 仅限上游的整个 monorepo 任务（`node-24-bench`、`node-compat`、`python-sdk`、`python-runtime` 及原生 Windows 通道）在 `task-profile` PR 下跳过。
 5. 在 Fork 仓库中执行时，运行器标签平滑回退到标准 GitHub 托管的 `ubuntu-24.04`，避免因企业独有标签导致无限期排队。
 6. PR 分支保护必需的汇总判决任务（`all-checks-passed`）评估活跃 Task Profile 任务的执行成功状态，而不会因跳过无关上游任务而失败。

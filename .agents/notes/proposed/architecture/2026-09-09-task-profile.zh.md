@@ -75,7 +75,7 @@ DSH 负责通用服务、调度器、持久化、扩展 API 与 profile。独立
 <a id="architecture"></a>
 ## 架构与现有组件
 
-Task 服务是任务执行的唯一准入方。定时器、Web 操作和模型工具调用该服务，而不是直接创建 agent。业务归属属于注册插件，派发关系则记录执行之间的来源。
+Task 服务是任务执行的唯一准入方。定时器、Web 操作和模型工具调用该服务，而不是直接创建 agent。业务归属属于注册插件，派发关系则记录每个普通执行由哪个特殊执行及哪次请求创建。
 
 ```mermaid
 flowchart TB
@@ -91,7 +91,7 @@ flowchart TB
   Runtime --> Resources[Concurrency and resource ownership]
   Sessions --> Special[Special execution Session]
   Sessions --> Ordinary[Ordinary execution Session]
-  Special -. dispatch provenance .-> Ordinary
+  Special -. dispatch association .-> Ordinary
 ```
 
 ### 拟议包职责
@@ -266,7 +266,7 @@ SQLite 与 JSONL 不共享事务。恢复按不可变标识显式核对准备、
 <a id="execution"></a>
 ## 派发、更新与恢复
 
-插件提供业务含义，提供方串行化变更并保留其标识。已完成的来源 Session 保留来源记录，但不是普通任务的活跃资源持有者。
+插件提供业务含义，提供方串行化变更并保留其标识。已完成的来源 Session 仍记录派发时的对话，但不是普通任务的活跃资源持有者。
 
 ### 发现与关联
 

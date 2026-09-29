@@ -30,7 +30,7 @@ describe('Task attachment inventory', () => {
 
   it('rejects an upload whose request omits multipart content type', async () => {
     const { attachments, run } = await fixture()
-    const request = Object.assign(Readable.from([Buffer.from('broken')]), { headers: {} }) as unknown as IncomingMessage
+    const request = Object.assign(Readable.from([Buffer.from('broken')]), { headers: {} }) as IncomingMessage
     await expect(attachments.upload(request, run, brandString<TaskPrincipalId>('principal'), 'request', () => {}))
       .rejects.toMatchObject({ status: 400, code: 'invalid_multipart' })
   })

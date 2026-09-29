@@ -115,7 +115,7 @@ export async function readTaskTranscript(
   if (query.cursor !== undefined) {
     let decoded: unknown
     try {
-      decoded = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8')) as unknown
+      decoded = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8'))
     } catch {
       throw new HttpProblem(400, 'invalid_cursor', 'Invalid transcript cursor')
     }

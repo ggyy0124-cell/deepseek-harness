@@ -213,7 +213,8 @@ const TOOL_PACKAGES: ToolPackage[] = [
     writes: ['tool/call', 'tool/result', 'task dispatch receipts and source associations'],
     async mount(ctx) {
       // Schema harvest observes only task kind; it never executes business operations.
-      ctx.provide('tasks', { forSession: () => ({ kind: 'manual' }) } as unknown as TaskService)
+      const tasks: unknown = { forSession: () => ({ kind: 'manual' }) }
+      ctx.provide('tasks', tasks as TaskService)
       await ctx.plugin(ToolTaskDispatch)
       const agent = { id: SessionId('tool-catalog-task') } as Agent
       await mountCatalogChildScope(ctx, (childCtx) => {

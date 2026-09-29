@@ -8,6 +8,7 @@ import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { installTaskAnswerers } from '../src/answerers.ts'
 import type { RuntimeInteractions } from '../src/interactions.ts'
 import { validateForm } from '../src/forms.ts'
+import { stub } from './stub.ts'
 
 const contexts: Context[] = []
 afterEach(async () => { for (const ctx of contexts.splice(0).reverse()) await ctx.fiber.dispose() })
@@ -19,7 +20,7 @@ function fixture(answer: JsonValue) {
   const ordinary = { id: SessionId('ordinary') } as Agent
   const lookup: Pick<TaskService, 'forSession'> = { forSession: id => id === agent.id ? { id: 'run' } as TaskRun : undefined }
   const ask = vi.fn<RuntimeInteractions['ask']>(async () => answer)
-  installTaskAnswerers(ctx, lookup as TaskService, { ask } as unknown as RuntimeInteractions)
+  installTaskAnswerers(ctx, lookup as TaskService, stub<RuntimeInteractions>({ ask }))
   return { ctx, agent, ordinary, ask }
 }
 

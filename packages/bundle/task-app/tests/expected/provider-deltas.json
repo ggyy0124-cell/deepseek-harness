@@ -16,6 +16,13 @@
   {
     "original": "packages/core/agent-loop/src",
     "copy": "packages/task/task-agent-loop/src",
+    "path": "inbox.ts",
+    "originalSha256": "70c07ea75ebcf18df353bbccf7c2aa3ecf6cb0d687b96e3520b675680c29f662",
+    "copySha256": "6c638227ee27bd94ac13d157fd189f613dc86d5ea477b82b8d788653afba75c4"
+  },
+  {
+    "original": "packages/core/agent-loop/src",
+    "copy": "packages/task/task-agent-loop/src",
     "path": "index.ts",
     "originalSha256": "853e76aef2eecafe5526a5267c3d386780b5c59e3c79c2448532fada7285a605",
     "copySha256": "448b0f8a45072f3219bdef80f74907c065915d8f47c597efe43adb0ebc14d0ff"

@@ -4,6 +4,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type { TaskDefinitionId, TaskPrincipalId, TaskRequestId, TaskRun, TaskRunId, TaskService, TaskWaitId } from '@deepseek-ai/dsh-task'
 import { executeOperation } from '../src/operations.ts'
+import { stub } from '../../task-local/tests/stub.ts'
 
 const runId = brandString<TaskRunId>('interaction-run')
 const run: TaskRun = {
@@ -26,7 +27,7 @@ describe('Task REST operations', () => {
         title: 'Question', description: 'Answer', schema: {}, createdAt: 2, expiresAt: 3,
         state: 'waiting' as const, answer: null },
     ])
-    const tasks = { getRun, interactions } as unknown as TaskService
+    const tasks = stub<TaskService>({ getRun, interactions })
     const value = executeOperation(
       tasks, 'listInteractions', { runId }, {}, undefined,
       brandString<TaskPrincipalId>('principal'), brandString<TaskRequestId>('request'), 20,

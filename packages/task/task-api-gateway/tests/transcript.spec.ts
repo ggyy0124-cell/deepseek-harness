@@ -13,6 +13,7 @@ import { EventEmitter } from 'node:events'
 import type { ServerResponse } from 'node:http'
 import { AttachmentId, type AttachmentStore, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import { HttpProblem } from '../src/http.ts'
+import { stub } from '../../task-local/tests/stub.ts'
 
 const signal = new AbortController().signal
 const sessionId = brandString<SessionId>('task-session')
@@ -20,16 +21,17 @@ const sessionId = brandString<SessionId>('task-session')
 const run = { id: 'task-run', sessionId } as TaskRun
 function fixture() {
   // Raw durable input deliberately includes fields excluded from the public projection.
-  const events = [
+  const raw: unknown = [
     { seq: 0, time: 0, type: 'turn/start', data: { turn: 1 } },
     { seq: 1, time: 1, type: 'user/message', surfaceOp: 'append', data: { content: [{ type: 'text', text: 'hello' }], source: { kind: 'user' } } },
     { seq: 2, time: 2, type: 'assistant/message', surfaceOp: 'append', data: { message: { content: [{ type: 'reasoning', text: 'analysis' }, { type: 'tool-call', id: 'call', name: 'inspect', arguments: '{}' }], source: { replayState: 'private-provider' } }, stream: ['private-stream'] } },
     { seq: 3, time: 3, type: 'tool/result', surfaceOp: 'append', data: { message: { role: 'tool', source: { kind: 'tool', callId: 'call' }, toolCallId: 'call', isError: true, content: [{ type: 'text', text: 'failed' }, { type: 'file', attachment: { attachmentId: 'opaque', name: 'note.txt', bytes: 4, path: 'private-path' } }] }, meta: 'private-metadata' } },
-  ] as unknown as SessionEvent[]
+  ]
+  const events = raw as SessionEvent[]
   const close = vi.fn(async () => {})
   const read = vi.fn(async (offset: number = 0, length: number = events.length) => ({ events: events.slice(offset, offset + length), eventState: 'owned' as const }))
   // A read-only handle double exposes only operations the reader is permitted to use.
-  const handle = { read, [Symbol.asyncDispose]: close } as unknown as SessionHandle
+  const handle = stub<SessionHandle>({ read, [Symbol.asyncDispose]: close })
   const open = vi.fn(async () => handle)
   const tasks = { getRun: vi.fn(() => run) }
   const page = async (query: Record<string, string> = {}) =>
@@ -87,7 +89,7 @@ describe('Task transcript windows', () => {
   it('aborts before writing to an already destroyed attachment response', async () => {
     const f = fixture()
     const writeHead = vi.fn()
-    const response = Object.assign(new EventEmitter(), { destroyed: true, writeHead }) as unknown as ServerResponse
+    const response = stub<ServerResponse>(Object.assign(new EventEmitter(), { destroyed: true, writeHead }))
     const store: Pick<AttachmentStore, 'readFileStream' | 'readImage'> = {
       readFileStream: vi.fn(async function* () { yield new TextEncoder().encode('file') }),
       readImage: vi.fn(),
@@ -106,7 +108,7 @@ describe('Task transcript windows', () => {
         options.signal.addEventListener('abort', () => { reject(new DOMException('Client disconnected', 'AbortError')) }, { once: true })
       })
     })
-    const response = Object.assign(new EventEmitter(), { destroyed: false, writableFinished: false }) as unknown as ServerResponse
+    const response = Object.assign(new EventEmitter(), { destroyed: false, writableFinished: false }) as ServerResponse
     const pending = downloadSessionAttachment({ open },
       { readFileStream: vi.fn(), readImage: vi.fn() }, run, 3, 1, response)
     const signal = await entered.promise
@@ -192,14 +194,16 @@ describe('Task transcript windows', () => {
     const f = fixture()
     const assistant = f.events[2]!
     const tool = f.events[3]!
-    f.events.splice(0, f.events.length, {
+    // Extension blocks are merge-extensible, so this event is typed only after it is built.
+    const extended: unknown = {
       seq: SessionSeq(0), time: 0, type: 'user/message', surfaceOp: 'append', data: { source: { kind: 'user' }, content: [
         { type: 'reasoning', text: 'reason' },
         { type: 'tool-call', id: 'call', name: 'inspect', arguments: '{}' },
         { type: 'image', attachment: { attachmentId: AttachmentId('b'.repeat(64)), mediaType: 'image/png', bytes: 3, width: 1, height: 1 } },
         { type: 'future-extension', value: true },
       ] },
-    } as unknown as SessionEvent)
+    }
+    f.events.splice(0, f.events.length, extended as SessionEvent)
     const page = await f.page()
     expect(page.items[0]?.blocks).toEqual([
       { kind: 'reasoning', text: 'reason' },

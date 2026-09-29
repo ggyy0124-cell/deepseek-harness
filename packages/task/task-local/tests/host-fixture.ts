@@ -18,6 +18,7 @@ import TaskAgentPresetRegistry from '@deepseek-ai/dsh-task-agent-preset-registry
 import TaskJsonlPersistence from '@deepseek-ai/dsh-task-session-persistence-jsonl'
 import SubprocessLocal from '@deepseek-ai/dsh-subprocess-local'
 import LocalTaskService, { type Config } from '../src/index.ts'
+import { stub } from './stub.ts'
 
 /** Mount the local provider with isolated persistence and no external model requests.
  * @param beforeTask - optional application services installed before Task initialization.
@@ -53,8 +54,8 @@ export async function taskHost(beforeTask?: (ctx: Context) => void | Promise<voi
       async* apply(declaring: Context) { yield await declaring.agentPresets.register({ id: 'minimal', plugins: [{ name: './presets/fixture.mjs' }] }) },
     })
     // Workspaces and permission selections have no external operations in these business stages.
-    ctx.provide('permissionPresets', { set() {}, names: [], current: () => 'default' } as unknown as Context['permissionPresets'])
-    ctx.provide('workspaceRegistry', { create: async () => ({ attachSession: async () => {} }) } as unknown as Context['workspaceRegistry'])
+    ctx.provide('permissionPresets', stub<Context['permissionPresets']>({ set() {}, names: [], current: () => 'default' }))
+    ctx.provide('workspaceRegistry', stub<Context['workspaceRegistry']>({ create: async () => ({ attachSession: async () => {} }) }))
     // Schemastery's input type includes fields supplied by its runtime defaults.
     const config = LocalTaskService.Config({ path: join(directory, 'tasks.sqlite'),
       resourceRoot: join(directory, 'resources'), tickMs: 10, ...overrides } as Config)

@@ -28,7 +28,7 @@ import { TaskDatabase } from './database.ts'
 import { RuntimeInteractions } from './interactions.ts'
 import { compileForm as validateFormSchema, validateForm, validateForms } from './forms.ts'
 import { nextCalendar } from './calendar.ts'
-import { retirementRecordSchema, taskConfigSchema, definitionSchema, runSchema } from './schema.ts'
+import { dispatchReceiptSchema, retirementRecordSchema, taskConfigSchema, definitionSchema, runSchema } from './schema.ts'
 import { z } from 'zod'
 import { TaskCommandError } from '@deepseek-ai/dsh-task'
 import { TaskChildRecoveryError } from './sessions.ts'
@@ -598,7 +598,7 @@ export class TaskEngine {
     let cancel: TaskRunId | undefined
     const result = this.db.transaction(() => {
       const recorded = this.db.receipt(`dispatch:${parentId}`, requestId, input)
-      if (recorded !== undefined) return recorded as unknown as TaskDispatchReceipt
+      if (recorded !== undefined) return dispatchReceiptSchema.parse(recorded)
       let target = this.db
         .activeRuns()
         .find(run => run.definitionId === parent.definitionId && run.businessKey === key)

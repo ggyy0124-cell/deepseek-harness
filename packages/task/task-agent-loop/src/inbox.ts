@@ -23,6 +23,9 @@ export const inboxProjectionSchema = z.object({
   'next-step': z.array(z.custom<UserMessage>()).readonly(),
 }).readonly()
 
+/** The same validation typed as the JSON-safe wire state, without an assertion through `unknown`. */
+const inboxWireSchema = z.custom<InboxWireState>(value => inboxProjectionSchema.safeParse(value).success)
+
 /** Standard fold that reconstructs pending input and rejects invalid durable splice history. */
 export const inboxProjectionDefinition = {
   key: 'inbox',
@@ -58,8 +61,8 @@ export const inboxProjectionDefinition = {
     // The wire value is the fold state itself: every pending message already
     // round-trips the session log as lossless JSON. Only the static type
     // narrows to the JSON-safe projection table entry.
-    viewSchema: inboxProjectionSchema as unknown as z.ZodType<InboxWireState>,
-    view: (state: InboxState) => state as unknown as InboxWireState,
+    viewSchema: inboxWireSchema,
+    view: (state: InboxState): InboxWireState => inboxWireSchema.parse(state),
   },
   stateVersion: 1,
 } satisfies ProjectionDefinition<'inbox', InboxState>

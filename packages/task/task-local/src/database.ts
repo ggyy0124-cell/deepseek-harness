@@ -45,7 +45,7 @@ const calendarScanSchema = z.object({
 export type CalendarScan = z.infer<typeof calendarScanSchema>
 
 /** JSON row read through a fixed SELECT statement. */
-interface Document { value: string }
+type Document = { value: string }
 /** One unacknowledged Session durability barrier. */
 export interface OutboxEntry { readonly id: number; readonly run: TaskRun }
 
@@ -193,7 +193,7 @@ export class TaskDatabase {
    */
   pluginSource(id: TaskDefinitionId): unknown {
     const row = this.db.prepare('SELECT value FROM metadata WHERE key=?').get(`plugin_source:${id}`)
-    return row === undefined ? undefined : JSON.parse(String(row['value'])) as unknown
+    return row === undefined ? undefined : JSON.parse(String(row['value']))
   }
   /** Select one bounded insertion-order history page in SQLite.
    * @param query - typed filters and pagination anchors.
@@ -220,7 +220,7 @@ export class TaskDatabase {
       where.push('rowid<?'); args.push(after.rowid)
     }
     const rows = this.db.prepare(`SELECT value FROM runs WHERE ${where.join(' AND ')} ORDER BY rowid DESC LIMIT ?`)
-      .all(...args, query.limit + 1) as unknown as Document[]
+      .all(...args, query.limit + 1) as Document[]
     return { items: rows.slice(0, query.limit).map(row => runSchema.parse(JSON.parse(row.value))),
       head: head.id, hasMore: rows.length > query.limit }
   }
@@ -229,7 +229,7 @@ export class TaskDatabase {
    * @returns validated records in acquisition order.
    */
   managedResources(runId: TaskRunId): TaskResourceRecord[] {
-    return (this.db.prepare('SELECT value FROM managed_resources WHERE run_id=? ORDER BY rowid').all(runId) as unknown as Document[])
+    return (this.db.prepare('SELECT value FROM managed_resources WHERE run_id=? ORDER BY rowid').all(runId) as Document[])
       .map(row => resourceSchema.parse(JSON.parse(row.value)) as TaskResourceRecord)
   }
   /** Persist acquisition or cleanup evidence before publishing its result.
@@ -250,9 +250,9 @@ export class TaskDatabase {
       coalesce(sum(terminal_at IS NULL AND value->>'status' IN ('provisioning','queued','recovering')),0) queuedRuns,
       min(CASE WHEN terminal_at IS NULL AND value->>'status' IN ('provisioning','queued','recovering') THEN value->>'createdAt' END) oldestQueuedAt,
       coalesce(sum(terminal_at IS NULL AND value->>'status'='blocked'),0) recoveryErrors,
-      coalesce(sum(value->>'cleanup'='blocked'),0) cleanupFailures FROM runs`).get() as unknown as
+      coalesce(sum(value->>'cleanup'='blocked'),0) cleanupFailures FROM runs`).get() as
       Pick<TaskDiagnostics, 'totalRuns' | 'activeRuns' | 'completedRuns' | 'queuedRuns' | 'oldestQueuedAt' | 'recoveryErrors' | 'cleanupFailures'>
-    const outbox = this.db.prepare("SELECT count(*) outboxPending, min(value->>'updatedAt') oldestOutboxAt FROM session_outbox").get() as unknown as
+    const outbox = this.db.prepare("SELECT count(*) outboxPending, min(value->>'updatedAt') oldestOutboxAt FROM session_outbox").get() as
       Pick<TaskDiagnostics, 'outboxPending' | 'oldestOutboxAt'>
     const inputs = this.db.prepare(`SELECT (SELECT count(*) FROM inputs WHERE consumed=0) +
       (SELECT count(*) FROM interactions WHERE value->>'state'='waiting') +
@@ -270,7 +270,7 @@ export class TaskDatabase {
    */
   interactions(runId?: TaskRunId): TaskInteraction[] {
     const rows = (runId === undefined ? this.db.prepare('SELECT value FROM interactions').all()
-      : this.db.prepare('SELECT value FROM interactions WHERE run_id=?').all(runId)) as unknown as Document[]
+      : this.db.prepare('SELECT value FROM interactions WHERE run_id=?').all(runId)) as Document[]
     return rows.map(row => interactionRecord.parse(JSON.parse(row.value)) as TaskInteraction)
   }
   /** Persist the latest state of one runtime request.
@@ -284,7 +284,7 @@ export class TaskDatabase {
    * @returns validated snapshots.
    */
   definitions(): TaskDefinitionView[] {
-    return (this.db.prepare('SELECT value FROM definitions ORDER BY id').all() as unknown as Document[]).map(row => definitionSchema.parse(JSON.parse(row.value)))
+    return (this.db.prepare('SELECT value FROM definitions ORDER BY id').all() as Document[]).map(row => definitionSchema.parse(JSON.parse(row.value)))
   }
   /** Persist one definition.
    * @param value - resolved definition.
@@ -296,7 +296,7 @@ export class TaskDatabase {
    * @returns validated lifecycle operations.
    */
   retirements(): TaskRetirement[] {
-    return (this.db.prepare('SELECT value FROM retirements ORDER BY definition_id').all() as unknown as Document[])
+    return (this.db.prepare('SELECT value FROM retirements ORDER BY definition_id').all() as Document[])
       .map(row => retirementRecordSchema.parse(JSON.parse(row.value)))
   }
   /** Persist retirement before aborting any owned operation.
@@ -334,13 +334,13 @@ export class TaskDatabase {
    * @returns validated immutable-by-copy snapshots.
    */
   runs(): TaskRun[] {
-    return (this.db.prepare('SELECT value FROM runs ORDER BY rowid').all() as unknown as Document[]).map(row => runSchema.parse(JSON.parse(row.value)))
+    return (this.db.prepare('SELECT value FROM runs ORDER BY rowid').all() as Document[]).map(row => runSchema.parse(JSON.parse(row.value)))
   }
   /** Read unfinished executions without scanning retained history.
    * @returns active snapshots.
    */
   activeRuns(): TaskRun[] {
-    return (this.db.prepare('SELECT value FROM runs WHERE terminal_at IS NULL ORDER BY rowid').all() as unknown as Document[]).map(row => runSchema.parse(JSON.parse(row.value)))
+    return (this.db.prepare('SELECT value FROM runs WHERE terminal_at IS NULL ORDER BY rowid').all() as Document[]).map(row => runSchema.parse(JSON.parse(row.value)))
   }
   /** Locate the first run retaining a shared preset revision.
    * @param run - execution whose configuration was inherited.
@@ -453,7 +453,7 @@ export class TaskDatabase {
   putReceipt(scope: string, id: string, input: JsonValue, value: JsonValue): void {
     this.db.prepare('INSERT INTO requests VALUES (?,?,?,?)').run(scope, id, JSON.stringify(input), JSON.stringify(value))
   }
-  /** Append provenance.
+  /** Record which dispatching run and request created an associated run.
    * @param parent - dispatching run.
    * @param request - retry key.
    * @param child - associated run.
@@ -467,7 +467,7 @@ export class TaskDatabase {
    * @returns inputs ordered by revision.
    */
   inputs(id: TaskRunId, includeConsumed = false): TaskInput[] {
-    return (this.db.prepare('SELECT value FROM inputs WHERE run_id=? AND (? OR consumed=0) ORDER BY revision').all(id, Number(includeConsumed)) as unknown as Document[])
+    return (this.db.prepare('SELECT value FROM inputs WHERE run_id=? AND (? OR consumed=0) ORDER BY revision').all(id, Number(includeConsumed)) as Document[])
       .map(row => z.object({ id: z.string(), revision: z.number().int(), kind: z.enum(['input', 'response', 'update']), value: z.json() }).parse(JSON.parse(row.value)) as TaskInput)
   }
   /** Append incoming data.
@@ -532,7 +532,9 @@ export class TaskDatabase {
    */
   operation(id: TaskRunId, key: string): { state: 'prepared' | 'confirmed'; value: JsonValue } | undefined {
     const row = this.db.prepare('SELECT state,value FROM operations WHERE run_id=? AND id=?').get(id, key) as { state: string; value: string } | undefined
-    return row === undefined ? undefined : z.object({ state: z.enum(['prepared', 'confirmed']), value: z.json() }).parse({ state: row.state, value: JSON.parse(row.value) as unknown })
+    if (row === undefined) return undefined
+    const value: unknown = JSON.parse(row.value)
+    return z.object({ state: z.enum(['prepared', 'confirmed']), value: z.json() }).parse({ state: row.state, value })
   }
   /** Persist an operation checkpoint before or after its side effect.
    *
@@ -599,7 +601,7 @@ export class TaskDatabase {
    * @returns latest execution snapshots, including terminal executions.
    */
   pendingSessions(): TaskRun[] {
-    return (this.db.prepare('SELECT value FROM runs WHERE id IN (SELECT run_id FROM session_outbox) ORDER BY rowid').all() as unknown as Document[])
+    return (this.db.prepare('SELECT value FROM runs WHERE id IN (SELECT run_id FROM session_outbox) ORDER BY rowid').all() as Document[])
       .map(row => runSchema.parse(JSON.parse(row.value)))
   }
   /** Acknowledge a barrier only after Session flush.

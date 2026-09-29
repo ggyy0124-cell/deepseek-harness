@@ -75,7 +75,7 @@ DSH owns the generic service, scheduler, persistence, extension API, and profile
 <a id="architecture"></a>
 ## Architecture and existing components
 
-The Task service is the only authority that admits task work. Timers, Web controls, and model tools call that service rather than creating Agents directly. Business ownership belongs to the registered plugin, while the dispatch relation records provenance between executions.
+The Task service is the only authority that admits task work. Timers, Web controls, and model tools call that service rather than creating Agents directly. Business ownership belongs to the registered plugin, while the dispatch relation records which special execution and request created each ordinary execution.
 
 ```mermaid
 flowchart TB
@@ -91,7 +91,7 @@ flowchart TB
   Runtime --> Resources[Concurrency and resource ownership]
   Sessions --> Special[Special execution Session]
   Sessions --> Ordinary[Ordinary execution Session]
-  Special -. dispatch provenance .-> Ordinary
+  Special -. dispatch association .-> Ordinary
 ```
 
 ### Proposed package responsibilities
@@ -265,7 +265,7 @@ SQLite and JSONL do not share a transaction. Recovery explicitly reconciles prov
 <a id="execution"></a>
 ## Dispatch, updates, and recovery
 
-The plugin supplies business meaning, while the provider serializes changes and preserves their identities. A completed source Session remains a provenance record; it is not the live resource owner of ordinary work.
+The plugin supplies business meaning, while the provider serializes changes and preserves their identities. A completed source Session remains the record of the dispatching conversation; it is not the live resource owner of ordinary work.
 
 ### Discover and associate
 

@@ -22,7 +22,7 @@ import type { TaskSessions } from './engine.ts'
 import type { TaskDatabase } from './database.ts'
 import type { TaskSessionAccess } from './access.ts'
 
-/** Agent adapter owns one root Agent per execution; task provenance never becomes runtime parenting. */
+/** Agent adapter owns one root Agent per execution; a dispatching run never becomes the runtime parent of the Agents it dispatches. */
 export class AgentTaskSessions implements TaskSessions {
   private readonly handles = new Map<TaskRunId, AgentHandle>()
   private readonly preparations = new Map<TaskRunId, Promise<void>>()

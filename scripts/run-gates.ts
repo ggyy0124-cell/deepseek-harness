@@ -281,7 +281,7 @@ function gatesForTaskProfileMode(selected: Mode): Gate[] {
     case 'ci-snapshot':
       return [ciBuildGate(), taskProfileSnapshotGate()]
     case 'ci-artifacts':
-      return [ciBuildGate(), builtPackageInvariantsGate(['build'])]
+      return [ciBuildGate(), ...taskProfilePublicationGates(['build']), builtPackageInvariantsGate(['build'])]
     case 'ci-consumers':
       return taskProfileConsumerGates()
     case 'ci-windows-blocking':
@@ -303,15 +303,18 @@ function gatesForTaskProfileMode(selected: Mode): Gate[] {
   }
 }
 
-function taskProfileStaticGates(): Gate[] {
+/**
+ * Task Profile static gates: every shared upstream static gate and the quick
+ * documentation-standard leaves, plus Task source isolation. The full doc-sync
+ * set stays upstream's, because its generators and site build cover the Web
+ * product rather than the Task surface.
+ * @returns the Task Profile static gate graph.
+ */
+export function taskProfileStaticGates(): Gate[] {
   return [
     pnpmScript('task-source-isolation', 'verify-task-source-isolation', { label: 'task source isolation' }),
-    pnpmScript('constraints', 'constraints'),
-    pnpmScript('package-dependencies', 'verify-package-dependencies', { label: 'package dependencies' }),
-    pnpmScript('cordis-config', 'verify-cordis-config', { label: 'Cordis config' }),
-    pnpmScript('package-invariants', 'verify-package-invariants', { label: 'package invariants' }),
-    pnpmScript('runtime-closure', 'verify-runtime-closure', { label: 'runtime closure' }),
-    pnpmScript('approval-policy', 'test:approval-policy', { label: 'Weighted approval policy' }),
+    ...ciSharedStaticGates(),
+    ...docQuickLeafGates(),
     typertContractsGate(),
     pnpmScript('typecheck', 'typecheck:contracts-ready', { needs: ['typert-contracts'] }),
     lintGate({ needs: ['typert-contracts'] }),
@@ -364,7 +367,15 @@ function taskProfileConsumerGates(): Gate[] {
     }),
     taskProfileSnapshotGate(validatedBuild),
     taskProfileE2eGate(validatedBuild),
+    ...taskProfilePublicationGates(validatedBuild),
     builtPackageInvariantsGate(builtTree),
+  ]
+}
+
+function taskProfilePublicationGates(needs: string[]): Gate[] {
+  return [
+    pnpmScript('publint', 'publint', { needs }),
+    pnpmScript('node-next-types', 'verify-node-next-types', { label: 'node-next types', needs }),
   ]
 }
 
@@ -477,7 +488,10 @@ export function gatesForMode(selected: Mode): Gate[] {
   }
 }
 
-function ciSharedStaticGates(): Gate[] {
+/** Static gates shared by upstream CI and the Task Profile surface.
+ * @returns the shared static gates.
+ */
+export function ciSharedStaticGates(): Gate[] {
   return [
     pnpmScript('runtime-closure', 'verify-runtime-closure', { label: 'runtime closure' }),
     pnpmScript('default-product-isolation', 'verify-default-product-isolation', { label: 'default product isolation' }),
@@ -981,7 +995,7 @@ function docSyncLeafGates(options: {
  * It covers the prose, pairing, README, budget, and Agent Note gates
  * without builds, generator regeneration, or the VitePress site build.
  */
-function docQuickLeafGates(): Gate[] {
+export function docQuickLeafGates(): Gate[] {
   return docSyncLeafGates({ includeDocTypecheck: false }).filter(gate => gate.quick === true)
 }
 
