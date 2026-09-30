@@ -20,6 +20,8 @@ import {
 } from './coverage-partitions.ts'
 import {
   isTaskProfileCiSurface,
+  TASK_PROFILE_COVERAGE_INCLUDES,
+  TASK_PROFILE_COVERAGE_SUITES,
   TASK_PROFILE_SNAPSHOT_PATH,
 } from './ci-task-profile-surface.ts'
 import { pnpmInvocation } from './pnpm-invocation.ts'
@@ -324,32 +326,13 @@ export function taskProfileStaticGates(): Gate[] {
 }
 
 function taskProfileCoverageGates(): Gate[] {
-  const coverageArgs = [
-    '--coverage.include=packages/task/task/src/**',
-    '--coverage.include=packages/task/task-agent-preset-registry/src/**',
-    '--coverage.include=packages/task/task-session/src/**',
-    '--coverage.include=packages/task/task-session-persistence-jsonl/src/**',
-    '--coverage.include=packages/task/task-api-client/src/**',
-    '--coverage.include=packages/task/task-api-gateway/src/**',
-    '--coverage.include=packages/task/task-api-protocol/src/**',
-    '--coverage.include=packages/task/tool-task-dispatch/src/**',
-  ]
-  const coverageSuites = [
-    'packages/task/task',
-    'packages/task/task-agent-preset-registry',
-    'packages/task/task-session',
-    'packages/task/task-session-persistence-jsonl',
-    'packages/task/task-api-client',
-    'packages/task/task-api-gateway',
-    'packages/task/task-api-protocol',
-    'packages/task/tool-task-dispatch',
-  ]
+  const coverageArgs = TASK_PROFILE_COVERAGE_INCLUDES.map(include => `--coverage.include=${include}`)
   const instrumented = pnpmExec('coverage', [
     'vitest',
     'run',
     '--coverage',
     ...coverageArgs,
-    ...coverageSuites,
+    ...TASK_PROFILE_COVERAGE_SUITES,
   ], {
     label: 'test:coverage',
   })

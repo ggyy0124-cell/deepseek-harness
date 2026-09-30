@@ -4,6 +4,7 @@ import {
   isTaskProfileCiSurface,
   TASK_PROFILE_CI_SURFACE,
   TASK_PROFILE_COVERAGE_INCLUDES,
+  TASK_PROFILE_COVERAGE_SUITES,
   TASK_PROFILE_TEST_INCLUDES,
 } from './ci-task-profile-surface.ts'
 import { ciSharedStaticGates, docQuickLeafGates, taskProfileStaticGates } from './run-gates.ts'
@@ -28,7 +29,8 @@ describe('ci-task-profile-surface', () => {
 
   it('lists Task Profile test and coverage roots', () => {
     expect(TASK_PROFILE_TEST_INCLUDES.some(entry => entry.includes('packages/task/'))).toBe(true)
-    expect(TASK_PROFILE_COVERAGE_INCLUDES.some(entry => entry.includes('packages/task/task/'))).toBe(true)
+    expect(TASK_PROFILE_COVERAGE_INCLUDES).toContain('packages/task/*/src/**')
+    expect(TASK_PROFILE_COVERAGE_SUITES).toContain('packages/task/')
   })
 })
 
