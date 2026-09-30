@@ -32,7 +32,7 @@ kind: "package-group"
 | [task-agent](task-agent/README.zh.md) | Task Profile Agent 创建授权 |
 | [task-session-persistence-jsonl](task-session-persistence-jsonl/README.zh.md) | Task Profile JSONL 写入授权 |
 | [task-agent-loop](task-agent-loop/README.zh.md) | 受权 Agent 命令与持久收件箱唤醒 |
-| [task-agent-presets](task-agent-presets/README.zh.md) | 用于任务恢复的不可变 preset 版本挂载 |
+| [task-agent-preset-registry](task-agent-preset-registry/README.zh.md) | 为任务恢复保留已记录版本的 preset 注册表 |
 | [task-local](task-local/README.zh.md) | SQLite 调度、恢复、资源准入与任务所属 Agent Session |
 | [tool-task-dispatch](tool-task-dispatch/README.zh.md) | 特殊任务模型派发 |
 

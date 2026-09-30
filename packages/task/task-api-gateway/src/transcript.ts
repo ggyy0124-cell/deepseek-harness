@@ -54,7 +54,7 @@ export function taskTranscriptContent(event: SessionEvent): readonly ContentBloc
   switch (event.type) {
     case 'user/message': return event.data.content
     case 'assistant/message': return event.data.message.content
-    case 'tool/result': return event.data.message.content[0].content
+    case 'tool/result': return event.data.message.content
     default: return []
   }
 }
@@ -71,7 +71,7 @@ function project(event: SessionEvent): Entry | undefined {
         : undefined
     case 'tool/result': {
       if (!isAppendSurfaceEvent(event)) return undefined
-      const result = event.data.message.content[0]
+      const result = event.data.message
       return {
         ...common,
         role: 'tool',
@@ -115,7 +115,7 @@ export async function readTaskTranscript(
   if (query.cursor !== undefined) {
     let decoded: unknown
     try {
-      decoded = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8')) as unknown
+      decoded = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8'))
     } catch {
       throw new HttpProblem(400, 'invalid_cursor', 'Invalid transcript cursor')
     }

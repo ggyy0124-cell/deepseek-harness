@@ -75,7 +75,7 @@ DSH 负责通用服务、调度器、持久化、扩展 API 与 profile。独立
 <a id="architecture"></a>
 ## 架构与现有组件
 
-Task 服务是任务执行的唯一准入方。定时器、Web 操作和模型工具调用该服务，而不是直接创建 agent。业务归属属于注册插件，派发关系则记录执行之间的来源。
+Task 服务是任务执行的唯一准入方。定时器、Web 操作和模型工具调用该服务，而不是直接创建 agent。业务归属属于注册插件，派发关系则记录每个普通执行由哪个特殊执行及哪次请求创建。
 
 ```mermaid
 flowchart TB
@@ -91,7 +91,7 @@ flowchart TB
   Runtime --> Resources[Concurrency and resource ownership]
   Sessions --> Special[Special execution Session]
   Sessions --> Ordinary[Ordinary execution Session]
-  Special -. dispatch provenance .-> Ordinary
+  Special -. dispatch association .-> Ordinary
 ```
 
 ### 拟议包职责
@@ -115,7 +115,7 @@ flowchart TB
 | --- | --- | --- |
 | [Profile 加载器](../../../../packages/boot/app-boot/src/profile.ts)与 [Web 组合包](../../../../packages/bundle/web-app/README.zh.md) | 命名 profile、有序补丁、Host/Client 组合。 | 增加 Task 模板与组合包依赖。实时重载必须区分配置更新、服务关闭和业务移除。 |
 | [Agent 注册表](../../../../packages/core/agent/src/index.ts) | 调用方持有的创建/恢复句柄及发布前 setup。 | Task 在业务归属范围内保留句柄；通用 Session 激活必须查询任务归属。 |
-| [Agent presets](../../../../packages/preset/agent-presets/README.zh.md) | `composeFrom()` 继承同一活跃组合版本。 | 排队子任务及重启需要持久化版本选择；现有 preset ID 和文件时间标记不提供该保证。 |
+| [Agent preset registry](../../../../packages/preset/agent-preset-registry/README.zh.md) | `composeFrom()` 继承同一活跃组合版本。 | 排队子任务及重启需要持久化版本选择；preset ID 与内存中的版本不提供该保证。 |
 | [Session 收件箱](../../../../packages/core/agent-loop/src/inbox.ts) | 带标识的消息及持久化收件箱变更。 | Task 投递按稳定 ID 核对持久化回执、准入与取消；仅调用 `followup()` 不构成确认协议。 |
 | [Schedule](../../../../packages/schedule/schedule/README.zh.md) | 时钟处理与定时器清理的参考。 | 它面向活跃会话与固定间隔；Task 需要服务所属触发器和新 Session。 |
 | [Workflow](../../../../packages/workflow/workflow/README.zh.md) 与 [Jobs](../../../../packages/jobs/jobs/README.zh.md) | 可以在阶段内部使用，并遵守各自生命周期。 | 两者都不是持久化的外层 Task 管理器。 |
@@ -266,7 +266,7 @@ SQLite 与 JSONL 不共享事务。恢复按不可变标识显式核对准备、
 <a id="execution"></a>
 ## 派发、更新与恢复
 
-插件提供业务含义，提供方串行化变更并保留其标识。已完成的来源 Session 保留来源记录，但不是普通任务的活跃资源持有者。
+插件提供业务含义，提供方串行化变更并保留其标识。已完成的来源 Session 仍记录派发时的对话，但不是普通任务的活跃资源持有者。
 
 ### 发现与关联
 

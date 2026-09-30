@@ -4,8 +4,10 @@ import {
   isTaskProfileCiSurface,
   TASK_PROFILE_CI_SURFACE,
   TASK_PROFILE_COVERAGE_INCLUDES,
+  TASK_PROFILE_COVERAGE_SUITES,
   TASK_PROFILE_TEST_INCLUDES,
 } from './ci-task-profile-surface.ts'
+import { ciSharedStaticGates, docQuickLeafGates, taskProfileStaticGates } from './run-gates.ts'
 
 function withEnv<T>(name: string, value: string | undefined, action: () => T): T {
   const previous = process.env[name]
@@ -27,6 +29,17 @@ describe('ci-task-profile-surface', () => {
 
   it('lists Task Profile test and coverage roots', () => {
     expect(TASK_PROFILE_TEST_INCLUDES.some(entry => entry.includes('packages/task/'))).toBe(true)
-    expect(TASK_PROFILE_COVERAGE_INCLUDES.some(entry => entry.includes('packages/task/task/'))).toBe(true)
+    expect(TASK_PROFILE_COVERAGE_INCLUDES).toContain('packages/task/*/src/**')
+    expect(TASK_PROFILE_COVERAGE_SUITES).toContain('packages/task/')
+  })
+})
+
+describe('Task Profile static gates', () => {
+  it('keep every shared upstream static gate and quick documentation gate', () => {
+    const [taskGates, upstreamGates] = withEnv('npm_execpath', '/private/pnpm.cjs',
+      () => [taskProfileStaticGates(), [...ciSharedStaticGates(), ...docQuickLeafGates()]])
+    const task = new Set(taskGates.map(gate => gate.id))
+    for (const gate of upstreamGates) expect(task, gate.id).toContain(gate.id)
+    expect(task).toContain('task-source-isolation')
   })
 })

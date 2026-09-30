@@ -49,6 +49,21 @@ describe('TaskAgentRegistry', () => {
     await ctx.fiber.dispose()
   })
 
+  it('reports a creation that fails after its guards admitted it', async () => {
+    const ctx = new Context()
+    await ctx.plugin(TaskAgentRegistry)
+    const failed: string[] = []
+    const remove = taskAgentRegistry(ctx).guardCreation(() => {}, (id) => { failed.push(id) })
+    // No agent-loop plugin registers a factory, so creation fails after the guards run.
+    await expect(ctx.agents.create({ sessionId: SessionId('failed') })).rejects.toThrow('no agent factory registered')
+    expect(failed).toEqual(['failed'])
+
+    remove()
+    await expect(ctx.agents.create({ sessionId: SessionId('unobserved') })).rejects.toThrow('no agent factory registered')
+    expect(failed).toEqual(['failed'])
+    await ctx.fiber.dispose()
+  })
+
   it('rejects a composition that retained the ordinary registry', async () => {
     const ctx = new Context()
     await ctx.plugin(AgentRegistry)

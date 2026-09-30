@@ -1,6 +1,40 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/task/task-session-persistence-jsonl/README.md
-README.md: 50abc44b1a1d034efbfc2d9841549bebf6847b25
-README.zh.md: 33ea1078957668ae2419f951813535a02791fe35
+/:
+  en: e178f22ba11d304c
+  zh: 08ae732369ca827d
+/deepseek-ai-dsh-task-session-persistence-jsonl:
+  en: f6a42349fcaa7cb2
+  zh: f62197c1ee74e1a4
+/deepseek-ai-dsh-task-session-persistence-jsonl/summary:
+  en: 56427242a9e7d128
+  zh: 6e29b8a0aa7ec50f
+/deepseek-ai-dsh-task-session-persistence-jsonl/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9f0336825ccdaacd
+/deepseek-ai-dsh-task-session-persistence-jsonl/use-this-package:
+  en: d3676b437b117254
+  zh: 1edde32b4821ec7b
+/deepseek-ai-dsh-task-session-persistence-jsonl/understand-the-implementation:
+  en: f51af61d5462a396
+  zh: 5dec1fb8853b1730
+/deepseek-ai-dsh-task-session-persistence-jsonl/no-runtime-invariant-companion-is-published-the-shared-jsonl-companion-owns-storage-checks-and-this-wrapper-performs-one-authorization-check-before-delegation:
+  en: 79a3281c914c07b2
+  zh: 29c08d70ba3615c1
+/deepseek-ai-dsh-task-session-persistence-jsonl/further-exploration:
+  en: e1f1f4d2987cd03e
+  zh: 3f0069219d9dca4a
+/deepseek-ai-dsh-task-session-persistence-jsonl/model-experience:
+  en: 69f1100191037a92
+  zh: 34e46a9abc71e3ef
+/deepseek-ai-dsh-task-session-persistence-jsonl/model-experience/kv-cache-effect:
+  en: 1150f25c80e49a2a
+  zh: 93e07b7906fbb777
+/deepseek-ai-dsh-task-session-persistence-jsonl/known-limitations-and-deferred-work:
+  en: 8bc71d321f78d092
+  zh: 8cb5a7614f0f458f
+/deepseek-ai-dsh-task-session-persistence-jsonl/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: ce96645b3e75874e

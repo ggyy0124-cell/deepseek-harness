@@ -23,6 +23,9 @@ export const inboxProjectionSchema = z.object({
   'next-step': z.array(z.custom<UserMessage>()).readonly(),
 }).readonly()
 
+/** The same validation typed as the JSON-safe wire state, without an assertion through `unknown`. */
+const inboxWireSchema = z.custom<InboxWireState>(value => inboxProjectionSchema.safeParse(value).success)
+
 /** Standard fold that reconstructs pending input and rejects invalid durable splice history. */
 export const inboxProjectionDefinition = {
   key: 'inbox',
@@ -58,8 +61,8 @@ export const inboxProjectionDefinition = {
     // The wire value is the fold state itself: every pending message already
     // round-trips the session log as lossless JSON. Only the static type
     // narrows to the JSON-safe projection table entry.
-    viewSchema: inboxProjectionSchema as unknown as z.ZodType<InboxWireState>,
-    view: (state: InboxState) => state as unknown as InboxWireState,
+    viewSchema: inboxWireSchema,
+    view: (state: InboxState): InboxWireState => inboxWireSchema.parse(state),
   },
   stateVersion: 1,
 } satisfies ProjectionDefinition<'inbox', InboxState>
@@ -67,7 +70,7 @@ export const inboxProjectionDefinition = {
 /**
  * Driver-owned durable Inbox implementation used by ReactLoopAgent and focused
  * provider tests.
- * @param projections - registry that owns the standard Inbox projection.
+ * @param projections - registry with the standard Inbox projection registered by AgentLoop.
  * @param session - session whose durable events store pending input.
  * @param dispatch - agent-scoped notifications for Inbox lifecycle events.
  */
@@ -76,9 +79,7 @@ export class ReactLoopInbox implements InboxContract {
     private readonly projections: SessionProjectionRegistry,
     private readonly session: Session,
     private readonly dispatch: AgentEventDispatch,
-  ) {
-    this.projections.register(inboxProjectionDefinition)
-  }
+  ) {}
 
   /** Prompts awaiting individual turns. */
   get nextTurn(): readonly UserMessage[] {
@@ -188,7 +189,6 @@ export class ReactLoopInbox implements InboxContract {
   /** Read the current durable projection state. */
   private current(): InboxState {
     const state = this.projections.stateOf(this.session, 'inbox')
-    /* v8 ignore next -- the constructor registers this key before any read */
     if (state === undefined) {
       throw new Error(
         `agent "${this.session.id}" cannot read inbox state: its projection registration is not active`,

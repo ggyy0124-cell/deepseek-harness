@@ -1,6 +1,40 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/task/task-agent/README.md
-README.md: 132f94878b4a0460c99b8830eac32dae4b20343a
-README.zh.md: cc0612e08e8bf99f304e23e2bc503b8ef567f9c5
+/:
+  en: b74941c45f863551
+  zh: 4724b07e642ed741
+/deepseek-ai-dsh-task-agent:
+  en: ade97a5bb4aabf72
+  zh: 5b94950f42129d6b
+/deepseek-ai-dsh-task-agent/summary:
+  en: b9e49f419ae4b7b3
+  zh: 6b9991e702e5de7a
+/deepseek-ai-dsh-task-agent/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9f0336825ccdaacd
+/deepseek-ai-dsh-task-agent/use-this-package:
+  en: e4354f3a882657b8
+  zh: 322ac545a39317c9
+/deepseek-ai-dsh-task-agent/understand-the-implementation:
+  en: 4fa6307aa1fa18e7
+  zh: eb87a0b88b123009
+/deepseek-ai-dsh-task-agent/no-runtime-invariant-companion-is-published-guard-registration-and-disposal-update-one-private-set-through-the-same-service:
+  en: 94454f62c1b07cb9
+  zh: 28e74e6dbde07190
+/deepseek-ai-dsh-task-agent/further-exploration:
+  en: 9d6d4cc3b31d45d8
+  zh: 0f9212cbbeea2f3b
+/deepseek-ai-dsh-task-agent/model-experience:
+  en: 40d362fc5b461bc0
+  zh: eb127af66a0d0723
+/deepseek-ai-dsh-task-agent/model-experience/kv-cache-effect:
+  en: 4a34b92209adc870
+  zh: 2af245ab2c9524ee
+/deepseek-ai-dsh-task-agent/known-limitations-and-deferred-work:
+  en: 9e4fa70ac14656ef
+  zh: aa7e0058e9a09644
+/deepseek-ai-dsh-task-agent/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: ce96645b3e75874e

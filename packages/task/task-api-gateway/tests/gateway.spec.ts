@@ -15,6 +15,7 @@ import { TaskApiClient } from '@deepseek-ai/dsh-task-api-client'
 import { z } from 'zod'
 import { taskHost } from '../../task-local/tests/host-fixture.ts'
 import TaskApiGateway, { type Config } from '../src/index.ts'
+import { stub } from '../../task-local/tests/stub.ts'
 
 const disposers: (() => Promise<void>)[] = []
 afterEach(async () => { for (const close of disposers.splice(0).reverse()) await close() })
@@ -84,7 +85,9 @@ async function gateway(definitionOverrides: Partial<TaskDefinition> = {}, gatewa
 describe('Task gateway composition', () => {
   it('drains a handler failure and rejects operations after gateway disposal', async () => {
     const { ctx, raw, gatewayFiber } = await gateway()
-    const service = ctx.taskGateway as unknown as {
+    // Private request plumbing, reached only to inject a transport failure.
+    const internals: unknown = ctx.taskGateway
+    const service = internals as {
       handle(request: IncomingMessage, response: ServerResponse): Promise<void>
       assertRunning(): void
       pending: Map<Promise<void>, unknown>
@@ -101,8 +104,9 @@ describe('Task gateway composition', () => {
     const { ctx, client, definition } = await gateway()
     const run = await client.request('triggerManual', { params: { definitionId: definition.id },
       body: { input: null }, idempotencyKey: 'closed-transcript' })
-    const response = Object.assign(new EventEmitter(), { destroyed: true }) as unknown as ServerResponse
-    const service = ctx.taskGateway as unknown as { transcript(response: ServerResponse,
+    const response = stub<ServerResponse>(Object.assign(new EventEmitter(), { destroyed: true }))
+    const internals: unknown = ctx.taskGateway
+    const service = internals as { transcript(response: ServerResponse,
       params: Record<string, string>, query: Record<string, string>): Promise<unknown> }
     await expect(service.transcript(response, { runId: run.id }, {})).rejects.toMatchObject({ name: 'AbortError' })
   })
@@ -156,14 +160,16 @@ describe('Task gateway composition', () => {
     const { ctx, raw, definition, client } = await gateway()
     const run = await client.request('triggerManual', { params: { definitionId: definition.id },
       body: { input: null }, idempotencyKey: 'session-file' })
-    const event = { seq: 1, time: 1, type: 'user/message', surfaceOp: 'append',
+    // A persisted file block as the durable reader returns it, before attachment ids are branded.
+    const persisted: unknown = { seq: 1, time: 1, type: 'user/message', surfaceOp: 'append',
       data: { content: [{ type: 'file', attachment: { attachmentId: 'file-id', name: 'report.txt', bytes: 6 } }],
-        source: { kind: 'user' } } } as unknown as SessionEvent
+        source: { kind: 'user' } } }
+    const event = persisted as SessionEvent
     const close = vi.fn(async () => {})
-    const open = vi.spyOn(ctx.sessionPersistence, 'open').mockResolvedValue({
+    const open = vi.spyOn(ctx.sessionPersistence, 'open').mockResolvedValue(stub<SessionHandle>({
       read: async () => ({ events: [event], eventState: 'owned' as const }),
       [Symbol.asyncDispose]: close,
-    } as unknown as SessionHandle)
+    }))
     Object.assign(ctx.attachments, {
       readFileStream: async function* () { yield new TextEncoder().encode('report') },
     })
@@ -273,7 +279,7 @@ describe('Task gateway composition', () => {
           const chunks: Buffer[] = []
           response.on('data', (chunk: Buffer) => { chunks.push(chunk) })
           response.once('error', reject)
-          response.once('end', () => { resolve({ status: response.statusCode!, value: JSON.parse(Buffer.concat(chunks).toString()) as unknown }) })
+          response.once('end', () => { resolve({ status: response.statusCode!, value: JSON.parse(Buffer.concat(chunks).toString()) }) })
         })
         request.once('error', reject)
         request.end(body)
@@ -284,7 +290,7 @@ describe('Task gateway composition', () => {
         const chunks: Buffer[] = []
         response.on('data', (chunk: Buffer) => { chunks.push(chunk) })
         response.once('error', reject)
-        response.once('end', () => { resolve({ status: response.statusCode!, value: JSON.parse(Buffer.concat(chunks).toString()) as unknown }) })
+        response.once('end', () => { resolve({ status: response.statusCode!, value: JSON.parse(Buffer.concat(chunks).toString()) }) })
       })
       request.once('error', reject); request.end()
     })

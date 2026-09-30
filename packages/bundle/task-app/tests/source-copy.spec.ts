@@ -8,8 +8,6 @@ import { expect, it } from 'vitest'
 const repository = fileURLToPath(new URL('../../../../', import.meta.url))
 const pairs = [
   ['packages/core/agent-loop/src', 'packages/task/task-agent-loop/src'],
-  ['packages/preset/agent-presets/src', 'packages/task/task-agent-presets/src'],
-  ['packages/preset/agent-presets/presets', 'packages/task/task-agent-presets/presets'],
 ] as const
 
 async function inventory(root: string, path = ''): Promise<string[]> {

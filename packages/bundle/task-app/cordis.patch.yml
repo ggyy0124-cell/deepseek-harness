@@ -10,7 +10,7 @@
 - id: typert-loader
   config:
     packages:
-      - '@deepseek-ai/dsh-agent-presets'
+      - '@deepseek-ai/dsh-agent-preset-registry'
 
 - insert:
     - id: task-administration
@@ -37,10 +37,15 @@
       disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
     - id: subagent-model-selection-settings
       name: '@deepseek-ai/dsh-tool-subagent/model-selection-settings'
-    - id: code-runtime
-      name: '@deepseek-ai/dsh-code-runtime-worker-thread'
     - id: workspace
       name: '@deepseek-ai/dsh-workspace'
+    # Runtime inspection read by the `cordis` preset's `tool-cordis` row. The
+    # inspect providers are process-global, so they register here once for
+    # every preset revision.
+    - id: cordis-host-runner
+      name: '@deepseek-ai/dsh-cordis-host-runner'
+    - id: cordis-inspect-providers
+      name: '@deepseek-ai/dsh-tool-cordis/host'
     - id: task-session
       name: '@deepseek-ai/dsh-task-session'
     - id: task-agent
@@ -53,8 +58,11 @@
       name: '@deepseek-ai/dsh-task-agent-loop'
       config:
         agents: []
-    - id: task-agent-presets
-      name: '@deepseek-ai/dsh-task-agent-presets'
+    # The preset selection registry; Task runs retain recorded revisions. The
+    # shipped Task preset declarations follow as separate patch files under
+    # `presets/`, listed after this file in `package.json` `dsh.bundle.patch`.
+    - id: agent-preset-registry
+      name: '@deepseek-ai/dsh-task-agent-preset-registry'
       config:
         default: standard
     - id: task-local
@@ -63,7 +71,6 @@
       disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
       config:
         path: !!js ctx.dshHomePath('tasks/tasks.sqlite')
-        revisionRoot: !!js ctx.dshHomePath('tasks/preset-revisions')
         resourceRoot: !!js ctx.dshHomePath('tasks/resources')
         concurrency: 4
         childConcurrency: 4
@@ -79,7 +86,7 @@
       disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
       name: '@deepseek-ai/dsh-tool-task-dispatch'
 
-# Per-Agent tools are contributed by each captured Task preset.
+# Per-Agent tools are contributed by each declared Task preset.
 - id: tool-bash
   disabled: true
 - id: tool-pwsh
@@ -114,7 +121,7 @@
   disabled: true
 - id: tool-subagent-fork
   disabled: true
-- id: workflow-worker-thread
+- id: workflow-ptc
   disabled: true
 - id: tool-workflow
   disabled: true
@@ -125,4 +132,6 @@
 - id: tool-todo
   disabled: true
 - id: tool-web
+  disabled: true
+- id: mcp-resources
   disabled: true

@@ -14,7 +14,8 @@ import {
 } from '@deepseek-ai/dsh-task'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import type {} from '@deepseek-ai/dsh-agent-presets'
+// Type-only: the shared `agentPresets` roster this gateway lists.
+import type {} from '@deepseek-ai/dsh-agent-preset-registry'
 import type {} from '@deepseek-ai/dsh-permission-presets'
 import {
   idSchema,

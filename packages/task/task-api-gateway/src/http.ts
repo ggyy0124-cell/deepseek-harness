@@ -38,7 +38,7 @@ export async function readJson(request: IncomingMessage, limit: number, timeoutM
     throw new HttpProblem(415, 'unsupported_media_type', 'Request body must use application/json')
   }
   try {
-    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) as unknown
+    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes))
   } catch {
     throw new HttpProblem(400, 'invalid_json', 'Request body is not valid UTF-8 JSON')
   }

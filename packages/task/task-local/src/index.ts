@@ -51,8 +51,6 @@ export interface Config {
   readonly resourceProcessGraceMs: number
   /** Maximum collected bytes per built-in resource subprocess stream. */
   readonly resourceOutputLimitBytes: number
-  /** Directory retaining immutable preset assets. */
-  readonly revisionRoot: string
   /** Maximum simultaneously admitted stages across all plugins. */
   readonly concurrency: number
   /** Maximum live foreground child Agents per Task Run. */
@@ -101,7 +99,6 @@ export class LocalTaskService extends TaskService {
     cleanupTimeoutMs: Schema.number().min(1).step(1).default(120000),
     shutdownTimeoutMs: Schema.number().min(1).step(1).default(120000),
     path: Schema.string().required(),
-    revisionRoot: Schema.string().required(),
     resourceRoot: Schema.string().required(),
     resourceOutputLimitBytes: Schema.number().min(1).step(1).default(65536),
     resourceProcessGraceMs: Schema.number().min(1).step(1).default(5000),
@@ -195,7 +192,7 @@ export class LocalTaskService extends TaskService {
         this.database.log(child.runId, 'child.ended', Date.now(), { sessionId: agent.id })
       })
     })
-    const sessions = new AgentTaskSessions(ctx, this.database, config.revisionRoot, access)
+    const sessions = new AgentTaskSessions(ctx, this.database, access)
     this.taskSessions = sessions
     this.engine = new TaskEngine(this.database, sessions, {
       resourceHandlers: new OwnedTaskFiles(config.resourceRoot, ctx.subprocess,

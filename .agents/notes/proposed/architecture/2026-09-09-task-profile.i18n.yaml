@@ -1,6 +1,133 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for 2026-09-09-task-profile.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/proposed/architecture/2026-09-09-task-profile.md
-2026-09-09-task-profile.md: d1453c52d8966018e593e8a524bdb727aa616919
-2026-09-09-task-profile.zh.md: 787b4ee880a5aa542cf258327db20e45628fd514
+/agent-note-task-profile-and-recoverable-business-execution:
+  en: 4d90b2083aba0c80
+  zh: 789602629b5a98c4
+/agent-note-task-profile-and-recoverable-business-execution/problem:
+  en: 54310e439ac37f3b
+  zh: 8e5ea2839dc33ebc
+/agent-note-task-profile-and-recoverable-business-execution/confirmed-independent-task-application-design:
+  en: 4385851c29a57453
+  zh: e73ad0f6105a5da7
+/agent-note-task-profile-and-recoverable-business-execution/proposal:
+  en: 09b446ef197b3f2b
+  zh: 31a28817c5e3ae63
+/agent-note-task-profile-and-recoverable-business-execution/proposal/scope-and-outcomes:
+  en: 739debc556e86302
+  zh: 40a7245e0a70ed16
+/agent-note-task-profile-and-recoverable-business-execution/proposal/contents:
+  en: b67a614eea9ca726
+  zh: 2c8f1a9503952182
+/agent-note-task-profile-and-recoverable-business-execution/architecture-and-existing-components:
+  en: 2581e21afd4055b7
+  zh: 1508fc9f14b602eb
+/agent-note-task-profile-and-recoverable-business-execution/architecture-and-existing-components/proposed-package-responsibilities:
+  en: f7fee2c72270c9ac
+  zh: f24948bc63298397
+/agent-note-task-profile-and-recoverable-business-execution/architecture-and-existing-components/existing-reuse-and-required-additions:
+  en: e6d7209199893c87
+  zh: 46a18c409dc3b39d
+/agent-note-task-profile-and-recoverable-business-execution/domain-model-and-invariants:
+  en: b87fb5decfb646f9
+  zh: 56f0834b00d244a8
+/agent-note-task-profile-and-recoverable-business-execution/domain-model-and-invariants/required-invariants:
+  en: bd1cd4a488db0c33
+  zh: 7845a01db11f638c
+/agent-note-task-profile-and-recoverable-business-execution/domain-model-and-invariants/execution-states:
+  en: 9b38002bdbe5bcde
+  zh: 62316f1887af3f2b
+/agent-note-task-profile-and-recoverable-business-execution/plugin-api-and-stage-execution:
+  en: f04089a827c67790
+  zh: 5f1041fa3837a3f0
+/agent-note-task-profile-and-recoverable-business-execution/plugin-api-and-stage-execution/registration-and-control-operations:
+  en: 8d346a0e1029fa80
+  zh: 79f53936009b7e67
+/agent-note-task-profile-and-recoverable-business-execution/plugin-api-and-stage-execution/durable-stage-protocol:
+  en: 284b24586f5d2448
+  zh: 74c08b030d7b59ca
+/agent-note-task-profile-and-recoverable-business-execution/plugin-api-and-stage-execution/business-waits-and-permissions:
+  en: 45b20db9c3bed126
+  zh: b177747f8a445834
+/agent-note-task-profile-and-recoverable-business-execution/storage-and-session-consistency:
+  en: daa16cf24a9b6d81
+  zh: 3b282c0a1809a3c2
+/agent-note-task-profile-and-recoverable-business-execution/storage-and-session-consistency/durable-records-and-indexes:
+  en: 9e09621f1b8e8776
+  zh: cc6cdb7cc764f762
+/agent-note-task-profile-and-recoverable-business-execution/storage-and-session-consistency/run-and-session-creation-protocol:
+  en: 6235154cc3985622
+  zh: 4fa2f902be9b4a95
+/agent-note-task-profile-and-recoverable-business-execution/storage-and-session-consistency/session-barriers-and-model-input:
+  en: 4dc800c5f8c87e7d
+  zh: 3e677f90dfc8c8a8
+/agent-note-task-profile-and-recoverable-business-execution/dispatch-updates-and-recovery:
+  en: fa8ceb36d2f25eee
+  zh: 2890d9471d62406e
+/agent-note-task-profile-and-recoverable-business-execution/dispatch-updates-and-recovery/discover-and-associate:
+  en: c20c8b635a3611b4
+  zh: 9cce2c02ff5ff37c
+/agent-note-task-profile-and-recoverable-business-execution/dispatch-updates-and-recovery/inheritance-without-runtime-parent-ownership:
+  en: 3f459d9051cf8082
+  zh: a071db69b8d802b5
+/agent-note-task-profile-and-recoverable-business-execution/dispatch-updates-and-recovery/host-startup-and-recovery:
+  en: b501c22c1fdeebef
+  zh: 9dda70a8a88a2731
+/agent-note-task-profile-and-recoverable-business-execution/scheduling-and-resource-control:
+  en: 9967a3d59528aa6d
+  zh: 7d7fa41e99e9da2b
+/agent-note-task-profile-and-recoverable-business-execution/scheduling-and-resource-control/polling:
+  en: 142c24c40a00e1f0
+  zh: d293e503e558a9f6
+/agent-note-task-profile-and-recoverable-business-execution/scheduling-and-resource-control/calendar-schedules:
+  en: 709c474fedf64d88
+  zh: 3087a124a41ff130
+/agent-note-task-profile-and-recoverable-business-execution/scheduling-and-resource-control/manual-triggers:
+  en: 1ce2cf899d419036
+  zh: c2984fabf418aa72
+/agent-note-task-profile-and-recoverable-business-execution/scheduling-and-resource-control/admission-and-resources:
+  en: 33e2f3be34d90d37
+  zh: 5544b328b605cf46
+/agent-note-task-profile-and-recoverable-business-execution/configuration-lifecycle-and-cleanup:
+  en: 33c9d53b5aa4740b
+  zh: 823edfd22637cf0b
+/agent-note-task-profile-and-recoverable-business-execution/configuration-lifecycle-and-cleanup/configuration-revisions-and-preset-lifetime:
+  en: 62079294fe4fbbae
+  zh: cd6bfb8d14849650
+/agent-note-task-profile-and-recoverable-business-execution/configuration-lifecycle-and-cleanup/disable-remove-upgrade-and-shutdown:
+  en: 90aeaa296069afe2
+  zh: 468aaadf4aa5a173
+/agent-note-task-profile-and-recoverable-business-execution/configuration-lifecycle-and-cleanup/cleanup-protocol:
+  en: d5be99ab08f9c121
+  zh: 7f6d5a452ece50d0
+/agent-note-task-profile-and-recoverable-business-execution/web-integration-and-business-migration:
+  en: f8777b7e6c0553e6
+  zh: 0b4cccfc37aeb581
+/agent-note-task-profile-and-recoverable-business-execution/web-integration-and-business-migration/api-and-session-ownership:
+  en: 79b31ed0ef531713
+  zh: 5ec371876b918ebf
+/agent-note-task-profile-and-recoverable-business-execution/web-integration-and-business-migration/business-plugin-packaging:
+  en: 70cc60b6187d823b
+  zh: 073124458a9e0028
+/agent-note-task-profile-and-recoverable-business-execution/web-integration-and-business-migration/zentao-end-to-end-example:
+  en: f08de73a3a0d1f47
+  zh: fa222065c3d32d39
+/agent-note-task-profile-and-recoverable-business-execution/web-integration-and-business-migration/script-adaptation-requirements:
+  en: 206582c6592bf607
+  zh: dfa13f21c98cfab0
+/agent-note-task-profile-and-recoverable-business-execution/web-integration-and-business-migration/local-service-operation:
+  en: 05b35c3d02c5b76d
+  zh: af70f29b5c35ae27
+/agent-note-task-profile-and-recoverable-business-execution/remaining-integrations:
+  en: 80f80f5cd2477ebe
+  zh: 023b5fe2d6da002f
+/agent-note-task-profile-and-recoverable-business-execution/alternatives-considered:
+  en: c7d7e2e125c3125c
+  zh: 5575f97e44764596
+/agent-note-task-profile-and-recoverable-business-execution/acceptance-criteria:
+  en: 0253aebb9295442a
+  zh: a48ec136fe68dde4
+/agent-note-task-profile-and-recoverable-business-execution/risks:
+  en: c1ee96f394ae20e6
+  zh: 7f48b4a6cd64455b

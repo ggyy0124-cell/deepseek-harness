@@ -139,26 +139,6 @@ export async function restoreTaskStore(source: string, destination: string): Pro
       const integrity = database.prepare('PRAGMA integrity_check').get() as { integrity_check: string }
       if (integrity.integrity_check !== 'ok') throw new Error('Task backup database integrity check failed')
       database.exec('BEGIN IMMEDIATE')
-      for (const record of database.prepare('SELECT run_id,id,value FROM operations').all() as {
-        run_id: string
-        id: string
-        value: string
-      }[]) {
-        if (!record.id.startsWith('@preset:')) continue
-        const saved = z.object({ path: z.string(), digest: z.string() }).parse(JSON.parse(record.value))
-        if (!contained(manifest.sourceRoot, saved.path))
-          throw new Error('Task backup references preset assets outside its root')
-        database
-          .prepare('UPDATE operations SET value=? WHERE run_id=? AND id=?')
-          .run(
-            JSON.stringify({
-              ...saved,
-              path: join(resolve(destination), relative(manifest.sourceRoot, saved.path)),
-            }),
-            record.run_id,
-            record.id,
-          )
-      }
       if (manifest.schemaVersion >= 2)
         database.prepare("UPDATE metadata SET value=? WHERE key='store_id'").run(randomUUID())
       if (manifest.schemaVersion >= 6)

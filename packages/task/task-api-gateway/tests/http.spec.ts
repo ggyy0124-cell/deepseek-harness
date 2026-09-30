@@ -25,7 +25,7 @@ async function parseBody(body: string, headers: Record<string, string>, complete
         let value = ''
         response.setEncoding('utf8')
         response.on('data', (chunk: string) => { value += chunk })
-        response.on('end', () => { resolve({ status: response.statusCode ?? 0, value: JSON.parse(value) as unknown }); outgoing.destroy() })
+        response.on('end', () => { resolve({ status: response.statusCode ?? 0, value: JSON.parse(value) }); outgoing.destroy() })
       })
       outgoing.on('error', reject)
       outgoing.write(body)

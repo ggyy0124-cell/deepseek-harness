@@ -1,7 +1,7 @@
 /** Scoped tool admission and plugin disposal through the real tool registry. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
+import { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
@@ -10,6 +10,7 @@ import ToolRuntime from '@deepseek-ai/dsh-tools'
 import type { ToolRunContext } from '@deepseek-ai/dsh-tools'
 import type { TaskService, TaskRun, TaskDispatchReceipt } from '@deepseek-ai/dsh-task'
 import * as plugin from '../src/index.ts'
+import { stub } from '../../task-local/tests/stub.ts'
 
 const contexts: Context[] = []
 afterEach(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.dispose() })
@@ -22,10 +23,12 @@ async function setup() {
   const dispatch = vi.fn(async (): Promise<TaskDispatchReceipt> => ({
     outcome: 'created', runId: 'child' as TaskRun['id'], sessionId: SessionId('child-session'), changed: false,
   }))
-  ctx.provide('tasks', {
+  // Dispatch reads only the run kind of the owning Session.
+  const tasks: unknown = {
     forSession: (id: string) => id === 'special' ? { kind: 'manual' } : id === 'ordinary' ? { kind: 'ordinary' } : undefined,
     dispatch,
-  } as unknown as TaskService)
+  }
+  ctx.provide('tasks', tasks as TaskService)
   const fiber = await ctx.plugin(plugin)
   const agents: Agent[] = []
   await ctx.plugin({
@@ -34,11 +37,11 @@ async function setup() {
       for (const id of ['special', 'ordinary', 'unmanaged']) {
         const agent = { id: SessionId(id) } as Agent
         Object.assign(agent, { ctx: createScope(inner, agent).ctx })
-        ctx.emit('agent/created', { agent })
         agents.push(agent)
       }
     },
   })
+  for (const agent of agents) await agentEvents(ctx, agent).serial('agent/created', { source: 'startup' })
   return { ctx, dispatch, fiber, agents }
 }
 
@@ -81,11 +84,11 @@ describe('task dispatch tool', () => {
     const special = agents[0]!
     const definition = ctx.tools.get('task_dispatch', special)
     if (definition === undefined) throw new Error('Expected special-task dispatch tool')
-    const execution = {
+    const execution = stub<ToolRunContext>({
       signal: new AbortController().signal,
       rootCallId: ToolCallId('direct'), callId: ToolCallId('direct'), name: 'task_dispatch', arguments: {},
       token: Symbol('direct'), deferContext() {}, concludeTurn() {},
-    } as unknown as ToolRunContext
+    })
     await expect(definition.execute({ request_id: 'request', input_json: '{}' }, execution))
       .rejects.toThrow('requires its owning special Agent')
     await expect(definition.execute({ request_id: 'request', input_json: '{}' }, { ...execution, agent: agents[1]! }))

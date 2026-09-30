@@ -7,6 +7,7 @@ import InvariantRegistry from '@deepseek-ai/dsh-invariants'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TaskDefinitionId, TaskRun, TaskRunId, TaskService } from '../src/index.ts'
 import * as TaskInvariant from '../src/invariant.ts'
+import { stub } from '../../task-local/tests/stub.ts'
 
 const contexts: Context[] = []
 afterEach(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.dispose() })
@@ -25,13 +26,15 @@ async function setup(options: { owner?: TaskRun; persisted?: boolean } = {}) {
   await ctx.plugin(InvariantRegistry)
   const owner = options.owner === undefined ? run : options.owner
   const persisted = options.persisted ?? true
-  ctx.provide('tasks', {
+  ctx.provide('tasks', stub<TaskService>({
     listRuns: () => [run],
     forSession: () => owner,
-  } as unknown as TaskService)
-  ctx.provide('sessionPersistence', {
+  }))
+  // The invariant reads only whether a header exists for the owned Session.
+  const persistence: unknown = {
     stat: async () => persisted ? { header: { id: run.sessionId } } : undefined,
-  } as unknown as Context['sessionPersistence'])
+  }
+  ctx.provide('sessionPersistence', persistence as Context['sessionPersistence'])
   return ctx
 }
 

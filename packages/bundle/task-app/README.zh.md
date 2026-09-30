@@ -25,9 +25,9 @@ kind: "package-bundle"
 <a id="use-this-package"></a>
 ## 使用本包
 
-使用 `pnpm dsh --profile task` 启动后端。数据库、保留的 preset 与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改。启动输出 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器。`/` 和 `/index.html` 返回 404。未安装业务插件时没有业务定义。
+使用 `pnpm dsh --profile task` 启动后端。数据库（含已记录的 preset 版本）与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改。启动输出 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器。`/` 和 `/index.html` 返回 404。未安装业务插件时没有业务定义。
 
-随附的编码 preset 允许特殊或普通任务的父 Agent 在已准入的模型轮次中自行决定是否调用前台进程内子 Agent；不要求创建子 Agent。`task-local` 默认通过 `childConcurrency` 将每个 Run 的并发子 Agent 限为四个；每个子 Agent 保留独立 Session，并须在父轮次结束前完成。
+本组合包在 `presets/` 下声明 Web preset，并保持派发在前台进行、禁用异步 workflow 启动。随附的编码 preset 允许特殊或普通任务的父 Agent 在已准入的模型轮次中自行决定是否调用前台进程内子 Agent；不要求创建子 Agent。`task-local` 默认通过 `childConcurrency` 将每个 Run 的并发子 Agent 限为四个；每个子 Agent 保留独立 Session，并须在父轮次结束前完成。
 
 管理操作也使用此 Profile：
 

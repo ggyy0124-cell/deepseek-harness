@@ -24,15 +24,20 @@ export const TASK_PROFILE_TEST_INCLUDES = [
   'packages/boot/app-boot/tests/profile.spec.ts',
 ] as const
 
-/** Per-file coverage scope for Task Profile owned runtime source. */
+/**
+ * Per-file coverage scope for Task Profile owned runtime source. The shared
+ * Vitest coverage excludes still apply, including the parity-pinned Task Agent
+ * Loop copy and the Task App launcher entries.
+ */
 export const TASK_PROFILE_COVERAGE_INCLUDES = [
-  'packages/task/task/src/**',
-  'packages/task/task-session/src/**',
-  'packages/task/task-session-persistence-jsonl/src/**',
-  'packages/task/task-api-client/src/**',
-  'packages/task/task-api-gateway/src/**',
-  'packages/task/task-api-protocol/src/**',
-  'packages/task/tool-task-dispatch/src/**',
+  'packages/task/*/src/**',
+] as const
+
+/** Vitest path filters selecting every Task Profile unit and profile test for the coverage run. */
+export const TASK_PROFILE_COVERAGE_SUITES = [
+  'packages/task/',
+  'packages/bundle/task-app/tests/',
+  'packages/boot/app-boot/tests/profile.spec.ts',
 ] as const
 
 /** jscpd scan roots for Task Profile duplication checks. */

@@ -172,7 +172,7 @@ function listRuns(tasks: TaskService, raw: Record<string, string>, pageSize: num
   let after: TaskRunId | undefined
   if (cursor !== undefined) {
     let value: unknown
-    try { value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as unknown }
+    try { value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) }
     catch { throw new HttpProblem(400, 'invalid_cursor', 'Invalid Task page cursor') }
     const page = validate(cursorSchema, value)
     head = brandString<TaskRunId>(page.head)

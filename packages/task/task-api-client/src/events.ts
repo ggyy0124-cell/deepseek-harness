@@ -72,7 +72,7 @@ async function* readEvents<T extends { kind: string; cursor: string }>(
           .join('\n')
         let parsed: unknown
         try {
-          parsed = JSON.parse(data) as unknown
+          parsed = JSON.parse(data)
         } catch {
           throw new Error('Task event contains invalid JSON')
         }

@@ -7,6 +7,8 @@ import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { TaskDefinition, TaskDefinitionId, TaskRequestId } from '@deepseek-ai/dsh-task'
 import { z } from 'zod'
 import * as fs from 'node:fs/promises'
+import { join } from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
 import { taskHost } from './host-fixture.ts'
 import { TaskPluginCode } from '../src/plugin-code.ts'
 import { TaskEngine } from '../src/engine.ts'
@@ -174,5 +176,15 @@ describe('Local Task provider', () => {
     expect(JSON.stringify(result)).toContain('not admitted')
     const ordinary = await ctx.tools.execute({ callId: ToolCallId('unowned'), name: 'unknown', arguments: {}, signal })
     expect(JSON.stringify(ordinary)).not.toContain('not admitted')
+  })
+
+  it('leaves Task records untouched when an ordinary Agent fails to create', async () => {
+    const { ctx, directory } = await fixture()
+    await expect(ctx.agents.create({ sessionId: SessionId('ordinary'), setup: () => { throw new Error('setup failed') } }))
+      .rejects.toThrow('setup failed')
+    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
+    const rows = db.prepare("SELECT event FROM journal WHERE event LIKE 'child.%'").all()
+    db.close()
+    expect(rows).toEqual([])
   })
 })

@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-task-api-client",
   "description": "Fetch-based Task API client without a Cordis runtime",
-  "version": "0.1.5-rc.2",
+  "version": "0.2.0-rc.1-task.0.0.1",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -20,13 +20,13 @@
   "license": "MIT",
   "dependencies": {
     "zod": "^4.3.6",
-    "@deepseek-ai/dsh-task-api-protocol": "workspace:^"
+    "@deepseek-ai/dsh-task-api-protocol": "workspace:*"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:~"
   },
   "publishConfig": {
     "access": "public"

@@ -63,29 +63,22 @@ describe('Task maintenance', () => {
     try { expect(restored.prepare('PRAGMA user_version').get()?.['user_version']).toBe(1) }
     finally { restored.close() }
   })
-  it('relocates retained preset assets and preserves external operation receipts', async () => {
+  it('restores recorded preset revisions and external operation receipts unchanged', async () => {
     const f = await fixture()
     const runId = brandString<TaskRunId>('preset-owner')
+    const revision = { preset: 'standard', plugins: '- name: ./fixture.mjs\n', baseUrl: 'file:///presets/', digest: 'a'.repeat(64) }
     const source = new TaskDatabase(join(f.tasks, 'tasks.sqlite'))
     try {
-      source.putOperation(runId, '@preset:config', 'confirmed', { path: join(f.tasks, 'revisions', 'preset'), digest: 'preset-digest' })
+      source.putOperation(runId, '@preset:config', 'confirmed', revision)
       source.putOperation(runId, 'external', 'confirmed', { id: 'operation1' })
     } finally { source.close() }
     await backupTaskStore(f.tasks, f.copy)
     await restoreTaskStore(f.copy, f.restored)
     const restored = new TaskDatabase(join(f.restored, 'tasks.sqlite'))
     try {
-      expect(restored.operation(runId, '@preset:config')).toMatchObject({ value: { path: join(f.restored, 'revisions', 'preset') } })
+      expect(restored.operation(runId, '@preset:config')).toMatchObject({ state: 'confirmed', value: revision })
       expect(restored.operation(runId, 'external')).toMatchObject({ state: 'confirmed', value: { id: 'operation1' } })
     } finally { restored.close() }
-  })
-  it('refuses a restore that would retain presets outside the owned store', async () => {
-    const f = await fixture()
-    const source = new TaskDatabase(join(f.tasks, 'tasks.sqlite'))
-    try { source.putOperation(brandString<TaskRunId>('external-preset'), '@preset:config', 'confirmed', { path: f.copy, digest: 'outside' }) }
-    finally { source.close() }
-    await backupTaskStore(f.tasks, f.copy)
-    await expect(restoreTaskStore(f.copy, f.restored)).rejects.toThrow('outside its root')
   })
   it('refuses unsupported database and manifest generations', async () => {
     const f = await fixture()

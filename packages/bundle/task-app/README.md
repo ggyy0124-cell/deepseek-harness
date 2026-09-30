@@ -25,9 +25,9 @@ Launch the Task engine and authenticated REST/SSE gateway over Base. Business pl
 <a id="use-this-package"></a>
 ## Use this package
 
-Launch the backend with `pnpm dsh --profile task`. Its database, retained presets and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port. Startup prints the API base address `/api/task/v1/` without issuing a credential or opening a browser. `/` and `/index.html` return 404. An installation without business plugins has no business definitions.
+Launch the backend with `pnpm dsh --profile task`. Its database, including recorded preset revisions, and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port. Startup prints the API base address `/api/task/v1/` without issuing a credential or opening a browser. `/` and `/index.html` return 404. An installation without business plugins has no business definitions.
 
-The shipped coding presets let a special or ordinary Task Agent choose whether to call foreground in-process subagents during an admitted model turn. No child is required. `task-local` limits them to four live children per Run by default through `childConcurrency`; each child retains its own Session and must finish before the parent turn settles.
+The bundle declares the Web presets under `presets/` with delegation kept in the foreground and asynchronous workflow starts disabled. The shipped coding presets let a special or ordinary Task Agent choose whether to call foreground in-process subagents during an admitted model turn. No child is required. `task-local` limits them to four live children per Run by default through `childConcurrency`; each child retains its own Session and must finish before the parent turn settles.
 
 Administration also uses this profile:
 

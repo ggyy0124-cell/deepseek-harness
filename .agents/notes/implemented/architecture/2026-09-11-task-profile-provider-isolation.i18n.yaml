@@ -1,6 +1,19 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for 2026-09-11-task-profile-provider-isolation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-11-task-profile-provider-isolation.md
-2026-09-11-task-profile-provider-isolation.md: 3232a9e4e5ee584a4b63721c29cc2ff07be868bf
-2026-09-11-task-profile-provider-isolation.zh.md: 693b2f454bf1e6704c3d38679f032d5ec60cc785
+/agent-note-task-profile-provider-isolation:
+  en: 168e65503c849084
+  zh: beb4c8ddab6a11c6
+/agent-note-task-profile-provider-isolation/problem:
+  en: 510b34bcf12015e2
+  zh: 9d970602da4c60ff
+/agent-note-task-profile-provider-isolation/decision:
+  en: fda3ecfbb162ae0d
+  zh: fecefc504d426d5e
+/agent-note-task-profile-provider-isolation/alternatives-considered:
+  en: ed15f4229adef9a4
+  zh: 475f1830e1e7acbf
+/agent-note-task-profile-provider-isolation/consequences:
+  en: 8d85ccfabd4c2b14
+  zh: 6f3de4bdfc0ab660

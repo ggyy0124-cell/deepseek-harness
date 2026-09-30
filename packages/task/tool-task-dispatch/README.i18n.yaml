@@ -1,6 +1,46 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/task/tool-task-dispatch/README.md
-README.md: 74a658c380b5707a28277fb36e9d1317b0221665
-README.zh.md: a408a944c9b28949d2029ac5e03ea8f9ae25765e
+/:
+  en: 1d85246791a7cd96
+  zh: 7d646511e11a27c7
+/deepseek-ai-dsh-tool-task-dispatch:
+  en: 1cb11f3849a7d57f
+  zh: 242ad34f59e7aeff
+/deepseek-ai-dsh-tool-task-dispatch/summary:
+  en: d5f9c3aea9f31d23
+  zh: a3f1183da8bac5ac
+/deepseek-ai-dsh-tool-task-dispatch/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9f0336825ccdaacd
+/deepseek-ai-dsh-tool-task-dispatch/use-this-package:
+  en: 29184d03ad84ea3c
+  zh: feddb3c6987a4f86
+/deepseek-ai-dsh-tool-task-dispatch/understand-the-implementation:
+  en: c51e7751997ed898
+  zh: 879018fe8dfd8f56
+/deepseek-ai-dsh-tool-task-dispatch/further-exploration:
+  en: 58dce19d087bd87d
+  zh: 96ff10670caee62a
+/deepseek-ai-dsh-tool-task-dispatch/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-tool-task-dispatch/model-experience/dispatch-tool:
+  en: 486c9632117e619b
+  zh: 965cab4e8bf3971c
+/deepseek-ai-dsh-tool-task-dispatch/model-experience/dispatch-tool/what-the-model-sees:
+  en: 5c9ff07d467b41d4
+  zh: 0390f7c5dc674af1
+/deepseek-ai-dsh-tool-task-dispatch/model-experience/dispatch-tool/token-effect:
+  en: e859df3abba40e81
+  zh: 27df9dd5b197f3a7
+/deepseek-ai-dsh-tool-task-dispatch/model-experience/dispatch-tool/kv-cache-effect:
+  en: ec8f81cd5237e1ad
+  zh: c5f4c1ce151c2420
+/deepseek-ai-dsh-tool-task-dispatch/known-limitations-and-deferred-work:
+  en: 046e623255e35474
+  zh: 55a8b0dcd9eaf256
+/deepseek-ai-dsh-tool-task-dispatch/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: ce96645b3e75874e

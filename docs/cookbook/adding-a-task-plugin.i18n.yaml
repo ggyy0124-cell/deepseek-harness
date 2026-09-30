@@ -1,6 +1,19 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for adding-a-task-plugin.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/cookbook/adding-a-task-plugin.md
-adding-a-task-plugin.md: 6b50c8fe1486dac9bbd22a375f5084cfa09e27e6
-adding-a-task-plugin.zh.md: 6571cd85710e4ed81957515ce51891ac5067bb5d
+/cookbook-add-a-task-business-plugin:
+  en: 55f9ed26559aaa84
+  zh: badffef0693dc4d8
+/cookbook-add-a-task-business-plugin/1-create-the-plugin:
+  en: c3f1f558f61cd085
+  zh: 9103786938ec357f
+/cookbook-add-a-task-business-plugin/2-mount-and-start-it:
+  en: 198a2ce90bfbc4e4
+  zh: 78629f2fe499cf85
+/cookbook-add-a-task-business-plugin/3-trigger-and-inspect:
+  en: 9de2c8a87d7461fc
+  zh: c9eed2a020f94d32
+/cookbook-add-a-task-business-plugin/4-replace-or-remove-business-code:
+  en: 92b283d53d274cd3
+  zh: 6c4b667e52788a6a

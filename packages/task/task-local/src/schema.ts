@@ -1,7 +1,11 @@
 /** Validators at configuration and durable JSON ingress. */
 import { z } from 'zod'
 import { executionConfigSchema } from '@deepseek-ai/dsh-task/schema'
-import type { TaskRetirement, TaskConfig, TaskDefinitionView, TaskRun } from '@deepseek-ai/dsh-task'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type {
+  TaskRetirement, TaskConfig, TaskDefinitionId, TaskDefinitionView, TaskDispatchReceipt, TaskRun, TaskRunId, TaskWaitId,
+} from '@deepseek-ai/dsh-task'
 
 /** Non-secret configuration shares the pure Task schema with wire validation. */
 export const taskConfigSchema: z.ZodType<TaskConfig> = executionConfigSchema
@@ -72,7 +76,29 @@ export const runSchema = z
     cleanup: z.enum(['pending', 'blocked', 'complete']),
     resources: z.array(identity),
   })
-  .transform(value => value as unknown as TaskRun)
+  .transform(({ id, sessionId, definitionId, parentRunId, forms, wait, ...rest }): TaskRun => ({
+    ...rest,
+    ...forms === undefined ? {} : { forms },
+    id: brandString<TaskRunId>(id),
+    sessionId: brandString<SessionId>(sessionId),
+    definitionId: brandString<TaskDefinitionId>(definitionId),
+    parentRunId: parentRunId === null ? null : brandString<TaskRunId>(parentRunId),
+    wait: wait === null ? null : {
+      id: brandString<TaskWaitId>(wait.id), revision: wait.revision, prompt: wait.prompt,
+      ...wait.schema === undefined ? {} : { schema: wait.schema },
+      ...wait.expiresAt === undefined ? {} : { expiresAt: wait.expiresAt },
+    },
+  }))
+
+/** Recorded dispatch result replayed for a repeated dispatch request. */
+export const dispatchReceiptSchema = z.object({
+  outcome: z.enum(['created', 'associated']),
+  runId: identity,
+  sessionId: identity,
+  changed: z.boolean(),
+}).transform(({ runId, sessionId, ...rest }): TaskDispatchReceipt => ({
+  ...rest, runId: brandString<TaskRunId>(runId), sessionId: brandString<SessionId>(sessionId),
+}))
 
 /** Durable retirement identity and lifecycle validation. */
 export const retirementRecordSchema = z.object({

@@ -7,6 +7,7 @@ import type { TaskJournalEntry, TaskStoreId, TaskService, TaskRun } from '@deeps
 import type { SessionHandle, SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
 import { streamSessionEvents } from '../src/session-events.ts'
 import { streamTaskEvents } from '../src/events.ts'
+import { stub } from '../../task-local/tests/stub.ts'
 
 const storeId = brandString<TaskStoreId>('00000000-0000-0000-0000-000000000001')
 const options = { eventPollMs: 1, eventHeartbeatMs: 1000, eventBatchSize: 1, eventBufferBytes: 1024, eventDrainTimeoutMs: 10 }
@@ -20,7 +21,7 @@ class SocketResponse extends EventEmitter {
   flushHeaders(): void {}
   write(frame: string): boolean { this.frames.push(frame); return !this.blocked }
   destroy(): void { if (this.destroyed) return; this.destroyed = true; this.emit('close') }
-  response(): ServerResponse { return this as unknown as ServerResponse }
+  response(): ServerResponse { return stub<ServerResponse>(this) }
 }
 function taskJournal(event = 'run.ended') {
   const entry: TaskJournalEntry = { sequence: 1, runId: null, event, at: 0, details: { internal: 'not-public' } }
@@ -87,11 +88,11 @@ describe('Session event transport', () => {
     }))
     const close = vi.fn(async () => {})
     // The read-only transport needs only ownership lookup and a bounded disposable handle.
-    const tasks = { getRun: () => ({ id: 'run', sessionId: 'session' }) as TaskRun } as unknown as TaskService
-    const persistence = { open: async () => ({
+    const tasks = stub<TaskService>({ getRun: () => ({ id: 'run', sessionId: 'session' }) as TaskRun })
+    const persistence = stub<SessionPersistence>({ open: async () => stub<SessionHandle>({
       read: async (offset: number, count: number) => ({ events: events.slice(offset, offset + count), eventState: 'owned' }),
       [Symbol.asyncDispose]: close,
-    }) as unknown as SessionHandle } as unknown as SessionPersistence
+    }) })
     return { tasks, persistence, close }
   }
   it('retains independent cursors, replays stored messages and disconnects after revocation', async () => {

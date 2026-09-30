@@ -1,10 +1,6 @@
-/** Session ownership, immutable preset copies, and correlated model delivery. */
-import { createHash, randomUUID } from 'node:crypto'
-import { cp, mkdir, readFile, readdir, rename, rm } from 'node:fs/promises'
-import { dirname, join, relative } from 'node:path'
+/** Session ownership, recorded preset revisions, and correlated model delivery. */
 import type { Context } from '@deepseek-ai/cordis'
 import type { AgentHandle } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-agent-presets'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import { MessageId, createUserMessage, type UserMessage } from '@deepseek-ai/dsh-llm'
 import { Session, SESSION_FORMAT_VERSION, type SessionEvent } from '@deepseek-ai/dsh-session'
@@ -12,29 +8,35 @@ import type {} from '@deepseek-ai/dsh-session-persistence'
 import type {} from '@deepseek-ai/dsh-permission-presets'
 import type {} from '@deepseek-ai/dsh-workspace'
 import type { TaskRun, TaskRunId } from '@deepseek-ai/dsh-task'
-import { taskAgentPresets } from '@deepseek-ai/dsh-task-agent-presets'
+import { parseTaskPresetRevision, taskAgentPresetRegistry, type TaskPresetRevision } from '@deepseek-ai/dsh-task-agent-preset-registry'
 import { wakeTaskAgent } from '@deepseek-ai/dsh-task-agent-loop'
 import { z } from 'zod'
+
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    /** A stage instruction a Task business plugin submitted through `TaskStage.model()`. */
+    'task': { kind: 'task' }
+  }
+}
 import type { TaskSessions } from './engine.ts'
 import type { TaskDatabase } from './database.ts'
 import type { TaskSessionAccess } from './access.ts'
 
-/** Agent adapter owns one root Agent per execution; task provenance never becomes runtime parenting. */
+/** Agent adapter owns one root Agent per execution; a dispatching run never becomes the runtime parent of the Agents it dispatches. */
 export class AgentTaskSessions implements TaskSessions {
   private readonly handles = new Map<TaskRunId, AgentHandle>()
   private readonly preparations = new Map<TaskRunId, Promise<void>>()
   private readonly flushes = new Map<TaskRunId, Promise<void>>()
-  private readonly revisions = new Map<string, Promise<string>>()
+  private readonly revisions = new Map<string, Promise<TaskPresetRevision>>()
   private readonly modelCalls = new Map<TaskRunId, { key: string; prompt: string; promise: Promise<string> }>()
 
   /**
    * @param ctx - provider-owned root context.
-   * @param db - task transactions/outbox.
-   * @param revisionRoot - retained preset assets.
+   * @param db - task transactions/outbox, including recorded preset revisions.
+   * @param access - Session authority shared with the Task providers.
    */
   constructor(
-    private readonly ctx: Context, private readonly db: TaskDatabase,
-    private readonly revisionRoot: string, private readonly access: TaskSessionAccess,
+    private readonly ctx: Context, private readonly db: TaskDatabase, private readonly access: TaskSessionAccess,
   ) {}
 
   /** Repair committed Session events before the scheduler or business plugins start. */
@@ -52,7 +54,7 @@ export class AgentTaskSessions implements TaskSessions {
     await pending
   }
   private async prepare(run: TaskRun, signal: AbortSignal): Promise<void> {
-    const path = await this.revision(run)
+    const revision = await this.revision(run)
     const owner = this.revisionOwner(run)
     const recordedModel = this.db.operation(owner.id, '@model-selection')
     const agentOptions = recordedModel === undefined
@@ -67,7 +69,7 @@ export class AgentTaskSessions implements TaskSessions {
       assertBinding(this.db, Session.create(run.sessionId, events, reader.header), run)
     } finally { await reader.close() }
     const setup = async (agentCtx: Context): Promise<void> => {
-      await taskAgentPresets(this.ctx).mountRevision(agentCtx, run.config.preset, path)
+      await taskAgentPresetRegistry(this.ctx).mountRevision(agentCtx, revision)
     }
     const handle = await this.ctx.agents.resume({ resumeSessionId: run.sessionId, signal, agentOptions, setup })
     this.handles.set(run.id, handle)
@@ -83,7 +85,7 @@ export class AgentTaskSessions implements TaskSessions {
       await this.flush(run)
     } catch (error) { await this.access.run(handle.agent.id, () => handle.dispose()); this.handles.delete(run.id); throw error }
   }
-  private revision(run: TaskRun): Promise<string> {
+  private revision(run: TaskRun): Promise<TaskPresetRevision> {
     const key = `${run.definitionId}:${run.configRevision}:${run.codeVersion}`
     let pending = this.revisions.get(key)
     if (pending === undefined) {
@@ -93,29 +95,15 @@ export class AgentTaskSessions implements TaskSessions {
     }
     return pending
   }
-  private async captureRevision(run: TaskRun, key: string): Promise<string> {
+  private async captureRevision(run: TaskRun, key: string): Promise<TaskPresetRevision> {
     const receiptKey = `@preset:${key}`
     // All children inherit the source revision even if its runtime Agent has been disposed.
     const owner = this.revisionOwner(run)
     const receipt = this.db.operation(owner.id, receiptKey)
-    if (receipt !== undefined) {
-      const saved = z.object({ path: z.string(), digest: z.string() }).parse(receipt.value)
-      if (await directoryDigest(dirname(saved.path)) !== saved.digest) throw new Error('task preset revision assets are missing or changed')
-      return saved.path
-    }
-    const source = await this.ctx.agentPresets.resolve(run.config.preset)
-    const target = join(this.revisionRoot, createHash('sha256').update(key).digest('hex'))
-    const staging = `${target}.${randomUUID()}`
-    await mkdir(this.revisionRoot, { recursive: true, mode: 0o700 })
-    try {
-      await cp(dirname(source.path), staging, { recursive: true, dereference: true, errorOnExist: true, force: false })
-      const digest = await directoryDigest(staging)
-      await rm(target, { recursive: true, force: true })
-      await rename(staging, target)
-      const path = join(target, relative(dirname(source.path), source.path))
-      this.db.putOperation(owner.id, receiptKey, 'confirmed', { path, digest })
-      return path
-    } finally { await rm(staging, { recursive: true, force: true }) }
+    if (receipt !== undefined) return parseTaskPresetRevision(receipt.value)
+    const revision = await taskAgentPresetRegistry(this.ctx).captureRevision(run.config.preset)
+    this.db.putOperation(owner.id, receiptKey, 'confirmed', { ...revision })
+    return revision
   }
   private revisionOwner(run: TaskRun): TaskRun {
     return this.db.revisionOwner(run)
@@ -176,7 +164,7 @@ export class AgentTaskSessions implements TaskSessions {
         throw new TaskChildRecoveryError('task child Agent outcome is uncertain; reconcile its Session before starting another model turn')
     }
     const id = MessageId(`task:${run.id}:${key}`)
-    const message: UserMessage = { ...createUserMessage({ content: [{ type: 'text', text: prompt }], source: { kind: 'plugin', plugin: 'task-local' } }), id }
+    const message: UserMessage = { ...createUserMessage({ content: [{ type: 'text', text: prompt }], source: { kind: 'task' } }), id }
     const events = await this.persistedEvents(run.sessionId)
     const inserted = events.some(event => event.type === 'agent/inbox/spliced' && event.data.inserted.some(input => input.id === id))
     const consumed = events.some(event => event.type === 'user/message' && event.data.id === id)
@@ -255,20 +243,4 @@ export function modelAnswer(events: readonly SessionEvent[], messageId: string):
     }
   }
   throw new Error('task model input has no completed turn; plugin recovery is required')
-}
-/** Hash retained preset files in deterministic path order. */
-async function directoryDigest(directory: string): Promise<string> {
-  const digest = createHash('sha256')
-  async function visit(path: string): Promise<void> {
-    const entries = (await readdir(path, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))
-    for (const entry of entries) {
-      const file = join(path, entry.name)
-      digest.update(relative(directory, file))
-      if (entry.isDirectory()) await visit(file)
-      else if (entry.isFile()) digest.update(await readFile(file))
-      else throw new Error('task preset revision must contain only regular files and directories')
-    }
-  }
-  await visit(directory)
-  return digest.digest('hex')
 }

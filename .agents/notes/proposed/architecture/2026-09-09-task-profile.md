@@ -75,7 +75,7 @@ DSH owns the generic service, scheduler, persistence, extension API, and profile
 <a id="architecture"></a>
 ## Architecture and existing components
 
-The Task service is the only authority that admits task work. Timers, Web controls, and model tools call that service rather than creating Agents directly. Business ownership belongs to the registered plugin, while the dispatch relation records provenance between executions.
+The Task service is the only authority that admits task work. Timers, Web controls, and model tools call that service rather than creating Agents directly. Business ownership belongs to the registered plugin, while the dispatch relation records which special execution and request created each ordinary execution.
 
 ```mermaid
 flowchart TB
@@ -91,7 +91,7 @@ flowchart TB
   Runtime --> Resources[Concurrency and resource ownership]
   Sessions --> Special[Special execution Session]
   Sessions --> Ordinary[Ordinary execution Session]
-  Special -. dispatch provenance .-> Ordinary
+  Special -. dispatch association .-> Ordinary
 ```
 
 ### Proposed package responsibilities
@@ -115,7 +115,7 @@ Business plugins consume `ctx.tasks` to register their special task and implemen
 | --- | --- | --- |
 | [Profile loader](../../../../packages/boot/app-boot/src/profile.ts) and [Web bundle](../../../../packages/bundle/web-app/README.md) | Named profiles, ordered patches, Host/Client composition. | Add the Task template and bundle dependencies. Live reload must distinguish configuration updates, service shutdown, and business removal. |
 | [Agent registry](../../../../packages/core/agent/src/index.ts) | Caller-owned create/resume handles and setup before publication. | Task retains handles under business ownership; generic Session activation must consult the task owner. |
-| [Agent presets](../../../../packages/preset/agent-presets/README.md) | `composeFrom()` inherits the same live composition generation. | Queued children and restart need durable revision selection; existing preset IDs and file stamps do not provide that guarantee. |
+| [Agent preset registry](../../../../packages/preset/agent-preset-registry/README.md) | `composeFrom()` inherits the same live composition revision. | Queued children and restart need durable revision selection; preset IDs and in-memory revisions do not provide that guarantee. |
 | [Session inbox](../../../../packages/core/agent-loop/src/inbox.ts) | Identified messages and durable inbox splices. | Task delivery reconciles stable IDs against persisted receipts, admission, and cancellation; `followup()` alone is not an acknowledgement protocol. |
 | [Schedule](../../../../packages/schedule/schedule/README.md) | Reference for clocks and timer teardown. | It targets a live conversation with fixed intervals; Task needs service-owned triggers and new Sessions. |
 | [Workflow](../../../../packages/workflow/workflow/README.md) and [Jobs](../../../../packages/jobs/jobs/README.md) | Optional operations within a stage, subject to their own lifetime. | Neither is the durable outer Task supervisor. |
@@ -265,7 +265,7 @@ SQLite and JSONL do not share a transaction. Recovery explicitly reconciles prov
 <a id="execution"></a>
 ## Dispatch, updates, and recovery
 
-The plugin supplies business meaning, while the provider serializes changes and preserves their identities. A completed source Session remains a provenance record; it is not the live resource owner of ordinary work.
+The plugin supplies business meaning, while the provider serializes changes and preserves their identities. A completed source Session remains the record of the dispatching conversation; it is not the live resource owner of ordinary work.
 
 ### Discover and associate
 

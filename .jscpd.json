@@ -7,8 +7,7 @@
   "ignore": [
     "**/tests/**",
     "**/tsdown.config.ts",
-    "**/task/task-agent-loop/src/**",
-    "**/task/task-agent-presets/src/**"
+    "**/task/task-agent-loop/src/**"
   ],
   "ignorePattern": [
     "(?s)/\\* jscpd:ignore-start \\*/.*?/\\* jscpd:ignore-end \\*/"

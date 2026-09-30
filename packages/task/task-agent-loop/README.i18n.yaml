@@ -1,6 +1,49 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/task/task-agent-loop/README.md
-README.md: 215c3e158a3f4a04025f981a421a5856a83b64e5
-README.zh.md: 6add2ab32b41ebe6b45bb293e4271601d359c821
+/:
+  en: 49b5566a30908a1a
+  zh: 4471a4ffd1a6794d
+/deepseek-ai-dsh-task-agent-loop:
+  en: 44dccca6df5e4a18
+  zh: 6fc7f42028d9efed
+/deepseek-ai-dsh-task-agent-loop/summary:
+  en: 0367406f1170b0dd
+  zh: 4d6fbf25a7a8e714
+/deepseek-ai-dsh-task-agent-loop/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 9f0336825ccdaacd
+/deepseek-ai-dsh-task-agent-loop/use-this-package:
+  en: 2fd45554af0f2ff4
+  zh: c11ffc43e0080a50
+/deepseek-ai-dsh-task-agent-loop/understand-the-implementation:
+  en: 60110cb94b554bda
+  zh: 1fef45a9f7f2ffd0
+/deepseek-ai-dsh-task-agent-loop/no-runtime-invariant-companion-is-published-the-shared-agent-loop-companion-owns-the-copied-lifecycle-relationships-and-source-parity-rejects-task-copy-drift:
+  en: b72fdb7493c7367d
+  zh: 2ef7114870c86b79
+/deepseek-ai-dsh-task-agent-loop/further-exploration:
+  en: fc5647b564303a57
+  zh: 58bbd70317b78070
+/deepseek-ai-dsh-task-agent-loop/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/deepseek-ai-dsh-task-agent-loop/model-experience/task-agent-turn:
+  en: 2914548626aa211c
+  zh: dfd91754e5d655a8
+/deepseek-ai-dsh-task-agent-loop/model-experience/task-agent-turn/what-the-model-sees:
+  en: a80cbab2d1387c6b
+  zh: 3461141e4f931abd
+/deepseek-ai-dsh-task-agent-loop/model-experience/task-agent-turn/token-effect:
+  en: 8466380bf502f2aa
+  zh: eae4228b36c5b722
+/deepseek-ai-dsh-task-agent-loop/model-experience/task-agent-turn/kv-cache-effect:
+  en: 303fd378121a6ac2
+  zh: 843316714b53c080
+/deepseek-ai-dsh-task-agent-loop/known-limitations-and-deferred-work:
+  en: cb78672649081bc8
+  zh: c7a8ffbffd4b2b86
+/deepseek-ai-dsh-task-agent-loop/known-limitations-and-deferred-work/dev-note:
+  en: 0a1253c6f7b5e8b9
+  zh: ce96645b3e75874e
