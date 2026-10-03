@@ -18,6 +18,8 @@ export interface Config {
   root: string
   /** Browser launch lifetime, shared with gateway provisioning. */
   launchTtlMs: number
+  /** Exact browser origin of launch links; empty selects HTTP loopback on the --port value. Must match the gateway's publicOrigin. */
+  publicOrigin: string
   /** Browser session lifetime. */
   sessionTtlMs: number
   /** Maximum stored credentials per category. */
@@ -27,6 +29,7 @@ export interface Config {
 export const Config: Schema<Config> = Schema.object({
   root: Schema.string().required(),
   launchTtlMs: Schema.number().min(1).default(60000),
+  publicOrigin: Schema.string().default(''),
   sessionTtlMs: Schema.number().min(1).default(2592000000),
   credentialLimit: Schema.number().min(1).step(1).default(100),
 })
@@ -37,6 +40,11 @@ export const Config: Schema<Config> = Schema.object({
 export function apply(ctx: Context, config: Config): void {
   const ready = ctx.get('appReady')
   if (ready === undefined) throw new Error('Task administration requires the dsh launcher')
+  if (config.publicOrigin !== '') {
+    const origin = new URL(config.publicOrigin)
+    if (!['http:', 'https:'].includes(origin.protocol) || origin.origin !== config.publicOrigin)
+      throw new Error('Task publicOrigin must be an HTTP origin')
+  }
   ctx.effect(
     () => {
       let pending: Promise<void> | undefined
@@ -54,6 +62,12 @@ export function apply(ctx: Context, config: Config): void {
             if (command === 'token-create')
               process.stdout.write(`${JSON.stringify(await store.createDevice())}\n`)
             else if (command === 'token-revoke') await store.revokeDevice(brandString<TaskDeviceId>(target))
+            else if (command === 'launch-link') {
+              const origin = config.publicOrigin === '' ? `http://${ctx.taskStartup.host}:${ctx.taskStartup.port}` : config.publicOrigin
+              const launch = await store.createLaunch()
+              // The fragment never reaches HTTP requests or server logs; the client posts it to /auth/exchange.
+              process.stdout.write(`${JSON.stringify({ url: `${origin}/#launch=${launch.token}`, expiresAt: new Date(launch.expiresAt).toISOString() })}\n`)
+            }
           }
           ctx.get('appExit')?.(0)
         }

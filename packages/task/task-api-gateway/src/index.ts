@@ -14,13 +14,16 @@ import {
 } from '@deepseek-ai/dsh-task'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import { credentialReferences } from '@deepseek-ai/dsh-task/schema'
 // Type-only: the shared `agentPresets` roster this gateway lists.
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
 import type {} from '@deepseek-ai/dsh-permission-presets'
 import {
   idSchema,
+  browserSessionSchema,
   configSchema,
   createTaskOpenApi,
+  credentialListSchema,
   problemSchema,
   taskCursorSchema,
   taskJsonRoutes,
@@ -42,7 +45,6 @@ import { projectDiagnostics } from './projection.ts'
 
 const prefix = '/api/task/v1'
 const exchangeSchema = z.strictObject({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/) })
-const sessionSchema = z.strictObject({ csrf: z.string() })
 /** Gateway deployment limits and browser origin. */
 export interface Config {
   /** Private immutable blob and upload receipt directory. */
@@ -193,9 +195,9 @@ export class TaskApiGateway extends Service {
     }, 'task-api.routes')
   }
   /** Create a browser launch secret for an authorized local application entry.
-   * @returns single-use secret; never logged by the gateway.
+   * @returns single-use secret and its expiry; the gateway never logs the secret.
    */
-  createLaunchToken(): Promise<string> {
+  createLaunchToken(): Promise<{ token: string; expiresAt: number }> {
     return this.authentication.createLaunch()
   }
   /** Provision a device through an authorized local caller.
@@ -255,6 +257,21 @@ export class TaskApiGateway extends Service {
     }
   }
 
+  /** Describe each credential reference named by an installed definition's current configuration.
+   * @returns value-free status per reference, in reference order, with the naming definitions.
+   */
+  private async credentialList(): Promise<{ reference: string; configured: boolean; writable: boolean; definitionIds: string[] }[]> {
+    const owners = new Map<string, string[]>()
+    for (const definition of this.ctx.tasks.listDefinitions()) {
+      if (!definition.installed || definition.forms === undefined) continue
+      for (const reference of credentialReferences(definition.forms.business, definition.config.business))
+        owners.set(reference, [...(owners.get(reference) ?? []), definition.id])
+    }
+    return Promise.all([...owners].sort(([left], [right]) => left.localeCompare(right)).map(async ([reference, definitionIds]) => {
+      const info = await this.ctx.credentials.describe(credentialRef(reference))
+      return { reference, configured: info.configured, writable: info.writable, definitionIds }
+    }))
+  }
   private async formOperation(
     operation: 'getCatalog' | 'checkConfig' | 'getOptions',
     params: Record<string, string>,
@@ -278,7 +295,9 @@ export class TaskApiGateway extends Service {
             }),
           )
         ).flat(),
-        presets: (await this.ctx.agentPresets.list()).map(item => ({ id: item.id, title: item.id })),
+        presets: (await this.ctx.agentPresets.list()).map(item => ({
+          id: item.id, title: item.name ?? item.id, description: item.description ?? null,
+        })),
         permissions: this.ctx.permissionPresets.names.map(id => ({
           id,
           title: this.ctx.permissionPresets.optionOf(id).name,
@@ -361,7 +380,9 @@ export class TaskApiGateway extends Service {
           `dsh_task_session=${session.cookie}; Path=/api/task/v1; HttpOnly; SameSite=Strict; Max-Age=${Math.floor(this.config.sessionTtlMs / 1000)}${this.origin().protocol === 'https:' ? '; Secure' : ''}`,
         )
         status = 200
-        this.send(response, status, { csrf: session.csrf })
+        this.send(response, status, browserSessionSchema.parse({
+          csrf: session.csrf, expiresAt: new Date(session.expiresAt).toISOString(),
+        }))
         return
       }
       const auth = await this.authentication.authenticate(
@@ -377,6 +398,15 @@ export class TaskApiGateway extends Service {
         const ready = this.ready && (await this.ctx.tasks.diagnostics()).scheduler === 'running'
         status = path === '/ready' && !ready ? 503 : 200
         this.send(response, status, { ready, stopping: this.stopping })
+        return
+      }
+      if (path === '/credentials') {
+        validate(z.strictObject({}), query)
+        if (method !== 'get' || body !== undefined)
+          throw new HttpProblem(405, 'method_not_allowed', 'Credential listing supports reads only')
+        operation = 'listCredentials'
+        status = 200
+        this.send(response, status, credentialListSchema.parse({ items: await this.credentialList() }))
         return
       }
       const credential = /^\/credentials\/([A-Za-z_][A-Za-z0-9_]*)$/.exec(path)
@@ -419,7 +449,7 @@ export class TaskApiGateway extends Service {
           const items = await this.attachments.upload(request, run, auth.principal, key, () => {
             this.assertRunning()
             const current = this.ctx.tasks.getRun(runId)
-            if (current === undefined || current.terminalAt !== null || current.status === 'cancelling')
+            if (current === undefined || current.terminalAt !== null || current.status === 'cancelling' || current.cleanup === 'blocked')
               throw new HttpProblem(409, 'run_readonly', 'Task run no longer accepts attachments')
           })
           status = 201
@@ -519,9 +549,9 @@ export class TaskApiGateway extends Service {
         operation = 'getBrowserSession'
         validate(z.strictObject({}), query)
         if (body !== undefined) throw new HttpProblem(400, 'unexpected_body', 'This operation has no body')
-        if (auth.csrf === null) throw new AuthenticationError()
+        if (auth.csrf === null || auth.expiresAt === null) throw new AuthenticationError()
         status = 200
-        this.send(response, status, sessionSchema.parse({ csrf: auth.csrf }))
+        this.send(response, status, browserSessionSchema.parse({ csrf: auth.csrf, expiresAt: new Date(auth.expiresAt).toISOString() }))
         return
       }
       if (path === '/openapi.json' && method === 'get') {

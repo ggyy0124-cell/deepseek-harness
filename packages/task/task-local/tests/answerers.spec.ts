@@ -5,6 +5,7 @@ import { SessionId } from '@deepseek-ai/dsh-session'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { TaskRun, TaskService } from '@deepseek-ai/dsh-task'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { ToolCallId } from '@deepseek-ai/dsh-llm/brand'
 import { installTaskAnswerers } from '../src/answerers.ts'
 import type { RuntimeInteractions } from '../src/interactions.ts'
 import { validateForm } from '../src/forms.ts'
@@ -41,15 +42,15 @@ describe('Task interaction answerers', () => {
     const { ctx, agent, ask } = fixture('allowed-once')
     const control = new AbortController()
     const next = vi.fn(async () => 'unavailable' as const)
-    expect(await ctx.waterfall('approval/request', { agent, toolName: 'publish', reason: 'Review', signal: control.signal }, next))
+    expect(await ctx.waterfall('approval/request', { agent, toolName: 'publish', reason: 'Review', callId: ToolCallId('call-1'), signal: control.signal }, next))
       .toBe('allowed-once')
-    expect(ask.mock.calls[0]?.[1]).toMatchObject({ source: 'tool_approval', title: 'publish', description: 'Review' })
+    expect(ask.mock.calls[0]?.[1]).toMatchObject({ source: 'tool_approval', title: 'publish', description: 'Review', callId: 'call-1', questions: null })
     const explicit = ask.mock.calls[0]![2]
     control.abort(); expect(explicit.aborted).toBe(true)
     await ctx.waterfall('approval/request', { agent, toolName: 'publish' }, next)
     const lifetime = ask.mock.calls[1]![2]
     expect(lifetime.aborted).toBe(false)
-    expect(ask.mock.calls[1]?.[1].description).toBe('')
+    expect(ask.mock.calls[1]?.[1]).toMatchObject({ description: '', callId: null })
     await ctx.fiber.dispose()
     expect(lifetime.aborted).toBe(true)
     expect(next).not.toHaveBeenCalled()
@@ -59,12 +60,18 @@ describe('Task interaction answerers', () => {
     const answer = { answers: [{ id: 'choice', selected: ['A', 'B'] }, { id: 'text', selected: [], custom: 'detail' }] }
     const { ctx, agent, ask } = fixture(answer)
     const questions = [
-      { id: 'choice', question: 'Choose', detail: 'More', multiSelect: true, options: [{ label: 'A' }, { label: 'B' }] },
+      { id: 'choice', question: 'Choose', detail: 'More', header: 'Scope', multiSelect: true,
+        options: [{ label: 'A', description: 'First' }, { label: 'B' }] },
       { id: 'text', question: 'Explain' },
     ]
     expect(await ctx.waterfall('user-questions/request', { agent, questions }, async () => ({ answers: [] }))).toEqual(answer)
     const captured = ask.mock.calls[0]![1]
-    expect(captured).toMatchObject({ source: 'agent_question', title: 'Choose\nExplain', description: 'More' })
+    expect(captured).toMatchObject({ source: 'agent_question', title: 'Choose\nExplain', description: 'More', callId: null })
+    expect(captured.questions).toEqual([
+      { id: 'choice', question: 'Choose', detail: 'More', header: 'Scope', multiSelect: true,
+        options: [{ label: 'A', description: 'First' }, { label: 'B', description: null }] },
+      { id: 'text', question: 'Explain', detail: null, header: null, multiSelect: false, options: [] },
+    ])
     expect(() => { validateForm(captured.schema, answer) }).not.toThrow()
     expect(() => { validateForm(captured.schema, { answers: [{ id: 'choice', selected: ['unknown'] }, answer.answers[1]!] }) }).toThrow()
     const single = fixture({ answers: [{ id: 'one', selected: ['A'] }] })

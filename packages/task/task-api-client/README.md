@@ -24,7 +24,7 @@ Call declared Task JSON operations using standard Fetch. The client validates re
 
 Construct `TaskApiClient` with an explicit API base URL, Fetch implementation and authentication callback. Call `request(operationId, request)` using the [protocol catalog](../task-api-protocol/README.md). Authentication is sampled per request. Browser commands include CSRF; bearer requests omit cookies. Redirects fail to prevent credentials from following a different endpoint.
 
-`TaskApiError.problem` carries validated server diagnostics and revision conflicts. Caller cancellation is forwarded to Fetch. Invalid parameters, missing write identities, unexpected response statuses and non-protocol errors reject. Error pages are not copied into exception messages.
+`credential(reference, value?)` reads or replaces one shared credential, and `credentials()` lists the references named by installed definitions; neither returns a value. `TaskApiError.problem` carries validated server diagnostics and revision conflicts. Caller cancellation is forwarded to Fetch. Invalid parameters, missing write identities, unexpected response statuses and non-protocol errors reject. Error pages are not copied into exception messages.
 
 **Runtime invariant:** No companion is published. Each operation validates its request and response directly; Fetch tests cover authentication and failure behavior.
 

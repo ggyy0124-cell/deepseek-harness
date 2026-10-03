@@ -24,7 +24,7 @@ kind: "package-library"
 
 使用明确的 API 基础 URL、Fetch 实现和认证回调构造 `TaskApiClient`。按[协议目录](../task-api-protocol/README.zh.md)调用 `request(operationId, request)`。每次请求获取当前认证值。浏览器命令附带 CSRF；Bearer 请求不发送 Cookie。重定向会失败，避免凭据随请求转发到其他地址。
 
-`TaskApiError.problem` 携带校验后的服务端诊断和版本冲突。调用方取消信号传递给 Fetch。非法参数、缺失写入标识、非预期响应状态和非协议错误均会拒绝。错误页面不会被复制到异常消息中。
+`credential(reference, value?)` 读取或替换单个共享凭据，`credentials()` 列出已安装定义引用的凭据；二者都不返回凭据值。`TaskApiError.problem` 携带校验后的服务端诊断和版本冲突。调用方取消信号传递给 Fetch。非法参数、缺失写入标识、非预期响应状态和非协议错误均会拒绝。错误页面不会被复制到异常消息中。
 
 **运行时不变量：** 不发布伴随插件。每个操作直接校验请求和响应；Fetch 测试覆盖认证和失败行为。
 

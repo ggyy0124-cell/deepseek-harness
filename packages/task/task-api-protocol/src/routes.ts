@@ -46,7 +46,7 @@ export const taskJsonRoutes = [
     path: '/catalog',
     response: z.object({
       models: z.array(z.object({ provider: z.string(), model: z.string(), title: z.string() })),
-      presets: z.array(z.object({ id: z.string(), title: z.string() })),
+      presets: z.array(z.object({ id: z.string(), title: z.string(), description: z.string().nullable() })),
       permissions: z.array(z.object({ id: z.string(), title: z.string() })),
     }),
     status: 200,
@@ -154,6 +154,13 @@ export const taskJsonRoutes = [
     status: 200,
   },
   {
+    operationId: 'listWaitingInteractions',
+    method: 'get',
+    path: '/interactions',
+    response: z.strictObject({ items: z.array(interactionSchema) }),
+    status: 200,
+  },
+  {
     operationId: 'respond',
     method: 'post',
     path: '/runs/{runId}/interactions/{waitId}/responses',
@@ -166,6 +173,14 @@ export const taskJsonRoutes = [
     operationId: 'cancelRun',
     method: 'post',
     path: '/runs/{runId}/cancellation',
+    params: runParams,
+    response: cancellationSchema,
+    status: 202,
+  },
+  {
+    operationId: 'retryCleanup',
+    method: 'post',
+    path: '/runs/{runId}/cleanup',
     params: runParams,
     response: cancellationSchema,
     status: 202,

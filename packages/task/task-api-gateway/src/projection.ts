@@ -1,6 +1,9 @@
 /** Explicit Task DTO projection; private run fields never cross the HTTP API. */
-import type { TaskDefinitionView, TaskRun } from '@deepseek-ai/dsh-task'
-import { definitionSchema, interactionSchema, runSchema, diagnosticsSchema, retirementSchema } from '@deepseek-ai/dsh-task-api-protocol'
+import type { TaskDefinitionView, TaskInteraction, TaskRetirement, TaskRun } from '@deepseek-ai/dsh-task'
+import { waitContentSchema } from '@deepseek-ai/dsh-task/schema'
+import {
+  availabilitySchema, definitionSchema, interactionSchema, runSchema, diagnosticsSchema, retirementSchema,
+} from '@deepseek-ai/dsh-task-api-protocol'
 import type { z } from 'zod'
 
 function time(value: number | null): string | null {
@@ -23,19 +26,43 @@ export function projectRun(run: TaskRun): z.infer<typeof runSchema> {
     revision: run.revision,
     status: run.status,
     reason: run.reason,
+    outcome: run.outcome,
+    occurrence: run.occurrence === null ? null : {
+      scheduledAt: time(run.occurrence.scheduledAt),
+      missed: run.occurrence.missed === null ? null : {
+        from: time(run.occurrence.missed.from), through: time(run.occurrence.missed.through), count: run.occurrence.missed.count,
+      },
+    },
     cleanup: run.cleanup,
     result: run.result,
     createdAt: time(run.createdAt),
     updatedAt: time(run.updatedAt),
     terminalAt: time(run.terminalAt),
     retryAt: time(run.retryAt),
+    supplementalInputSchema: run.forms?.supplement ?? null,
   })
 }
-/** Expose the existing JSON configuration as schema version zero.
+/** Derive a definition's admission state from its record and latest retirement.
  * @param definition - installed or retained definition.
+ * @param retirement - latest retirement of the definition, if one was requested.
+ * @returns the public availability value.
+ */
+function availability(definition: TaskDefinitionView, retirement: TaskRetirement | undefined): z.infer<typeof availabilitySchema> {
+  if (retirement?.state === 'pending') return 'retiring'
+  if (retirement?.state === 'blocked') return 'retirement_blocked'
+  if (!definition.installed) return retirement === undefined ? 'unavailable' : 'retired'
+  if (definition.enabled) return 'active'
+  return definition.blockedReason === null ? 'paused' : 'blocked'
+}
+/** Expose a definition; one without declared forms uses schema version zero and a generic JSON editor.
+ * @param definition - installed or retained definition.
+ * @param retirement - latest retirement of the definition, if one was requested.
  * @returns the generic configuration DTO; schema zero does not claim plugin-declared form validation.
  */
-export function projectDefinition(definition: TaskDefinitionView): z.infer<typeof definitionSchema> {
+export function projectDefinition(
+  definition: TaskDefinitionView,
+  retirement: TaskRetirement | undefined,
+): z.infer<typeof definitionSchema> {
   return definitionSchema.strict().parse({
     id: definition.id,
     title: definition.title,
@@ -43,31 +70,61 @@ export function projectDefinition(definition: TaskDefinitionView): z.infer<typeo
     revision: definition.revision,
     installed: definition.installed,
     enabled: definition.enabled,
+    availability: availability(definition, retirement),
+    reason: definition.blockedReason,
     config: definition.config,
     nextDueAt: time(definition.nextDueAt),
     configSchemaVersion: definition.forms?.version ?? 0,
     businessConfigSchema: definition.forms?.business ?? {},
     manualInputSchema: definition.config.schedule.kind === 'manual' ? (definition.forms?.input ?? {}) : null,
+    supplementalInputSchema: definition.forms?.supplement ?? null,
   })
 }
-/** Project the engine's persisted business wait; Agent approvals require a separate adapter.
+/** Project the engine's persisted business wait; runtime approvals use {@link projectRuntimeInteraction}.
  * @param run - execution with an optional business wait.
- * @returns zero or one version-bound business interaction.
+ * @returns zero or one version-bound business interaction; structured content supplies its body and attachments.
  */
 export function projectInteractions(run: TaskRun): z.infer<typeof interactionSchema>[] {
   if (run.wait === null || run.terminalAt !== null) return []
+  const prompt = run.wait.prompt
+  const parsed = waitContentSchema.safeParse(prompt)
+  const content = typeof prompt === 'string' ? { title: prompt } : parsed.success ? parsed.data : null
   return [
     interactionSchema.strict().parse({
       id: run.wait.id,
+      runId: run.id,
       revision: run.wait.revision,
       source: 'business',
-      title: typeof run.wait.prompt === 'string' ? run.wait.prompt : run.definitionId,
-      description: typeof run.wait.prompt === 'string' ? '' : JSON.stringify(run.wait.prompt),
+      title: content?.title ?? run.definitionId,
+      description: content === null ? JSON.stringify(prompt) : content.body ?? '',
       schema: run.wait.schema ?? {},
-      createdAt: time(run.updatedAt),
+      callId: null,
+      questions: null,
+      attachments: content?.attachments ?? [],
+      createdAt: time(run.wait.createdAt ?? run.updatedAt),
       expiresAt: time(run.wait.expiresAt ?? null),
     }),
   ]
+}
+/** Project one waiting tool approval or Agent question.
+ * @param value - persisted runtime request.
+ * @returns version-bound interaction carrying its tool call or structured questions.
+ */
+export function projectRuntimeInteraction(value: TaskInteraction): z.infer<typeof interactionSchema> {
+  return interactionSchema.strict().parse({
+    id: value.id,
+    runId: value.runId,
+    revision: value.revision,
+    source: value.source,
+    title: value.title,
+    description: value.description,
+    schema: value.schema,
+    callId: value.callId,
+    questions: value.questions,
+    attachments: [],
+    createdAt: time(value.createdAt),
+    expiresAt: time(value.expiresAt),
+  })
 }
 
 /** Convert diagnostic timestamps while retaining explicit unavailable storage.

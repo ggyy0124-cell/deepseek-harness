@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-03-task-web-client-hosting.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-03-task-web-client-hosting.md
+/agent-note-task-web-client-hosting-and-browser-session:
+  en: f7a5a140d24f7226
+  zh: 95514b252783861c
+/agent-note-task-web-client-hosting-and-browser-session/problem:
+  en: 007467c1b74bf227
+  zh: bd917651ddc7d506
+/agent-note-task-web-client-hosting-and-browser-session/decision:
+  en: 9e35a573fe0dffa7
+  zh: 132870491e34f8f1
+/agent-note-task-web-client-hosting-and-browser-session/alternatives-considered:
+  en: 408aec8a326bcb8b
+  zh: 519415a53592455e
+/agent-note-task-web-client-hosting-and-browser-session/consequences:
+  en: e511dfd7ea67016a
+  zh: 4d10ba1bbd12811e

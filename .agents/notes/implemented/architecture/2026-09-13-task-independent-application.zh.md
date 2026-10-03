@@ -10,7 +10,7 @@ Status: implemented
 
 ## 决策
 
-内置 Task Profile 组合 Base 与 Task App。Task App 挂载未修改的 Host WebServer、Task 专属运行时及 REST 网关。当前范围不含业务插件、Task Web UI 和原生客户端应用；不提供前端资源、自动打开浏览器或签发浏览器登录链接的命令，启动时输出 API 地址。默认旧 Task 组合迁移到新 bundle 列表，自定义组合保留。Base、Web App 和共享运行时源码保持不变。
+内置 Task Profile 组合 Base 与 Task App。Task App 挂载未修改的 Host WebServer、Task 专属运行时及 REST 网关。当前范围不含业务插件、Task Web UI 和原生客户端应用；不提供前端资源或自动打开浏览器；启动时输出 API 地址，`--launch-link` 输出浏览器登录链接（[面向 Web 客户端的能力](2026-10-03-task-web-client-capabilities.zh.md)）。默认旧 Task 组合迁移到新 bundle 列表，自定义组合保留。Base、Web App 和共享运行时源码保持不变。
 
 业务插件拥有阶段、配置 schema 及可选检查和选项来源，每个 Cordis fiber 对应一个特殊任务，不提供浏览器代码。Draft 2020-12 校验只允许本地引用，schema 版本变化需要显式迁移，每个执行保存 forms 快照，普通执行继承父执行配置与 forms。已有业务等待保留其持久化 schema 和版本。工具审批和模型提问持久化，响应必须匹配仍在准入执行中的等待者、输入版本和有效期。重启撤销中断的运行时请求，旧批准不能授权新工具执行。
 

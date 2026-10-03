@@ -100,6 +100,25 @@ describe('Task gateway composition', () => {
     expect(() => { service.assertRunning() }).toThrow('stopping')
   })
 
+  it('keeps a cleanup-blocked run read-only and settles its recorded outcome after a cleanup retry', async () => {
+    let failures = 1
+    const { client, definition } = await gateway({
+      runSpecial: async () => ({ kind: 'succeed', result: 'Completed' }),
+      cleanup: async () => { if (failures-- > 0) throw new Error('worktree busy') },
+    })
+    const run = await client.request('triggerManual', { params: { definitionId: definition.id },
+      body: { input: null }, idempotencyKey: 'blocked-cleanup' })
+    const read = () => client.request('getRun', { params: { runId: run.id } })
+    await expect.poll(async () => (await read()).cleanup).toBe('blocked')
+    expect(await read()).toMatchObject({ status: 'blocked', outcome: 'succeeded', terminalAt: null })
+    await expect(client.upload(run.id, [new File(['late'], 'late.txt')], 'blocked-upload'))
+      .rejects.toMatchObject({ problem: { status: 409, code: 'run_readonly' } })
+    expect(await client.request('retryCleanup', { params: { runId: run.id }, idempotencyKey: 'repair' }))
+      .toMatchObject({ runId: run.id, status: 'cancelling' })
+    await expect.poll(async () => (await read()).status).toBe('succeeded')
+    expect(await read()).toMatchObject({ cleanup: 'complete', outcome: 'succeeded', result: 'Completed' })
+  })
+
   it('refuses a transcript read if its response was already destroyed', async () => {
     const { ctx, client, definition } = await gateway()
     const run = await client.request('triggerManual', { params: { definitionId: definition.id },
@@ -225,7 +244,7 @@ describe('Task gateway composition', () => {
 
   it('sets Secure on browser cookies for an HTTPS public origin behind a local listener', async () => {
     const { ctx, origin } = await gateway({}, { publicOrigin: 'https://tasks.example' })
-    const body = JSON.stringify({ token: await ctx.taskGateway.createLaunchToken() })
+    const body = JSON.stringify({ token: (await ctx.taskGateway.createLaunchToken()).token })
     const result = await new Promise<{ status: number; cookie: string | undefined; body: string }>((resolve, reject) => {
       const request = httpRequest({ hostname: '127.0.0.1', port: new URL(origin).port, path: '/api/task/v1/auth/exchange',
         method: 'POST', headers: { Host: 'tasks.example', Origin: 'https://tasks.example',
@@ -457,9 +476,10 @@ describe('Task gateway composition', () => {
     expect(await client.credential('TASK_INSTRUMENTED')).toEqual({ configured: false, writable: true })
     expect(await client.credential('TASK_INSTRUMENTED', 'private')).toEqual({ configured: true, writable: true })
     const exchange = await raw('auth/exchange', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: await ctx.taskGateway.createLaunchToken() }) })
+      body: JSON.stringify({ token: (await ctx.taskGateway.createLaunchToken()).token }) })
     const cookie = exchange.headers.get('set-cookie')!.split(';')[0]!
-    const { csrf } = await exchange.json() as { csrf: string }
+    const { csrf, expiresAt } = await exchange.json() as { csrf: string; expiresAt: string }
+    expect(Date.parse(expiresAt) - Date.now()).toBeGreaterThan(29 * 24 * 3600 * 1000)
     const browserFetch: typeof fetch = (url, init) => {
       const headers = new Headers(init?.headers)
       headers.set('Cookie', cookie); headers.set('Origin', origin)
@@ -489,7 +509,7 @@ describe('Task gateway composition', () => {
     expect(await browser.request('cancelRun', { params: { runId: run.id }, idempotencyKey: 'browser-cancel' }))
       .toMatchObject({ status: 'cancelling' })
     const status = await browserFetch(`${origin}/api/task/v1/auth/session`)
-    expect(await status.json()).toEqual({ csrf })
+    expect(await status.json()).toEqual({ csrf, expiresAt })
     const deniedLogout = await browserFetch(`${origin}/api/task/v1/auth/logout`, {
       method: 'POST', headers: { 'X-CSRF-Token': 'wrong' },
     })
@@ -499,5 +519,36 @@ describe('Task gateway composition', () => {
     await expect(browser.credential('TASK_BROWSER')).rejects.toMatchObject({ problem: { status: 401 } })
     await ctx.taskGateway.revokeDeviceToken(device.id)
     await expect(client.request('listDefinitions', {})).rejects.toMatchObject({ problem: { status: 401 } })
+  })
+
+  it('lists credential references named by installed definitions with value-free status', async () => {
+    const { ctx, client, raw, definition } = await gateway()
+    const credentialForms = { version: 1, input: {}, business: { type: 'object', properties: {
+      token: { type: 'string', 'x-dsh-widget': 'credential' }, mirror: { type: 'string', 'x-dsh-widget': 'credential' } } } }
+    const { forms: _forms, ...formless } = definition
+    const register = (id: string, business: Record<string, string>, forms?: TaskDefinition['forms']) => ctx.plugin({ name: id, inject: ['tasks'],
+      apply(owner: Context) {
+        owner.tasks.register(owner, { ...formless, ...(forms === undefined ? {} : { forms }), id: brandString<TaskDefinitionId>(id),
+          config: { ...definition.config, business } })
+      } })
+    await register('credentialed', { token: 'TASK_SHARED', mirror: 'TASK_ALPHA' }, credentialForms)
+    await register('second', { token: 'TASK_SHARED' }, credentialForms)
+    const removed = await register('removed', { token: 'TASK_REMOVED' }, credentialForms)
+    await removed.dispose()
+    await register('formless', { token: 'TASK_UNDECLARED' })
+    await client.credential('TASK_SHARED', 'private-value')
+    expect(await client.credentials()).toEqual([
+      { reference: 'TASK_ALPHA', configured: false, writable: true, definitionIds: ['credentialed'] },
+      { reference: 'TASK_SHARED', configured: true, writable: true, definitionIds: ['credentialed', 'second'] },
+    ])
+    expect((await raw('credentials', { method: 'POST' })).status).toBe(405)
+  })
+
+  it('publishes preset display names and descriptions in the catalog', async () => {
+    const { ctx, client } = await gateway()
+    vi.spyOn(ctx.agentPresets, 'list').mockResolvedValue([{ id: 'named', name: 'Named', description: 'Described' }, { id: 'plain' }])
+    expect((await client.request('getCatalog', {})).presets).toEqual([
+      { id: 'named', title: 'Named', description: 'Described' }, { id: 'plain', title: 'plain', description: null },
+    ])
   })
 })

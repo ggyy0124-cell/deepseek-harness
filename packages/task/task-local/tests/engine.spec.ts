@@ -102,6 +102,7 @@ describe('durable tasks', () => {
     const waiting = engine.triggerManual(definitionId, request('expires'), null)
     await turn()
     const prompt = db.run(waiting.id)!.wait!
+    expect(prompt.createdAt).toBe(Date.UTC(2026, 8, 10))
     advance(101)
     expect(() => { engine.respond(waiting.id, prompt.id, prompt.revision, request('expired'), true) })
       .toThrow('stale or closed')
@@ -116,6 +117,7 @@ describe('durable tasks', () => {
     engine.updateConfig(definitionId, 1, { ...config, schedule: { kind: 'polling', intervalMs: 100 } })
     await turn()
     expect(db.runs()).toHaveLength(1)
+    expect(db.runs()[0]).toMatchObject({ outcome: null, occurrence: { scheduledAt: Date.UTC(2026, 8, 10), missed: null } })
   })
 
   it.each(['error', 'primitive'] as const)('disables a poll after a %s discovery admission failure', async (failure) => {
@@ -123,9 +125,14 @@ describe('durable tasks', () => {
     engine.register(definition({ config: { ...definition().config, schedule: { kind: 'polling', intervalMs: 100 } },
       parseInput: () => { if (failure === 'error') throw new Error('discovery unavailable'); throw 'discovery unavailable' } }))
     await turn()
-    expect(db.definitions()[0]?.enabled).toBe(false)
+    expect(db.definitions()[0]).toMatchObject({ enabled: false,
+      blockedReason: `schedule evaluation failed (${failure === 'error' ? 'Error' : 'unknown'})` })
     expect(db.runs()).toEqual([])
     expect(db.journal(0).some(item => item.event === 'schedule.blocked')).toBe(true)
+    engine.setEnabled(definitionId, false)
+    expect(db.definitions()[0]?.blockedReason).not.toBeNull()
+    engine.setEnabled(definitionId, true)
+    expect(db.definitions()[0]).toMatchObject({ enabled: true, blockedReason: null })
   })
 
   it('retains an unfinished scan on configuration updates and closes an exhausted schedule', async () => {
@@ -150,6 +157,7 @@ describe('durable tasks', () => {
     await turn()
     expect(db.runs()).toHaveLength(1)
     expect(db.runs()[0]?.input).toMatchObject({ missedCount: 1 })
+    expect(db.runs()[0]?.occurrence).toEqual({ scheduledAt: Date.UTC(2026, 8, 10, 0, 1), missed: null })
   })
 
   it.each(['retire', 'cancel'] as const)('records failed %s command cleanup for later repair', async (kind) => {
@@ -508,14 +516,17 @@ describe('durable tasks', () => {
     engine.register(definition())
     const first = engine.triggerManual(definitionId, request('page-one'), null)
     const second = engine.triggerManual(definitionId, request('page-two'), null)
-    const initial = db.queryRuns({ limit: 1, status: 'provisioning' })
+    const initial = db.queryRuns({ limit: 1, status: ['provisioning'] })
     expect(initial.items.map(run => run.id)).toEqual([second.id])
     engine.triggerManual(definitionId, request('page-three'), null)
-    const next = db.queryRuns({ limit: 1, head: initial.head!, after: second.id, status: 'provisioning' })
+    const next = db.queryRuns({ limit: 1, head: initial.head!, after: second.id, status: ['provisioning'] })
     expect(next.items.map(run => run.id)).toEqual([first.id])
     expect(next.hasMore).toBe(false)
+    expect(db.queryRuns({ limit: 5, status: [] }).items).toEqual([])
+    expect(db.queryRuns({ limit: 5, parentRunId: first.id }).items).toEqual([])
     await engine.cancel(second.id)
-    expect(() => db.queryRuns({ limit: 1, head: initial.head!, after: second.id, status: 'provisioning' })).toThrow('membership changed')
+    expect(db.queryRuns({ limit: 5, status: ['cancelled', 'provisioning'] }).items).toHaveLength(3)
+    expect(() => db.queryRuns({ limit: 1, head: initial.head!, after: second.id, status: ['provisioning'] })).toThrow('membership changed')
     expect(engine.diagnostics()).toMatchObject({ totalRuns: 3, activeRuns: 2, completedRuns: 1, queuedRuns: 2, activePermits: 0 })
   })
 
@@ -723,7 +734,13 @@ describe('durable tasks', () => {
     const runs = db.runs()
     expect(runs).toHaveLength(misfire === 'all' ? 3 : misfire === 'coalesce' ? 1 : 0)
     if (misfire === 'all') expect(runs.map(run => run.status)).toEqual(['waiting_input', 'provisioning', 'provisioning'])
-    if (misfire === 'coalesce') expect(runs[0]?.input).toMatchObject({ missedCount: 3 })
+    if (misfire === 'coalesce') {
+      expect(runs[0]?.input).toMatchObject({ missedCount: 3 })
+      expect(runs[0]?.occurrence).toEqual({ scheduledAt: Date.UTC(2026, 8, 10, 0, 3),
+        missed: { from: Date.UTC(2026, 8, 10, 0, 1), through: Date.UTC(2026, 8, 10, 0, 3), count: 3 } })
+    }
+    if (misfire === 'all') expect(runs.map(run => run.occurrence?.scheduledAt))
+      .toEqual([1, 2, 3].map(minute => Date.UTC(2026, 8, 10, 0, minute)))
     expect(db.journal(0).some(entry => entry.event === 'calendar.scanned')).toBe(true)
     await turn()
     expect(db.runs()).toHaveLength(runs.length)
@@ -973,9 +990,33 @@ describe('durable tasks', () => {
     engine.register(definition({ cleanup, resources: () => ['browser:one'] }))
     const run = engine.triggerManual(definitionId, request('first'), null)
     await turn()
-    expect(db.run(run.id)).toMatchObject({ status: 'blocked', cleanup: 'blocked', terminalAt: null })
+    expect(db.run(run.id)).toMatchObject({ status: 'blocked', cleanup: 'blocked', terminalAt: null,
+      outcome: 'succeeded', result: 'done', reason: 'resource cleanup failed; retry cleanup after repair' })
     await engine.cancel(run.id)
-    expect(db.run(run.id)).toMatchObject({ status: 'cancelled', cleanup: 'complete' })
+    expect(db.run(run.id)).toMatchObject({ status: 'succeeded', outcome: 'succeeded', result: 'done', cleanup: 'complete' })
+  })
+
+  it('retries blocked cleanup through a command that keeps the recorded outcome', async () => {
+    const { engine, db, turn } = setup()
+    const cleanup = vi.fn().mockRejectedValueOnce(new Error('first attempt'))
+      .mockRejectedValueOnce(new Error('second attempt')).mockResolvedValue(undefined)
+    engine.register(definition({ cleanup, runSpecial: async () => ({ kind: 'fail', reason: 'business rejected' }) }))
+    const principal = brandString<TaskPrincipalId>('owner')
+    const run = engine.triggerManual(definitionId, request('failed-run'), null)
+    expect(() => engine.command(principal, request('not-blocked'), { kind: 'cleanup', runId: run.id }))
+      .toThrow('cleanup is not blocked')
+    await turn()
+    expect(db.run(run.id)).toMatchObject({ status: 'blocked', cleanup: 'blocked', outcome: 'failed' })
+    expect(engine.command(principal, request('retry-1'), { kind: 'cleanup', runId: run.id }))
+      .toEqual({ kind: 'cancellation', runId: run.id, status: 'cancelling' })
+    await expect.poll(() => cleanup.mock.calls.length).toBe(2)
+    await engine.drain()
+    expect(db.run(run.id)).toMatchObject({ status: 'blocked', cleanup: 'blocked', outcome: 'failed' })
+    engine.command(principal, request('retry-2'), { kind: 'cleanup', runId: run.id })
+    await engine.drain()
+    expect(db.run(run.id)).toMatchObject({ status: 'failed', outcome: 'failed', reason: 'business rejected', cleanup: 'complete' })
+    expect(db.journal(0).filter(entry => entry.event === 'cleanup.retry')).toHaveLength(2)
+    expect(() => engine.command(principal, request('ended'), { kind: 'cleanup', runId: run.id })).toThrow('read-only')
   })
 
   it('cancels in-flight work on plugin removal but preserves it on host shutdown', async () => {
@@ -1292,7 +1333,7 @@ describe('Task forms and runtime interactions', () => {
     db.putRun({ ...run, status: 'running' })
     const controller = new AbortController()
     const answer = engine.interactions.ask(run.id,
-      { source: 'agent_question', title: 'Choose', description: '', schema: {}, expiresAt: null }, controller.signal)
+      { source: 'agent_question', title: 'Choose', description: '', schema: {}, callId: null, questions: null, expiresAt: null }, controller.signal)
     const pending = db.interactions(run.id)[0]!
     engine.interactions.respond(run.id, pending.id, pending.revision, 'accepted')
     controller.abort()
@@ -1306,7 +1347,7 @@ describe('Task forms and runtime interactions', () => {
     const run = engine.triggerManual(definitionId, request('interrupted-question'), null)
     const question = { id: brandString<import('@deepseek-ai/dsh-task').TaskWaitId>('interrupted'), runId: run.id,
       revision: 1, source: 'agent_question' as const, title: 'Choose', description: '', schema: {},
-      expiresAt: null, createdAt: run.createdAt, state: 'waiting' as const, answer: null }
+      callId: null, questions: null, expiresAt: null, createdAt: run.createdAt, state: 'waiting' as const, answer: null }
     db.putInteraction(question)
     db.putInteraction({ ...question, id: brandString<import('@deepseek-ai/dsh-task').TaskWaitId>('answered'), state: 'answered', answer: true })
     const audit = vi.fn()
@@ -1318,7 +1359,7 @@ describe('Task forms and runtime interactions', () => {
   it.each(['expiry', 'revision', 'terminal'] as const)('withdraws live runtime questions on %s', async (change) => {
     const { db, engine, advance } = setup()
     engine.register(definition({ runSpecial: async stage => ({ kind: 'succeed', result: await engine.interactions.ask(stage.run.id,
-      { source: 'agent_question', title: 'Choose', description: '', schema: {}, expiresAt: stage.run.createdAt + 100 }, stage.signal) }) }))
+      { source: 'agent_question', title: 'Choose', description: '', schema: {}, callId: null, questions: null, expiresAt: stage.run.createdAt + 100 }, stage.signal) }) }))
     const run = engine.triggerManual(definitionId, request('expired-question'), null)
     engine.tick()
     await expect.poll(() => db.interactions(run.id).length).toBe(1)
@@ -1341,7 +1382,7 @@ describe('Task forms and runtime interactions', () => {
     const { engine } = setup()
     engine.register(definition())
     const run = engine.triggerManual(definitionId, request('not-admitted'), null)
-    const question = { source: 'agent_question' as const, title: 'Choose', description: '', schema: {}, expiresAt: null }
+    const question = { source: 'agent_question' as const, title: 'Choose', description: '', schema: {}, callId: null, questions: null, expiresAt: null }
     await expect(engine.interactions.ask(run.id, question, new AbortController().signal)).rejects.toThrow('admitted stage')
     await expect(engine.interactions.ask(brandString<import('@deepseek-ai/dsh-task').TaskRunId>('missing'), question,
       new AbortController().signal)).rejects.toThrow('admitted stage')
@@ -1375,7 +1416,7 @@ describe('Task forms and runtime interactions', () => {
     const { engine, db } = setup()
     const principal = brandString<TaskPrincipalId>('owner')
     engine.register(definition({ runSpecial: async stage => ({ kind: 'succeed', result: await engine.interactions.ask(stage.run.id,
-      { source: 'tool_approval', title: 'Publish', description: '', schema: { enum: ['allowed-once', 'rejected'] }, expiresAt: null }, stage.signal) }) }))
+      { source: 'tool_approval', title: 'Publish', description: '', schema: { enum: ['allowed-once', 'rejected'] }, callId: null, questions: null, expiresAt: null }, stage.signal) }) }))
     const run = engine.triggerManual(definitionId, request('approval-run'), null)
     engine.tick()
     await expect.poll(() => db.interactions(run.id).length).toBe(1)
@@ -1393,7 +1434,7 @@ describe('Task forms and runtime interactions', () => {
   it('withdraws live questions when cancellation drains their stage', async () => {
     const { engine, db } = setup()
     engine.register(definition({ runSpecial: async stage => ({ kind: 'succeed', result: await engine.interactions.ask(stage.run.id,
-      { source: 'agent_question', title: 'Choose', description: '', schema: {}, expiresAt: null }, stage.signal) }) }))
+      { source: 'agent_question', title: 'Choose', description: '', schema: {}, callId: null, questions: null, expiresAt: null }, stage.signal) }) }))
     const run = engine.triggerManual(definitionId, request('question-run'), null)
     engine.tick()
     await expect.poll(() => db.interactions(run.id).length).toBe(1)
@@ -1408,5 +1449,50 @@ describe('Task forms and runtime interactions', () => {
     const run = engine.triggerManual(definitionId, request('expires'), null)
     await turn(); advance(101); await turn()
     expect(db.run(run.id)).toMatchObject({ status: 'succeeded', result: { kind: 'timeout' } })
+  })
+})
+
+describe('Task presentation records', () => {
+  it('validates supplemental input against the schema captured by the run', async () => {
+    const { engine, db } = setup()
+    const supplement = { type: 'object', required: ['text'], additionalProperties: false, properties: { text: { type: 'string' } } }
+    engine.register(definition({ forms: { version: 1, business: { type: 'null' }, input: {}, supplement },
+      runSpecial: async () => ({ kind: 'wait', checkpoint: null, prompt: 'Review' }) }))
+    const run = engine.triggerManual(definitionId, request('supplement-run'), null)
+    expect(db.run(run.id)?.forms?.supplement).toEqual(supplement)
+    expect(() => { engine.sendInput(run.id, request('wrong-shape'), { note: 'missing text' }) }).toThrow('schema')
+    engine.sendInput(run.id, request('valid-shape'), { text: 'Retry after the fix' })
+    expect(db.inputs(run.id).map(input => input.value)).toEqual([{ text: 'Retry after the fix' }])
+    await engine.cancel(run.id)
+  })
+
+  it('reads records written before presentation fields existed', () => {
+    const root = mkdtempSync(join(tmpdir(), 'task-presentation-'))
+    disposers.push(async () => { rmSync(root, { recursive: true, force: true }) })
+    const path = join(root, 'tasks.sqlite')
+    const db = new TaskDatabase(path)
+    const base = { sessionId: 'task-session', definitionId, kind: 'manual', parentRunId: null, businessKey: null, codeVersion: '1',
+      configRevision: 1, config: definition().config, input: null, checkpoint: null, revision: 1, inputRevision: 0, wait: null,
+      retryAt: null, result: null, reason: null, createdAt: 1, updatedAt: 2, cleanup: 'complete', resources: [] }
+    db.close()
+    const raw = new DatabaseSync(path)
+    try {
+      for (const [id, status, terminalAt] of [['ended', 'succeeded', 3], ['active', 'queued', null]] as const)
+        raw.prepare('INSERT INTO runs VALUES (?,?,?,?,?,?)').run(id, `${id}-session`, definitionId, null, terminalAt,
+          JSON.stringify({ ...base, id, sessionId: `${id}-session`, status, terminalAt,
+            wait: id === 'active' ? { id: 'wait', revision: 0, prompt: 'Old prompt' } : null }))
+      raw.prepare('INSERT INTO definitions VALUES (?,?)').run(definitionId, JSON.stringify({ id: definitionId, title: 'Business',
+        codeVersion: '1', revision: 1, enabled: true, installed: true, config: definition().config, nextDueAt: null }))
+      for (const [id, createdAt, state] of [['later', 20, 'waiting'], ['earlier', 10, 'waiting'], ['done', 5, 'answered']] as const)
+        raw.prepare('INSERT INTO interactions VALUES (?,?,?)').run(id, 'active', JSON.stringify({ id, runId: 'active', revision: 0,
+          source: 'tool_approval', title: 'Publish', description: '', schema: {}, createdAt, expiresAt: null, state, answer: null }))
+    } finally { raw.close() }
+    const reopened = new TaskDatabase(path)
+    disposers.push(async () => { reopened.close() })
+    expect(reopened.run(brandString<TaskRun['id']>('ended'))).toMatchObject({ outcome: 'succeeded', occurrence: null })
+    expect(reopened.run(brandString<TaskRun['id']>('active'))).toMatchObject({ outcome: null, wait: { prompt: 'Old prompt' } })
+    expect(reopened.run(brandString<TaskRun['id']>('active'))?.wait).not.toHaveProperty('createdAt')
+    expect(reopened.definitions()[0]?.blockedReason).toBeNull()
+    expect(reopened.waitingInteractions().map(item => [item.id, item.callId, item.questions])).toEqual([['earlier', null, null], ['later', null, null]])
   })
 })

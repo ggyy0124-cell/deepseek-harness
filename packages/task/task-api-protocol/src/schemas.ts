@@ -1,13 +1,13 @@
 /** Public Task API records. These schemas contain no Host service or Session implementation types. */
 import { z } from 'zod'
-import { executionConfigSchema } from '@deepseek-ai/dsh-task/schema'
+import { credentialReferencePattern, executionConfigSchema, taskIdPattern, taskQuestionSchema } from '@deepseek-ai/dsh-task/schema'
 
 /** Opaque wire identity; consumers must not interpret its contents. */
 export const idSchema = z
   .string()
   .min(1)
   .max(256)
-  .regex(/^(?!\.{1,2}$)[A-Za-z0-9._:-]+$/)
+  .regex(taskIdPattern)
   .brand<'TaskApiId'>()
 /** Persisted revision accepted for optimistic concurrency. */
 export const revisionSchema = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
@@ -17,10 +17,16 @@ export const timestampSchema = z.iso.datetime()
 export const businessSchema = z.record(z.string(), z.json())
 /** Credential status contains no resolved secret. */
 export const credentialStatusSchema = z.object({
-  reference: idSchema,
+  reference: z.string().regex(credentialReferencePattern),
   configured: z.boolean(),
   writable: z.boolean(),
 })
+/** Credential references named by installed definitions' current configuration, with value-free status. */
+export const credentialListSchema = z.object({
+  items: z.array(credentialStatusSchema.extend({ definitionIds: z.array(idSchema) })),
+})
+/** Browser session returned by launch exchange and session recovery. */
+export const browserSessionSchema = z.strictObject({ csrf: z.string(), expiresAt: timestampSchema })
 /** Stable resource status values published by API version 1. */
 export const statusSchema = z.enum([
   'provisioning',
@@ -37,6 +43,10 @@ export const statusSchema = z.enum([
 ])
 /** Execution configuration preserves references rather than secret values. */
 export const configSchema = executionConfigSchema
+/** Admission state of a definition; `blocked` means the scheduler disabled itself and `reason` says why. */
+export const availabilitySchema = z.enum([
+  'active', 'paused', 'blocked', 'retiring', 'retirement_blocked', 'unavailable', 'retired',
+])
 /** Read-only installed or historical business definition. */
 export const definitionSchema = z.object({
   id: idSchema,
@@ -46,19 +56,30 @@ export const definitionSchema = z.object({
   revision: revisionSchema,
   installed: z.boolean(),
   enabled: z.boolean(),
+  availability: availabilitySchema,
+  reason: z.string().nullable(),
   config: configSchema,
   businessConfigSchema: businessSchema,
   manualInputSchema: businessSchema.nullable(),
+  supplementalInputSchema: businessSchema.nullable(),
   nextDueAt: timestampSchema.nullable(),
 })
 /** Persisted human interaction with a version-bound reply. */
 export const interactionSchema = z.object({
   id: idSchema,
+  runId: idSchema,
   revision: revisionSchema,
   source: z.enum(['business', 'tool_approval', 'agent_question']),
   title: z.string(),
+  /** Markdown body of a business wait; plain text for tool approvals and Agent questions. */
   description: z.string(),
   schema: businessSchema,
+  /** Transcript tool call awaiting approval; null for business waits and questions. */
+  callId: z.string().nullable(),
+  /** Structured Agent questions; null for other sources. */
+  questions: z.array(taskQuestionSchema).nullable(),
+  /** Run attachments referenced by a business wait. */
+  attachments: z.array(idSchema),
   createdAt: timestampSchema,
   expiresAt: timestampSchema.nullable(),
 })
@@ -75,12 +96,21 @@ export const runSchema = z.object({
   revision: revisionSchema,
   status: statusSchema,
   reason: z.string().nullable(),
+  /** Terminal decision once settlement begins; it survives pending or blocked cleanup. */
+  outcome: z.enum(['succeeded', 'failed', 'cancelled']).nullable(),
+  /** Schedule instant of a polling or calendar run; `missed` covers coalesced occurrences. */
+  occurrence: z.object({
+    scheduledAt: timestampSchema,
+    missed: z.object({ from: timestampSchema, through: timestampSchema, count: z.number().int().positive() }).nullable(),
+  }).nullable(),
   cleanup: z.enum(['pending', 'blocked', 'complete']),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
   terminalAt: timestampSchema.nullable(),
   retryAt: timestampSchema.nullable(),
   result: z.json(),
+  /** Supplemental input schema captured by this run; null accepts any JSON input. */
+  supplementalInputSchema: businessSchema.nullable(),
 })
 /** Stable diagnostic response shared by every HTTP error. */
 export const problemSchema = z.object({
@@ -116,10 +146,14 @@ export const pageQuerySchema = z.strictObject({
     .regex(/^(?:[1-9]|[1-9][0-9]|1[0-9]{2}|200)$/)
     .optional(),
 })
+const statusAlternatives = statusSchema.options.join('|')
+/** Comma-separated current statuses; a run matches any listed status. */
+export const statusListSchema = z.string().regex(new RegExp(`^(?:${statusAlternatives})(?:,(?:${statusAlternatives}))*$`))
 /** Execution filters use exact business keys and UTC interval endpoints. */
 export const runsQuerySchema = pageQuerySchema.extend({
   definitionId: idSchema.optional(),
-  status: statusSchema.optional(),
+  status: statusListSchema.optional(),
+  parentRunId: idSchema.optional(),
   kind: z.enum(['manual', 'polling', 'scheduled', 'ordinary']).optional(),
   businessKey: z.string().min(1).max(1024).optional(),
   createdFrom: timestampSchema.optional(),

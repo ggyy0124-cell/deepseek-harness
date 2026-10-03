@@ -37,6 +37,27 @@ describe('Task schema admission', () => {
     expect(() => { validateForm(schema, { id: 'secret-value' }) }).toThrow('does not match')
   })
 
+  it.each([
+    [{ 'x-dsh-label': 'Title' }, 'do not support the x-dsh-label annotation'],
+    [{ type: 'string', 'x-dsh-widget': 'slider' }, 'must be textarea, credential, or options'],
+    [{ type: 'integer', 'x-dsh-widget': 'credential' }, 'credential requires type string'],
+    [{ properties: { notes: { 'x-dsh-widget': 'textarea' } } }, 'textarea requires type string'],
+  ])('rejects unsupported Task form annotations: %j', (schema, message) => {
+    expect(() => compileForm(schema as JsonValue)).toThrow(message)
+  })
+
+  it('accepts widget annotations and rejects invalid credential reference names', () => {
+    const schema = { type: 'object', properties: {
+      token: { type: 'string', 'x-dsh-widget': 'credential' },
+      product: { 'x-dsh-widget': 'options' },
+      notes: { type: 'string', 'x-dsh-widget': 'textarea' },
+    } }
+    validateForm(schema, { token: 'ZENTAO_TOKEN', product: 12, notes: 'Line one\nLine two' })
+    expect(() => { validateForm(schema, { token: 'not a reference' }) }).toThrow('credential reference names are invalid')
+    validateForms({ version: 1, business: schema, input: {}, supplement: { type: 'object', properties: { text: { type: 'string', 'x-dsh-widget': 'textarea' } } } })
+    expect(() => { validateForms({ version: 1, business: {}, input: {}, supplement: { 'x-dsh-order': 1 } }) }).toThrow('x-dsh-order')
+  })
+
   it.each([0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1])('requires a positive safe schema generation: %s', (version) => {
     expect(() => { validateForms({ version, business: {}, input: {} }) }).toThrow('positive integer')
   })

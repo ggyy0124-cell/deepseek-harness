@@ -12,7 +12,7 @@ Task execution is defined by a business plugin and hosted by a durable provider.
 
 ## Stages and external effects
 
-[`TaskStage`](../../packages/task/task/src/index.ts) exposes the admitted snapshot, ordered inputs, retained child Session identities, cancellation signal, model calls, dispatch, and durable external operations. Its capabilities expire when the handler settles. `advance`, `wait`, `retry`, and `block` retain the execution; `succeed` and `fail` require cleanup before a terminal state is committed.
+[`TaskStage`](../../packages/task/task/src/index.ts) exposes the admitted snapshot, ordered inputs, retained child Session identities, cancellation signal, model calls, dispatch, and durable external operations. Its capabilities expire when the handler settles. `advance`, `wait`, `retry`, and `block` retain the execution; `succeed` and `fail` require cleanup before a terminal state is committed. The Run records that decision as `outcome` when cleanup starts, so blocked cleanup and its retry keep the business result.
 
 An operation identity is local to a run. A confirmed result is reused; a prepared operation invokes plugin reconciliation instead of blindly repeating an external write. Business updates and confirmations are persisted inputs. Confirmations reference a specific wait and input revision; stale replies are rejected.
 
@@ -24,7 +24,7 @@ Only explicit stage model calls add business instructions to model context. Each
 
 ## Administrative commands
 
-`TaskPrincipalId` identifies an authenticated owner, `TaskCommand` selects one configuration, enable, trigger, input, response or cancellation mutation, and `TaskCommandResult` retains its original admission snapshot. The Task provider commits the mutation and receipt together. A matching principal and request key replays that snapshot; changed content conflicts. Cancellation admission precedes asynchronous cleanup. [Task Gateway](../../packages/task/task-api-gateway/README.md) projects these operations into authenticated HTTP resources without exposing the internal Run record.
+`TaskPrincipalId` identifies an authenticated owner, `TaskCommand` selects one configuration, enable, trigger, input, response, cancellation or cleanup-retry mutation, and `TaskCommandResult` retains its original admission snapshot. A cleanup retry applies only to a Run whose cleanup is blocked and settles it with its recorded outcome. The Task provider commits the mutation and receipt together. A matching principal and request key replays that snapshot; changed content conflicts. Cancellation admission precedes asynchronous cleanup. [Task Gateway](../../packages/task/task-api-gateway/README.md) projects these operations into authenticated HTTP resources without exposing the internal Run record.
 
 `TaskDeviceId` is the branded revocation identity issued by the local Gateway provisioning method; it never contains the device secret.
 
@@ -48,9 +48,9 @@ HTTP Consumer of Task and Credentials; business plugins contribute no routes.
 
 ```ts cordis-catalog
 /** Create a browser launch secret for an authorized local application entry.
- * @returns single-use secret; never logged by the gateway.
+ * @returns single-use secret and its expiry; the gateway never logs the secret.
  */
-createLaunchToken(): Promise<string>
+createLaunchToken(): Promise<{ token: string; expiresAt: number }>
 
 /** Provision a device through an authorized local caller.
  * @returns device revocation identity and its secret once.
@@ -112,6 +112,11 @@ abstract listDefinitions(): readonly TaskDefinitionView[]
  * @returns detached waiting requests.
  */
 abstract interactions(id: TaskRunId): readonly TaskInteraction[]
+
+/** Read outstanding tool approvals and model questions across executions.
+ * @returns detached waiting requests ordered by creation time; business waits remain on their runs.
+ */
+abstract waitingInteractions(): readonly TaskInteraction[]
 
 /** Check proposed configuration without saving it.
  * @param id - installed definition.

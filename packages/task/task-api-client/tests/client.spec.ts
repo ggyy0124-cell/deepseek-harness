@@ -29,6 +29,17 @@ describe('Task JSON client', () => {
     transport.mockResolvedValueOnce(Response.json({ configured: true, writable: false, secret: 'private' }))
     expect(await client.credential('TASK_KEY')).toEqual({ configured: true, writable: false })
   })
+  it('lists credential references without values and validates the listing', async () => {
+    const transport = vi.fn<typeof globalThis.fetch>()
+    const client = new TaskApiClient({ baseUrl, fetch: transport, authentication })
+    const item = { reference: 'TASK_KEY', configured: true, writable: true, definitionIds: ['zentao.defects'] }
+    transport.mockResolvedValueOnce(Response.json({ items: [item] }))
+    expect(await client.credentials()).toEqual([item])
+    const url = transport.mock.calls[0]![0]
+    expect(url instanceof URL ? url.href : url).toBe(`${baseUrl}/credentials`)
+    transport.mockResolvedValueOnce(Response.json({ items: [{ ...item, reference: 'not a reference' }] }))
+    await expect(client.credentials()).rejects.toThrow()
+  })
   it('validates successful responses and propagates network failure without retrying', async () => {
     const transport = vi.fn<typeof globalThis.fetch>()
     const client = new TaskApiClient({ baseUrl, fetch: transport, authentication })

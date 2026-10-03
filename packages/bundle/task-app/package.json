@@ -86,7 +86,8 @@
     "@deepseek-ai/dsh-tool-web": "workspace:*",
     "@deepseek-ai/dsh-tool-workflow": "workspace:*",
     "@deepseek-ai/dsh-workflow-ptc": "workspace:*",
-    "@deepseek-ai/dsh-cordis-host-runner": "workspace:*"
+    "@deepseek-ai/dsh-cordis-host-runner": "workspace:*",
+    "@deepseek-ai/dsh-task-web-frontend": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~"

@@ -8,6 +8,7 @@ import type {
   TaskDefinitionId,
   TaskPrincipalId,
   TaskRequestId,
+  TaskRun,
   TaskRunId,
   TaskService,
   TaskWaitId,
@@ -19,11 +20,12 @@ import {
   inputSchema,
   responseSchema,
   runsQuerySchema,
+  statusSchema,
   type taskJsonRoutes,
 } from '@deepseek-ai/dsh-task-api-protocol'
 import { z } from 'zod'
 import { HttpProblem, validate } from './http.ts'
-import { projectRetirement, projectDefinition, projectInteractions, projectRun } from './projection.ts'
+import { projectRetirement, projectDefinition, projectInteractions, projectRun, projectRuntimeInteraction } from './projection.ts'
 
 type Operation = Exclude<
   (typeof taskJsonRoutes)[number]['operationId'],
@@ -35,11 +37,11 @@ const cursorSchema = z.strictObject({
   after: z.string(),
   filter: z.string(),
 })
-function result(value: TaskCommandResult): unknown {
+function result(tasks: TaskService, value: TaskCommandResult): unknown {
   switch (value.kind) {
     case 'retirement': return projectRetirement(value.retirement)
     case 'definition':
-      return projectDefinition(value.definition)
+      return projectDefinition(value.definition, tasks.getRetirement(value.definition.id))
     case 'run':
       return projectRun(value.run)
     case 'cancellation':
@@ -84,32 +86,22 @@ export function executeOperation(
       return projectRetirement(value)
     }
     case 'retireDefinition':
-      return result(tasks.command(principal, requestId, { kind: 'retire', definitionId, ...validate(z.object({ revision: revisionSchema }), body) }))
+      return result(tasks, tasks.command(principal, requestId, { kind: 'retire', definitionId, ...validate(z.object({ revision: revisionSchema }), body) }))
     case 'listDefinitions':
-      return { items: tasks.listDefinitions().map(projectDefinition) }
+      return { items: tasks.listDefinitions().map(value => projectDefinition(value, tasks.getRetirement(value.id))) }
     case 'getDefinition': {
       const definition = tasks.listDefinitions().find(value => value.id === definitionId)
       if (definition === undefined) throw new HttpProblem(404, 'not_found', 'Task definition not found')
-      return projectDefinition(definition)
+      return projectDefinition(definition, tasks.getRetirement(definition.id))
     }
     case 'getRun':
       return projectRun(run())
     case 'listInteractions':
-      return {
-        items: [
-          ...projectInteractions(run()),
-          ...tasks.interactions(runId).map(value => ({
-            id: value.id,
-            revision: value.revision,
-            source: value.source,
-            title: value.title,
-            description: value.description,
-            schema: value.schema,
-            createdAt: new Date(value.createdAt).toISOString(),
-            expiresAt: value.expiresAt === null ? null : new Date(value.expiresAt).toISOString(),
-          })),
-        ],
-      }
+      return { items: [...projectInteractions(run()), ...tasks.interactions(runId).map(projectRuntimeInteraction)] }
+    case 'listWaitingInteractions': {
+      const items = [...waitingRuns(tasks).flatMap(projectInteractions), ...tasks.waitingInteractions().map(projectRuntimeInteraction)]
+      return { items: items.sort((left, right) => left.createdAt.localeCompare(right.createdAt)) }
+    }
     case 'listRuns':
       return listRuns(tasks, query, pageSize)
     case 'configureDefinition': {
@@ -117,6 +109,7 @@ export function executeOperation(
       const { model, ...config } = input.config
       const value: TaskConfig = model === undefined ? config : { ...config, model }
       return result(
+        tasks,
         tasks.command(principal, requestId, {
           kind: 'configure',
           definitionId,
@@ -128,10 +121,11 @@ export function executeOperation(
     }
     case 'enableDefinition': {
       const input = validate(enableSchema, body)
-      return result(tasks.command(principal, requestId, { kind: 'enable', definitionId, ...input }))
+      return result(tasks, tasks.command(principal, requestId, { kind: 'enable', definitionId, ...input }))
     }
     case 'triggerManual':
       return result(
+        tasks,
         tasks.command(principal, requestId, {
           kind: 'trigger',
           definitionId,
@@ -140,10 +134,12 @@ export function executeOperation(
       )
     case 'sendInput':
       return result(
+        tasks,
         tasks.command(principal, requestId, { kind: 'input', runId, ...validate(inputSchema, body) }),
       )
     case 'respond':
       return result(
+        tasks,
         tasks.command(principal, requestId, {
           kind: 'respond',
           runId,
@@ -152,10 +148,27 @@ export function executeOperation(
         }),
       )
     case 'cancelRun':
-      return result(tasks.command(principal, requestId, { kind: 'cancel', runId }))
+      return result(tasks, tasks.command(principal, requestId, { kind: 'cancel', runId }))
+    case 'retryCleanup':
+      return result(tasks, tasks.command(principal, requestId, { kind: 'cleanup', runId }))
     /* v8 ignore next -- Operation is derived from the closed protocol route union. */
     default:
       return assertNever(operation)
+  }
+}
+/** Read every run waiting for a business reply, across bounded history pages pinned to one head.
+ * @param tasks - Task service for the current profile.
+ * @returns waiting runs, newest first.
+ */
+function waitingRuns(tasks: TaskService): TaskRun[] {
+  const runs: TaskRun[] = []
+  let anchor: { head: TaskRunId; after: TaskRunId } | undefined
+  for (;;) {
+    const page = tasks.queryRuns({ limit: 200, status: ['waiting_input'], ...anchor })
+    runs.push(...page.items)
+    const last = page.items.at(-1)
+    if (!page.hasMore || page.head === null || last === undefined) return runs
+    anchor = { head: page.head, after: last.id }
   }
 }
 function listRuns(tasks: TaskService, raw: Record<string, string>, pageSize: number): unknown {
@@ -184,7 +197,8 @@ function listRuns(tasks: TaskService, raw: Record<string, string>, pageSize: num
   const page = tasks.queryRuns({ limit: size,
     ...(head === undefined ? {} : { head }), ...(after === undefined ? {} : { after }),
     ...(filter.definitionId === undefined ? {} : { definitionId: brandString<TaskDefinitionId>(filter.definitionId) }),
-    ...(filter.status === undefined ? {} : { status: filter.status }),
+    ...(filter.status === undefined ? {} : { status: statusSchema.array().parse(filter.status.split(',')) }),
+    ...(filter.parentRunId === undefined ? {} : { parentRunId: brandString<TaskRunId>(filter.parentRunId) }),
     ...(filter.kind === undefined ? {} : { kind: filter.kind }),
     ...(filter.businessKey === undefined ? {} : { businessKey: filter.businessKey }),
     ...(filter.createdFrom === undefined ? {} : { createdFrom: Date.parse(filter.createdFrom) }),

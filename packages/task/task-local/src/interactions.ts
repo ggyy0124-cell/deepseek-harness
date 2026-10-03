@@ -45,7 +45,7 @@ export class RuntimeInteractions {
    */
   async ask(
     runId: TaskRunId,
-    request: Pick<TaskInteraction, 'source' | 'title' | 'description' | 'schema' | 'expiresAt'>,
+    request: Pick<TaskInteraction, 'source' | 'title' | 'description' | 'schema' | 'callId' | 'questions' | 'expiresAt'>,
     signal: AbortSignal,
   ): Promise<JsonValue> {
     signal.throwIfAborted()

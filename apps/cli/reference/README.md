@@ -34,7 +34,7 @@ The shipped apps own these command lines:
 | Profile | Arguments |
 |---|---|
 | `web` | `--host`, `--port`, repeatable `--trusted-host`, `--no-open` |
-| `task` | `--host` (loopback only), `--port`, `--token-create`, `--token-revoke <id>`, `--backup <directory>`, `--restore <directory>` |
+| `task` | `--host` (loopback only), `--port`, `--token-create`, `--token-revoke <id>`, `--launch-link`, `--backup <directory>`, `--restore <directory>` |
 | `headless` | the task text, as the positional argument |
 | `sdk` | no options; stdio carries the JSON-RPC protocol |
 | `sdk-minimal` | no options; stdio carries the same JSON-RPC protocol |

@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-在 Base 上启动 Task 引擎与经过认证的 REST/SSE 网关。业务插件、Task Web UI 和原生客户端应用属于后续集成范围。定时工作需要服务进程持续运行。
+在 Base 上启动 Task 引擎、经过认证的 REST/SSE 网关和 [Task Web 客户端](../../../apps/task-web/README.zh.md)。业务插件和原生客户端应用属于后续集成范围。定时工作需要服务进程持续运行。
 
 ## 目录
 
@@ -25,7 +25,7 @@ kind: "package-bundle"
 <a id="use-this-package"></a>
 ## 使用本包
 
-使用 `pnpm dsh --profile task` 启动后端。数据库（含已记录的 preset 版本）与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改。启动输出 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器。`/` 和 `/index.html` 返回 404。未安装业务插件时没有业务定义。
+使用 `pnpm dsh --profile task` 启动后端。数据库（含已记录的 preset 版本）与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改。启动输出 Web 客户端地址 `/` 和 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器；使用 `--launch-link` 登录。浏览器导航到没有构建文件的路径时得到客户端的 `index.html`，已有文件直接返回，其他缺失路径返回 404。未安装业务插件时没有业务定义。
 
 本组合包在 `presets/` 下声明 Web preset，并保持派发在前台进行、禁用异步 workflow 启动。随附的编码 preset 允许特殊或普通任务的父 Agent 在已准入的模型轮次中自行决定是否调用前台进程内子 Agent；不要求创建子 Agent。`task-local` 默认通过 `childConcurrency` 将每个 Run 的并发子 Agent 限为四个；每个子 Agent 保留独立 Session，并须在父轮次结束前完成。
 
@@ -34,11 +34,12 @@ kind: "package-bundle"
 ```sh
 pnpm dsh --profile task --token-create
 pnpm dsh --profile task --token-revoke DEVICE_ID
+pnpm dsh --profile task --launch-link
 pnpm dsh --profile task --backup /absolute/new-backup
 pnpm dsh --profile task --restore /absolute/backup
 ```
 
-`--token-create` 只输出一次可撤销的 API Bearer 凭据，调用者通过 `Authorization: Bearer <token>` 提交。备份前须停止 Task 宿主；排他所有者锁会拒绝仍在运行的宿主。恢复先校验摘要和 SQLite 完整性，再发布到空 Task 数据目录，重写保留预设的位置、标记资源句柄需要重新核实，并替换事件流身份。凭据和外部系统状态不随之恢复。复制的工作树再次使用前需要修复仓库登记。这些命令不会启动 Web 服务器或任务调度器。
+`--token-create` 只输出一次可撤销的 API Bearer 凭据，调用者通过 `Authorization: Bearer <token>` 提交。`--launch-link` 为 `--port` 上的宿主输出 `{ "url", "expiresAt" }`：URL 片段（`#launch=`）中携带一次性浏览器登录凭据，有效期 60 秒，由 Task Web 客户端提交到 `/auth/exchange`。网关会重新读取共享凭据文档，因此正在运行的宿主也能接受该凭据。浏览器使用其他源时，将管理行的 `publicOrigin` 设为与网关 `publicOrigin` 相同的值。备份前须停止 Task 宿主；排他所有者锁会拒绝仍在运行的宿主。恢复先校验摘要和 SQLite 完整性，再发布到空 Task 数据目录，重写保留预设的位置、标记资源句柄需要重新核实，并替换事件流身份。凭据和外部系统状态不随之恢复。复制的工作树再次使用前需要修复仓库登记。这些命令不会启动 Web 服务器或任务调度器。
 
 #### 后台服务示例
 
@@ -102,7 +103,7 @@ macOS LaunchAgent:
 
 [补丁](cordis.patch.yml)禁用共享 Session、Agent、JSONL 持久化、Agent Loop 与 Agent Preset 条目，再为这些服务键插入 Task 专用提供方。补丁还组合本地任务提供方、REST 网关、派发消费者。共享 Agent Preset Typert 产物仍是唯一 RPC 协议描述，并通过替代 `agentPresets` 服务解析调用。
 
-[Task REST 网关](../../task/task-api-gateway/README.zh.md) 通过未修改的 Host WebServer 在 `/api/task/v1` 提供服务。此 Profile 不提供前端资源。业务插件提供执行阶段与配置 Schema，不携带前端模块。REST 协议、Fetch SDK 以及浏览器和设备认证继续供后续客户端使用。
+[Task REST 网关](../../task/task-api-gateway/README.zh.md) 通过未修改的 Host WebServer 在 `/api/task/v1` 提供服务。应用入口为构建好的 `@deepseek-ai/dsh-task-web-frontend` `dist/` 占用 WebServer 的兜底路由（[`src/web.ts`](src/web.ts)）；首页带有同源内容安全策略，带指纹的资源按不可变缓存。业务插件提供执行阶段与配置 Schema，不携带前端模块。REST 协议、Fetch SDK 以及设备认证继续供原生客户端使用。
 
 </details>
 
@@ -130,7 +131,7 @@ macOS LaunchAgent:
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 此 Bundle 不包含业务插件、Task Web UI、原生客户端应用或操作系统服务安装器。任务在配置的宿主启动后恢复执行。
+- 此 Bundle 不包含业务插件、原生客户端应用或操作系统服务安装器。任务在配置的宿主启动后恢复执行。
 
 <a id="dev-note"></a>
 ### 开发备注

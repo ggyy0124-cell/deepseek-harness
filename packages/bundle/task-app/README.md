@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Launch the Task engine and authenticated REST/SSE gateway over Base. Business plugins, Task Web UI and native client applications are deferred integrations. The host must remain running for scheduled work to start.
+Launch the Task engine, the authenticated REST/SSE gateway and the [Task Web client](../../../apps/task-web/README.md) over Base. Business plugins and native client applications are deferred integrations. The host must remain running for scheduled work to start.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ Launch the Task engine and authenticated REST/SSE gateway over Base. Business pl
 <a id="use-this-package"></a>
 ## Use this package
 
-Launch the backend with `pnpm dsh --profile task`. Its database, including recorded preset revisions, and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port. Startup prints the API base address `/api/task/v1/` without issuing a credential or opening a browser. `/` and `/index.html` return 404. An installation without business plugins has no business definitions.
+Launch the backend with `pnpm dsh --profile task`. Its database, including recorded preset revisions, and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port. Startup prints the Web client address `/` and the API base address `/api/task/v1/` without issuing a credential or opening a browser; sign in with `--launch-link`. Browser navigations to paths without a built file receive the client's `index.html`, existing files are served directly, and other missing paths return 404. An installation without business plugins has no business definitions.
 
 The bundle declares the Web presets under `presets/` with delegation kept in the foreground and asynchronous workflow starts disabled. The shipped coding presets let a special or ordinary Task Agent choose whether to call foreground in-process subagents during an admitted model turn. No child is required. `task-local` limits them to four live children per Run by default through `childConcurrency`; each child retains its own Session and must finish before the parent turn settles.
 
@@ -34,11 +34,12 @@ Administration also uses this profile:
 ```sh
 pnpm dsh --profile task --token-create
 pnpm dsh --profile task --token-revoke DEVICE_ID
+pnpm dsh --profile task --launch-link
 pnpm dsh --profile task --backup /absolute/new-backup
 pnpm dsh --profile task --restore /absolute/backup
 ```
 
-`--token-create` prints a revocable API bearer credential once; callers supply it in `Authorization: Bearer <token>`. Stop the Task host before backup; an exclusive owner lock rejects a running host. Restore validates hashes and SQLite integrity before publishing into an empty Task data directory, rewrites retained preset locations, marks resource handles for reconciliation and replaces the event-stream identity. Credentials and external-system state are not restored. A copied worktree requires repository registration repair before reuse. These commands do not start the web server or task scheduler.
+`--token-create` prints a revocable API bearer credential once; callers supply it in `Authorization: Bearer <token>`. `--launch-link` prints `{ "url", "expiresAt" }` for the host on `--port`: a single-use browser launch secret in the URL fragment (`#launch=`), valid for 60 seconds, that the Task Web client posts to `/auth/exchange`. A running host accepts it because the gateway rereads the shared credential document. Set the administration row's `publicOrigin` to the gateway's `publicOrigin` when browsers use another origin. Stop the Task host before backup; an exclusive owner lock rejects a running host. Restore validates hashes and SQLite integrity before publishing into an empty Task data directory, rewrites retained preset locations, marks resource handles for reconciliation and replaces the event-stream identity. Credentials and external-system state are not restored. A copied worktree requires repository registration repair before reuse. These commands do not start the web server or task scheduler.
 
 #### Background service examples
 
@@ -102,7 +103,7 @@ After reviewing the Linux unit, `systemctl --user enable --now dsh-task` enables
 
 The [patch](cordis.patch.yml) disables the shared Session, Agent, JSONL persistence, Agent Loop, and Agent Preset rows, then inserts Task-specific providers for those service keys. It also composes the local task provider, REST gateway, dispatch consumer. The shared Agent Preset Typert artifact remains the single RPC protocol description and resolves calls through the replacement `agentPresets` service.
 
-The [Task REST gateway](../../task/task-api-gateway/README.md) serves `/api/task/v1` through the unchanged Host WebServer. The profile serves no frontend assets. Business plugins provide executable stages and configuration schemas without frontend modules. The REST protocol, Fetch SDK and browser/device authentication remain available for future clients.
+The [Task REST gateway](../../task/task-api-gateway/README.md) serves `/api/task/v1` through the unchanged Host WebServer. The application entry claims the WebServer fallback for the built `@deepseek-ai/dsh-task-web-frontend` `dist/` ([`src/web.ts`](src/web.ts)); the index carries a same-origin content security policy and fingerprinted assets are cached as immutable. Business plugins provide executable stages and configuration schemas without frontend modules. The REST protocol, Fetch SDK and device authentication remain available for native clients.
 
 </details>
 
@@ -130,7 +131,7 @@ No direct prefix changes; the selected preset and business prompts determine cac
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The bundle does not include business plugins, Task Web UI, native client applications or an operating-system service installer. Task execution resumes when the configured host starts.
+- The bundle does not include business plugins, native client applications or an operating-system service installer. Task execution resumes when the configured host starts.
 
 <a id="dev-note"></a>
 ### Dev Note
