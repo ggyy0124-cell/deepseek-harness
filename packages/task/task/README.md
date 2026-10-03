@@ -36,7 +36,7 @@ Within either special or ordinary runs, the parent Agent decides whether to use 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-Cleanup receives an AbortSignal when its configured deadline expires. The plugin must stop owned work and settle; the engine retains resource locks after an overdue cleanup until a later cancellation successfully cleans them.
+Cleanup receives an AbortSignal when its configured deadline expires. The plugin must stop owned work and settle; the engine retains resource locks after an overdue cleanup until a later cleanup retry or cancellation succeeds. A Run's `outcome` is recorded when settlement begins, so a retry finishes with the original succeeded, failed or cancelled decision.
 
 <details>
 <summary>Implementation details</summary>
@@ -45,7 +45,9 @@ The [stage API](src/index.ts) separates model calls, durable external operations
 
 Administrative clients use `command` with a stable authenticated principal and retry key. Matching replays return the original admission snapshot, including after restart or task completion; changed commands conflict. Configuration and enable commands check the definition revision. Cancellation admission returns before cleanup; `cancel` remains the awaited cleanup operation for plugin retirement.
 
-A definition may declare versioned `forms`, deterministic `migrateConfig`, and cancellation-aware `checkConfig`/`options`. Schemas use self-contained Draft 2020-12 and never deliver frontend code. The provider snapshots forms with the execution; model questions and tool approvals use durable revision-bound interactions.
+A definition may declare versioned `forms`, deterministic `migrateConfig`, and cancellation-aware `checkConfig`/`options`. Schemas use self-contained Draft 2020-12 and never deliver frontend code. The only Task annotation is `x-dsh-widget`: `textarea`, `credential` for a shared credential reference name, or `options` for values from `options`; other `x-dsh-` keys are rejected. The `./schema` export's `credentialReferences` collects the credential names a configuration uses. An optional `supplement` schema validates input sent to unfinished runs. The provider snapshots forms with the execution; model questions and tool approvals use durable revision-bound interactions.
+
+A business wait prompt is either a title string or `{ title, body, attachments }`, where `body` is Markdown and `attachments` name Run attachments. Polling and calendar runs record their schedule instant in `occurrence`, including the range of coalesced calendar occurrences.
 
 </details>
 

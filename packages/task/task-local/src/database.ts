@@ -6,13 +6,14 @@ import { mkdirSync, openSync, closeSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { z } from 'zod'
 import { TaskCommandError } from '@deepseek-ai/dsh-task'
+import { taskQuestionSchema } from '@deepseek-ai/dsh-task/schema'
 import type { TaskRunQuery, TaskRunPage, TaskResourceRecord, TaskDiagnostics, TaskRetirement, TaskDefinitionId, TaskInteraction, TaskDefinitionView, TaskInput, TaskJournalEntry, TaskRun, TaskRunId, TaskStoreId } from '@deepseek-ai/dsh-task'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { retirementRecordSchema, definitionSchema, runSchema } from './schema.ts'
 
 /** Monotonic database schema generation. */
-export const SCHEMA_VERSION = 8
+export const SCHEMA_VERSION = 9
 
 /** One foreground child belongs to one model operation of a Task Run. */
 export interface TaskChildRecord {
@@ -136,6 +137,11 @@ export class TaskDatabase {
           CREATE INDEX task_children_run ON task_children(run_id,model_key);
           PRAGMA user_version=8`)
       })
+      if (version.user_version < 9) this.transaction(() => {
+        this.db.exec(`CREATE INDEX run_parent_history ON runs((value->>'parentRunId'));
+          CREATE INDEX waiting_interactions ON interactions((value->>'state'));
+          PRAGMA user_version=9`)
+      })
       const identity = this.db.prepare("SELECT value FROM metadata WHERE key='store_id'").get()
       this.id = brandString<TaskStoreId>(z.object({ value: z.uuid() }).parse(identity).value)
     } catch (error) { opened?.close(); this.lock?.close(); throw error }
@@ -210,8 +216,12 @@ export class TaskDatabase {
     const where = ['rowid<=?']
     const args: (string | number)[] = [head.rowid]
     for (const [column, value] of [
-      ['definition_id', query.definitionId], ["value->>'status'", query.status], ["value->>'kind'", query.kind], ['business_key', query.businessKey],
+      ['definition_id', query.definitionId], ["value->>'kind'", query.kind], ['business_key', query.businessKey],
+      ["value->>'parentRunId'", query.parentRunId],
     ] as const) if (value !== undefined) { where.push(`${column}=?`); args.push(value) }
+    if (query.status !== undefined) {
+      where.push("value->>'status' IN (SELECT value FROM json_each(?))"); args.push(JSON.stringify(query.status))
+    }
     if (query.createdFrom !== undefined) { where.push("value->>'createdAt'>=?"); args.push(query.createdFrom) }
     if (query.createdTo !== undefined) { where.push("value->>'createdAt'<=?"); args.push(query.createdTo) }
     if (query.after !== undefined) {
@@ -272,6 +282,14 @@ export class TaskDatabase {
     const rows = (runId === undefined ? this.db.prepare('SELECT value FROM interactions').all()
       : this.db.prepare('SELECT value FROM interactions WHERE run_id=?').all(runId)) as Document[]
     return rows.map(row => interactionRecord.parse(JSON.parse(row.value)) as TaskInteraction)
+  }
+  /** Read unanswered runtime interactions of every execution.
+   * @returns waiting records in creation order.
+   */
+  waitingInteractions(): TaskInteraction[] {
+    return (this.db.prepare("SELECT value FROM interactions WHERE value->>'state'='waiting'").all() as Document[])
+      .map(row => interactionRecord.parse(JSON.parse(row.value)) as TaskInteraction)
+      .sort((left, right) => left.createdAt - right.createdAt)
   }
   /** Persist the latest state of one runtime request.
    * @param value - validated request and response state.
@@ -628,6 +646,9 @@ function canonicalJson(value: JsonValue): string {
 const interactionRecord = z.object({
   id: z.string(), runId: z.string(), revision: z.number().int().nonnegative(),
   source: z.enum(['tool_approval', 'agent_question']), title: z.string(), description: z.string(), schema: z.json(),
+  // Records written before structured presentation fields existed carry neither.
+  callId: z.string().nullable().default(null),
+  questions: z.array(taskQuestionSchema).nullable().default(null),
   createdAt: z.number(), expiresAt: z.number().nullable(), state: z.enum(['waiting', 'answered', 'withdrawn']), answer: z.json(),
 })
 

@@ -34,6 +34,8 @@ export function installTaskAnswerers(
           source: 'tool_approval',
           title: request.toolName,
           description: request.reason ?? '',
+          callId: request.callId ?? null,
+          questions: null,
           expiresAt: null,
           schema: { type: 'string', enum: ['allowed-once', 'rejected'] },
         },
@@ -57,6 +59,15 @@ export function installTaskAnswerers(
             .map(item => item.detail ?? '')
             .filter(Boolean)
             .join('\n'),
+          callId: null,
+          questions: request.questions.map(item => ({
+            id: item.id,
+            question: item.question,
+            detail: item.detail ?? null,
+            header: item.header ?? null,
+            multiSelect: item.multiSelect === true,
+            options: (item.options ?? []).map(option => ({ label: option.label, description: option.description ?? null })),
+          })),
           expiresAt: null,
           schema: {
             type: 'object',

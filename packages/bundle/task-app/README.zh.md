@@ -34,11 +34,12 @@ kind: "package-bundle"
 ```sh
 pnpm dsh --profile task --token-create
 pnpm dsh --profile task --token-revoke DEVICE_ID
+pnpm dsh --profile task --launch-link
 pnpm dsh --profile task --backup /absolute/new-backup
 pnpm dsh --profile task --restore /absolute/backup
 ```
 
-`--token-create` 只输出一次可撤销的 API Bearer 凭据，调用者通过 `Authorization: Bearer <token>` 提交。备份前须停止 Task 宿主；排他所有者锁会拒绝仍在运行的宿主。恢复先校验摘要和 SQLite 完整性，再发布到空 Task 数据目录，重写保留预设的位置、标记资源句柄需要重新核实，并替换事件流身份。凭据和外部系统状态不随之恢复。复制的工作树再次使用前需要修复仓库登记。这些命令不会启动 Web 服务器或任务调度器。
+`--token-create` 只输出一次可撤销的 API Bearer 凭据，调用者通过 `Authorization: Bearer <token>` 提交。`--launch-link` 为 `--port` 上的宿主输出 `{ "url", "expiresAt" }`：URL 片段（`#launch=`）中携带一次性浏览器登录凭据，有效期 60 秒，由 Task Web 客户端提交到 `/auth/exchange`。网关会重新读取共享凭据文档，因此正在运行的宿主也能接受该凭据。浏览器使用其他源时，将管理行的 `publicOrigin` 设为与网关 `publicOrigin` 相同的值。备份前须停止 Task 宿主；排他所有者锁会拒绝仍在运行的宿主。恢复先校验摘要和 SQLite 完整性，再发布到空 Task 数据目录，重写保留预设的位置、标记资源句柄需要重新核实，并替换事件流身份。凭据和外部系统状态不随之恢复。复制的工作树再次使用前需要修复仓库登记。这些命令不会启动 Web 服务器或任务调度器。
 
 #### 后台服务示例
 
@@ -130,7 +131,7 @@ macOS LaunchAgent:
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 此 Bundle 不包含业务插件、Task Web UI、原生客户端应用或操作系统服务安装器。任务在配置的宿主启动后恢复执行。
+- 此 Bundle 不包含业务插件、Task Web UI、原生客户端应用或操作系统服务安装器。任务在配置的宿主启动后恢复执行。[Task Web 原型](../../../design/task-web/README.zh.md)描述计划中的 Web 客户端。
 
 <a id="dev-note"></a>
 ### 开发备注

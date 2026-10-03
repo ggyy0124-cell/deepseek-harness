@@ -34,11 +34,12 @@ Administration also uses this profile:
 ```sh
 pnpm dsh --profile task --token-create
 pnpm dsh --profile task --token-revoke DEVICE_ID
+pnpm dsh --profile task --launch-link
 pnpm dsh --profile task --backup /absolute/new-backup
 pnpm dsh --profile task --restore /absolute/backup
 ```
 
-`--token-create` prints a revocable API bearer credential once; callers supply it in `Authorization: Bearer <token>`. Stop the Task host before backup; an exclusive owner lock rejects a running host. Restore validates hashes and SQLite integrity before publishing into an empty Task data directory, rewrites retained preset locations, marks resource handles for reconciliation and replaces the event-stream identity. Credentials and external-system state are not restored. A copied worktree requires repository registration repair before reuse. These commands do not start the web server or task scheduler.
+`--token-create` prints a revocable API bearer credential once; callers supply it in `Authorization: Bearer <token>`. `--launch-link` prints `{ "url", "expiresAt" }` for the host on `--port`: a single-use browser launch secret in the URL fragment (`#launch=`), valid for 60 seconds, that a Task Web client posts to `/auth/exchange`. A running host accepts it because the gateway rereads the shared credential document. Set the administration row's `publicOrigin` to the gateway's `publicOrigin` when browsers use another origin. Stop the Task host before backup; an exclusive owner lock rejects a running host. Restore validates hashes and SQLite integrity before publishing into an empty Task data directory, rewrites retained preset locations, marks resource handles for reconciliation and replaces the event-stream identity. Credentials and external-system state are not restored. A copied worktree requires repository registration repair before reuse. These commands do not start the web server or task scheduler.
 
 #### Background service examples
 
@@ -130,7 +131,7 @@ No direct prefix changes; the selected preset and business prompts determine cac
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- The bundle does not include business plugins, Task Web UI, native client applications or an operating-system service installer. Task execution resumes when the configured host starts.
+- The bundle does not include business plugins, Task Web UI, native client applications or an operating-system service installer. Task execution resumes when the configured host starts. The [Task Web prototype](../../../design/task-web/README.md) specifies the planned Web client.
 
 <a id="dev-note"></a>
 ### Dev Note

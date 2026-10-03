@@ -27,7 +27,7 @@ kind: "package-reference"
 
 Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供者，在 `/api/task/v1` 挂载本包。本地应用代码通过 `ctx.taskGateway` 的 `createLaunchToken()` 或 `createDeviceToken()` 签发凭据，通过 `revokeDeviceToken()` 撤销设备后续请求的访问权。这些方法不是公共 HTTP 签发路由。调用者可以通过本地应用界面展示一次密钥，但不能将密钥写入诊断日志。
 
-通过 `POST /auth/exchange`、准确的 Origin 请求头和 JSON `{ "token": "..." }` 交换登录凭据。响应设置 HttpOnly、SameSite Strict Cookie 并返回 CSRF 值。经过认证的浏览器可通过 `GET /auth/session` 重新获取该值。Cookie 写请求必须携带相同 Origin 和 `X-CSRF-Token`；Bearer 请求使用 `Authorization`。所有 Task 状态变更都要求 `Idempotency-Key`。经过认证的 `GET /openapi.json` 描述已挂载的 JSON 操作及浏览器登录交换。
+通过 `POST /auth/exchange`、准确的 Origin 请求头和 JSON `{ "token": "..." }` 交换登录凭据。响应设置 HttpOnly、SameSite Strict Cookie，并返回 CSRF 值和会话过期时间。经过认证的浏览器可通过 `GET /auth/session` 重新获取二者。Cookie 写请求必须携带相同 Origin 和 `X-CSRF-Token`；Bearer 请求使用 `Authorization`。所有 Task 状态变更都要求 `Idempotency-Key`。经过认证的 `GET /openapi.json` 描述已挂载的 JSON 操作及浏览器登录交换。
 
 | 字段 | 默认值 | 含义 |
 |---|---|---|
@@ -65,11 +65,11 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 `GET /runs/{runId}/transcript` 通过只读句柄读取现有 Session 持久化记录，不激活 Agent。`limit` 限制源事件数，因此仅含内部事件的页面可以为空，但游标仍会前进。`hasMore` 为真时继续使用 `nextCursor`，并保留最终游标用于后续追加。锚点缺失或改变返回 `cursor_stale`。仅公开原始用户、助手和工具结果消息，排除仅供模型使用的替换、回放状态和工具私有元数据。图片及文件块公开展示元数据。`/runs/{runId}/session-attachments/{sequence}/{index}` 验证可见消息的引用后，通过附件提供者传输字节。Session 尚未持久化时返回 `409 session_unavailable`；可见附件不存在时返回 404。网关卸载和客户端提前断开会中止下载并等待读取句柄关闭；响应成功写完后正常关闭。存储内部可能物化比请求窗口更多的数据。
 
 
-`/runs/{runId}/events` 提供独立游标的 Session SSE，不激活 Agent。业务等待、工具审批和模型提问共用交互 API，取消及重启中断的运行时请求会撤销，插件恢复后需要重新请求工具批准。`/catalog` 提供模型、preset 和权限目录，配置检查与动态选项获取接收取消信号。
+`/runs/{runId}/events` 提供独立游标的 Session SSE，不激活 Agent。业务等待、工具审批和模型提问共用交互 API；`GET /interactions` 按创建顺序列出所有执行中等待回复的交互。取消及重启中断的运行时请求会撤销，插件恢复后需要重新请求工具批准。`POST /runs/{runId}/cleanup` 以开始结算时记录的终态重试被阻塞的清理，并返回 202。`/catalog` 提供模型、preset 和权限目录，preset 附带显示名称和说明；配置检查与动态选项获取接收取消信号。
 
-`/runs/{runId}/attachments` 接收认证 multipart `files`，保存不可变 SHA-256 文件及主体范围内的重试回执，终态拒绝新上传。下载按执行身份隔离，支持单个字节范围。`attachmentRoot` 必填；文件和请求默认上限分别为 52428800、209715200 字节，`attachmentUploadTimeoutMs` 默认 120000，`attachmentFileLimit` 默认 20。`configCheckTimeoutMs` 默认 60000，插件必须响应取消信号。
+`/runs/{runId}/attachments` 接收认证 multipart `files`，保存不可变 SHA-256 文件及主体范围内的重试回执，Run 处于取消中、清理受阻或终态时，以 `409 run_readonly` 拒绝新上传。下载按执行身份隔离，支持单个字节范围。`attachmentRoot` 必填；文件和请求默认上限分别为 52428800、209715200 字节，`attachmentUploadTimeoutMs` 默认 120000，`attachmentFileLimit` 默认 20。`configCheckTimeoutMs` 默认 60000，插件必须响应取消信号。
 
-`GET /credentials/{reference}` 只返回是否配置及可写状态；`PUT` 以幂等赋值方式替换共享凭据，不回显值，不使用 Task 命令回执。Cookie 写操作需要 CSRF。`/health` 和 `/ready` 需要认证，`/ready` 仅在启动器与 Task 恢复成功、调度器运行后返回 200，否则返回 503；`/auth/logout` 撤销浏览器会话。
+`GET /credentials` 列出已安装定义中 `x-dsh-widget: credential` 字段引用的凭据，附带引用它们的定义及不含值的状态。`GET /credentials/{reference}` 只返回是否配置及可写状态；`PUT` 以幂等赋值方式替换共享凭据，不回显值，不使用 Task 命令回执。Cookie 写操作需要 CSRF。`/health` 和 `/ready` 需要认证，`/ready` 仅在启动器与 Task 恢复成功、调度器运行后返回 200，否则返回 503；`/auth/logout` 撤销浏览器会话。
 
 </details>
 

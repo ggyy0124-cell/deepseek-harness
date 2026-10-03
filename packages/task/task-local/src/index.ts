@@ -321,6 +321,9 @@ export class LocalTaskService extends TaskService {
   override interactions(id: TaskRunId) {
     return this.database.interactions(id).filter(value => value.state === 'waiting')
   }
+  override waitingInteractions() {
+    return this.database.waitingInteractions()
+  }
   override checkConfig(id: TaskDefinitionId, config: TaskConfig, signal: AbortSignal) {
     return this.engine.checkConfig(id, config, signal)
   }

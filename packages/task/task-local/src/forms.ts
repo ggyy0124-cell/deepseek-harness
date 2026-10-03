@@ -1,11 +1,12 @@
 /** Bounded, self-contained Draft 2020-12 configuration and interaction validation. */
 import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js'
 import { TaskCommandError, type TaskForms } from '@deepseek-ai/dsh-task'
+import { credentialReferencePattern, credentialReferences, taskFormAnnotationError } from '@deepseek-ai/dsh-task/schema'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 
 const ajv = new Ajv2020({ strict: false, allErrors: false, validateFormats: false, addUsedSchema: false })
 const validators = new WeakMap<object, ValidateFunction>()
-/** Compile a local JSON Schema and reject remote references or executable extensions.
+/** Compile a local JSON Schema and reject remote references, executable extensions or unknown Task annotations.
  * @param schema - plugin-owned schema document.
  * @returns validator with no remote resolver or mutation of input values.
  */
@@ -19,6 +20,10 @@ export function compileForm(schema: JsonValue): ValidateFunction {
   const visit = (value: JsonValue, depth: number): void => {
     if (depth > 32) throw new Error('Task form schema exceeds nesting limit')
     if (typeof value !== 'object' || value === null) return
+    if (!Array.isArray(value)) {
+      const annotation = taskFormAnnotationError(value)
+      if (annotation !== undefined) throw new Error(annotation)
+    }
     for (const [key, child] of Object.entries(value)) {
       if ((key === '$ref' || key === '$dynamicRef') && (typeof child !== 'string' || !child.startsWith('#')))
         throw new Error('Task schemas must use local references')
@@ -39,8 +44,10 @@ export function compileForm(schema: JsonValue): ValidateFunction {
 export function validateForm(schema: JsonValue, value: JsonValue): void {
   if (!compileForm(schema)(value))
     throw new TaskCommandError('invalid_configuration', 'Task value does not match the declared schema')
+  if (credentialReferences(schema, value).some(reference => !credentialReferencePattern.test(reference)))
+    throw new TaskCommandError('invalid_configuration', 'Task credential reference names are invalid')
 }
-/** Validate both schema documents at plugin registration.
+/** Validate every schema document at plugin registration.
  * @param forms - optional schema generation; absent preserves historical generic JSON definitions.
  */
 export function validateForms(forms: TaskForms | undefined): void {
@@ -49,4 +56,5 @@ export function validateForms(forms: TaskForms | undefined): void {
     throw new Error('Task schema version must be a positive integer')
   compileForm(forms.business)
   compileForm(forms.input)
+  if (forms.supplement !== undefined) compileForm(forms.supplement)
 }

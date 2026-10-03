@@ -36,7 +36,7 @@ kind: "package-reference"
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-清理超过配置期限后，其 AbortSignal 会中止。插件必须停止所拥有的工作并结束回调；超时清理的资源锁会保留，直到后续取消成功完成清理。
+清理超过配置期限后，其 AbortSignal 会中止。插件必须停止所拥有的工作并结束回调；超时清理的资源锁会保留，直到后续重试清理或取消成功。Run 在开始结算时记录 `outcome`，因此重试会以最初的成功、失败或取消结论完成。
 
 <details>
 <summary>实现细节</summary>
@@ -45,7 +45,9 @@ kind: "package-reference"
 
 管理客户端通过 `command` 提交稳定的认证主体和重试键。相同请求返回最初的受理快照，即使任务已经完成或服务已经重启；同一键对应的请求发生变化时会冲突。配置和启停命令检查任务定义版本。取消命令在清理完成前返回受理结果；插件卸载仍通过 `cancel` 等待清理完成。
 
-定义可声明带版本的 `forms`、确定性 `migrateConfig`，以及响应取消的 `checkConfig`/`options`。Schema 使用自包含 Draft 2020-12，不提供前端代码。提供方将 forms 保存在执行快照中；模型提问和工具审批使用持久化、版本绑定的交互记录。
+定义可声明带版本的 `forms`、确定性 `migrateConfig`，以及响应取消的 `checkConfig`/`options`。Schema 使用自包含 Draft 2020-12，不提供前端代码。Task 只支持 `x-dsh-widget` 一个注解：`textarea`、表示共享凭据引用名的 `credential`，或从 `options` 取值的 `options`；其他 `x-dsh-` 键会被拒绝。`./schema` 导出的 `credentialReferences` 收集配置使用的凭据名。可选的 `supplement` schema 校验发送给未结束执行的补充输入。提供方将 forms 保存在执行快照中；模型提问和工具审批使用持久化、版本绑定的交互记录。
+
+业务等待的提示内容可以是标题字符串，也可以是 `{ title, body, attachments }`，其中 `body` 为 Markdown，`attachments` 为 Run 附件 ID。轮询和日历执行在 `occurrence` 中记录调度时刻，包括合并补跑的日历调度点范围。
 
 </details>
 

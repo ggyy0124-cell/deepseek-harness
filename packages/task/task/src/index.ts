@@ -204,6 +204,10 @@ export abstract class TaskService extends Service {
    * @returns detached waiting requests.
    */
   abstract interactions(id: TaskRunId): readonly TaskInteraction[]
+  /** Read outstanding tool approvals and model questions across executions.
+   * @returns detached waiting requests ordered by creation time; business waits remain on their runs.
+   */
+  abstract waitingInteractions(): readonly TaskInteraction[]
   /** Check proposed configuration without saving it.
    * @param id - installed definition.
    * @param config - proposed configuration.

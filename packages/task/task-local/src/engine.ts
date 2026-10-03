@@ -15,6 +15,7 @@ import type {
   TaskDefinitionView,
   TaskDispatchReceipt,
   TaskInput,
+  TaskOccurrence,
   TaskRequestId,
   TaskRetirementId,
   TaskRun,
@@ -191,6 +192,7 @@ export class TaskEngine {
             config,
             ...forms,
             nextDueAt: this.initialDue(config),
+            blockedReason: null,
           }
           : {
             ...previous,
@@ -364,7 +366,8 @@ export class TaskEngine {
     if (enabled && retirement !== undefined && retirement.state !== 'complete')
       throw new TaskCommandError('invalid_state', 'Task retirement must finish before admission resumes')
     this.db.transaction(() => {
-      this.db.putDefinition({ ...current, enabled, revision: current.revision + 1 })
+      this.db.putDefinition({ ...current, enabled, revision: current.revision + 1,
+        blockedReason: enabled ? null : current.blockedReason })
       this.audit(null, 'definition.enabled', { definitionId: id, enabled, revision: current.revision + 1 })
     })
   }
@@ -450,6 +453,18 @@ export class TaskEngine {
         this.db.afterCommit(() => {
           void this.cancel(run.id).catch(() => {
             // Cancellation failures retain their durable blocked state for repair.
+          })
+        })
+        return { kind: 'cancellation', runId: run.id, status: 'cancelling' }
+      }
+      case 'cleanup': {
+        const run = this.requireRun(command.runId)
+        if (run.terminalAt !== null) throw new TaskCommandError('read_only', 'task is read-only')
+        if (run.cleanup !== 'blocked') throw new TaskCommandError('invalid_state', 'task cleanup is not blocked')
+        this.change(run, { status: 'cancelling', wait: null }, 'cleanup.retry')
+        this.db.afterCommit(() => {
+          void this.cancel(run.id).catch(() => {
+            // A repeated cleanup failure records its blocked state again.
           })
         })
         return { kind: 'cancellation', runId: run.id, status: 'cancelling' }
@@ -680,6 +695,7 @@ export class TaskEngine {
       const run = this.requireRun(id)
       if (run.terminalAt !== null || run.status === 'cancelling' || run.cleanup === 'blocked')
         throw new TaskCommandError('read_only', 'task is read-only or awaiting cleanup')
+      if (run.forms?.supplement !== undefined) validateForm(run.forms.supplement, value)
       this.addInput(run, requestId, value, 'input')
       this.db.putReceipt(`input:${id}`, requestId, value, true)
     })
@@ -702,8 +718,10 @@ export class TaskEngine {
     const completion = this.withDeadline(run.id, 'cancel.timeout', this.options.cancellationGraceMs, async () => {
       await worker?.done
     }).then(async () => {
-      if (this.requireRun(id).terminalAt === null)
-        await this.finish(this.requireRun(id), 'cancelled', null, 'cancelled by user or plugin removal')
+      const latest = this.requireRun(id)
+      if (latest.terminalAt !== null) return
+      const terminal = this.recordedSettlement(id, 'cancelled by user or plugin removal')
+      await this.finish(latest, terminal.status, terminal.result, terminal.reason)
     }).finally(() => this.cancelling.delete(id))
     this.cancelling.set(id, completion)
     return completion
@@ -775,7 +793,8 @@ export class TaskEngine {
       )
         continue
       const rule = definition.config.schedule
-      if (rule.kind === 'manual' || definition.nextDueAt === null || definition.nextDueAt > now) continue
+      const due = definition.nextDueAt
+      if (rule.kind === 'manual' || due === null || due > now) continue
       try {
         if (rule.kind === 'polling') {
           if (
@@ -790,19 +809,21 @@ export class TaskEngine {
           this.db.transaction(() => {
             this.trigger(
               definition,
-              brandString<TaskRequestId>(`poll:${definition.revision}:${definition.nextDueAt}`),
+              brandString<TaskRequestId>(`poll:${definition.revision}:${due}`),
               null,
+              { scheduledAt: due, missed: null },
             )
             this.db.putDefinition({ ...definition, nextDueAt: null })
           })
         } else {
           this.db.transaction(() => {
-            this.scanCalendar(definition, rule, definition.nextDueAt as number, now)
+            this.scanCalendar(definition, rule, due, now)
           })
         }
       } catch (error: unknown) {
         this.db.transaction(() => {
-          this.db.putDefinition({ ...definition, enabled: false })
+          this.db.putDefinition({ ...definition, enabled: false,
+            blockedReason: `schedule evaluation failed (${error instanceof Error ? error.name : 'unknown'})` })
           this.audit(null, 'schedule.blocked', {
             definitionId: definition.id,
             error: error instanceof Error ? error.name : 'unknown',
@@ -838,7 +859,7 @@ export class TaskEngine {
         if (pending >= this.options.pendingLimit) break
         this.trigger(definition, brandString<TaskRequestId>(`calendar:${definition.revision}:${due}`), {
           scheduledAt: due,
-        })
+        }, { scheduledAt: due, missed: null })
         pending++
       }
       scan = { ...scan, count: scan.count + 1, last: due }
@@ -846,10 +867,11 @@ export class TaskEngine {
       due = nextCalendar(rule, due)
     }
     const complete = due === null || due > scan.through
+    const last = scan.last
     const needsRun =
-      scan.last !== null &&
+      last !== null &&
       (rule.misfire === 'coalesce' ||
-        (rule.misfire === 'skip' && scan.count === 1 && scan.through - scan.last < 60_000))
+        (rule.misfire === 'skip' && scan.count === 1 && scan.through - last < 60_000))
     const waitingForCapacity = complete && needsRun && pending >= this.options.pendingLimit
     const pressured =
       waitingForCapacity || (!complete && pending >= this.options.pendingLimit && rule.misfire === 'all')
@@ -858,11 +880,14 @@ export class TaskEngine {
     scan = { ...scan, pressured }
     if (complete && !waitingForCapacity) {
       if (needsRun)
-        this.trigger(definition, brandString<TaskRequestId>(`calendar:${definition.revision}:${scan.last}`), {
-          scheduledAt: scan.last,
+        this.trigger(definition, brandString<TaskRequestId>(`calendar:${definition.revision}:${last}`), {
+          scheduledAt: last,
           missedCount: scan.count,
           missedFrom: scan.from,
-          missedThrough: scan.last,
+          missedThrough: last,
+        }, {
+          scheduledAt: last,
+          missed: scan.count > 1 ? { from: scan.from, through: last, count: scan.count } : null,
         })
       this.db.putCalendarScan(definition.id, null)
     } else this.db.putCalendarScan(definition.id, scan)
@@ -880,7 +905,9 @@ export class TaskEngine {
         pending,
       })
   }
-  private trigger(definition: TaskDefinitionView, requestId: TaskRequestId, input: JsonValue): TaskRun {
+  private trigger(
+    definition: TaskDefinitionView, requestId: TaskRequestId, input: JsonValue, occurrence: TaskOccurrence | null = null,
+  ): TaskRun {
     const previous = this.db.receipt(`trigger:${definition.id}`, requestId, input)
     if (previous !== undefined) return this.requireRun(brandString<TaskRunId>(z.string().parse(previous)))
     if (!definition.enabled || !definition.installed || this.removing.has(definition.id))
@@ -888,11 +915,13 @@ export class TaskEngine {
     const plugin = this.plugin(definition.id)
     if (plugin.forms !== undefined) validateForm(plugin.forms.input, input)
     const value = json(plugin.parseInput(input))
-    const run = this.reserve(definition, value)
+    const run = this.reserve(definition, value, undefined, undefined, occurrence)
     this.db.putReceipt(`trigger:${definition.id}`, requestId, input, run.id)
     return run
   }
-  private reserve(definition: TaskDefinitionView, input: JsonValue, parent?: TaskRun, key?: string): TaskRun {
+  private reserve(
+    definition: TaskDefinitionView, input: JsonValue, parent?: TaskRun, key?: string, occurrence: TaskOccurrence | null = null,
+  ): TaskRun {
     const now = this.options.clock()
     const forms = parent === undefined ? definition.forms : parent.forms
     const run: TaskRun = {
@@ -915,6 +944,8 @@ export class TaskEngine {
       retryAt: null,
       result: null,
       reason: null,
+      outcome: null,
+      occurrence,
       createdAt: now,
       updatedAt: now,
       terminalAt: null,
@@ -933,17 +964,7 @@ export class TaskEngine {
     let run = this.requireRun(id)
     try {
       if (run.status === 'cancelling') {
-        const intent = this.db.operation(id, '@terminal')
-        const terminal =
-          intent === undefined
-            ? { status: 'cancelled' as const, result: null, reason: run.reason }
-            : z
-              .object({
-                status: z.enum(['succeeded', 'failed', 'cancelled']),
-                result: z.json(),
-                reason: z.string().nullable(),
-              })
-              .parse(intent.value)
+        const terminal = this.recordedSettlement(id, run.reason)
         await this.finish(run, terminal.status, terminal.result, terminal.reason)
         return
       }
@@ -1101,6 +1122,7 @@ export class TaskEngine {
                 prompt: json(decision.prompt),
                 ...(decision.schema === undefined ? {} : { schema: decision.schema }),
                 ...(decision.expiresAt === undefined ? {} : { expiresAt: decision.expiresAt }),
+                createdAt: this.options.clock(),
               },
             },
             'stage.waiting',
@@ -1138,7 +1160,7 @@ export class TaskEngine {
       this.db.putOperation(run.id, '@terminal', 'confirmed', { status, result, reason })
       this.change(
         this.requireRun(run.id),
-        { status: 'cancelling', result, reason, wait: null },
+        { status: 'cancelling', result, reason, wait: null, outcome: status },
         'cleanup.started',
       )
     })
@@ -1147,6 +1169,18 @@ export class TaskEngine {
       .finally(() => this.finishing.delete(run.id))
     this.finishing.set(run.id, pending)
     return pending
+  }
+  /** Read the terminal decision recorded when settlement began; a run without one settles as cancelled.
+   * @param id - execution.
+   * @param reason - cancellation reason used when no decision was recorded.
+   * @returns status, result and reason to commit after cleanup.
+   */
+  private recordedSettlement(id: TaskRunId, reason: string | null): { status: TerminalStatus; result: JsonValue; reason: string | null } {
+    const intent = this.db.operation(id, '@terminal')
+    return intent === undefined
+      ? { status: 'cancelled', result: null, reason }
+      : z.object({ status: z.enum(['succeeded', 'failed', 'cancelled']), result: z.json(), reason: z.string().nullable() })
+        .parse(intent.value)
   }
   private async doFinish(
     run: TaskRun,
@@ -1170,7 +1204,7 @@ export class TaskEngine {
           {
             status: 'blocked',
             cleanup: 'blocked',
-            reason: 'resource cleanup failed; retry cancellation after repair',
+            reason: 'resource cleanup failed; retry cleanup after repair',
           },
           'cleanup.blocked',
         ),
