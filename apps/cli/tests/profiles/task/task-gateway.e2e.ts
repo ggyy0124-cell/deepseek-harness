@@ -36,8 +36,13 @@ describe('Task REST gateway', () => {
       }, { timeout: 30000 }).toBe(true).catch((error: unknown) => { throw new Error(diagnostics, { cause: error }) })
       if (auth === undefined) throw new Error('missing test credentials')
       const origin = `http://127.0.0.1:${auth.port}`
-      expect((await fetch(origin + '/')).status).toBe(404)
-      expect((await fetch(origin + '/index.html')).status).toBe(404)
+      expect((await fetch(origin + '/runs/unknown')).status).toBe(404)
+      for (const path of ['/', '/index.html', '/runs/unknown']) {
+        const page = await fetch(origin + path, { headers: { Accept: 'text/html' } })
+        expect(page.status).toBe(200)
+        expect(page.headers.get('content-security-policy')).toContain("script-src 'self'")
+        expect(await page.text()).toContain('<div id="root"></div>')
+      }
       expect(diagnostics).not.toContain('#launch=')
       const baseUrl = `${origin}/api/task/v1/`
       const bearer = auth.device.token

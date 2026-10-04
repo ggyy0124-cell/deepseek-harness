@@ -38,6 +38,7 @@ python/**/.pytest_cache/
 packages/**/__pycache__/
 design/**/__pycache__/
 apps/web/dist/
+apps/task-web/dist/
 .artifacts/
 .dsh-build/
 .playwright-mcp/
