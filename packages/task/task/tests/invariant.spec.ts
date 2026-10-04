@@ -17,7 +17,8 @@ const run: TaskRun = {
   kind: 'manual', parentRunId: null, businessKey: null, codeVersion: '1', configRevision: 1,
   config: { schedule: { kind: 'manual' }, concurrency: 1, preset: 'test', permissionPreset: 'test', workspacePath: '/', business: null },
   input: null, checkpoint: null, revision: 2, inputRevision: 1, status: 'waiting_input', wait: null, retryAt: null,
-  result: null, reason: null, createdAt: 0, updatedAt: 0, terminalAt: null, cleanup: 'pending', resources: [],
+  result: null, reason: null, outcome: null, occurrence: null, createdAt: 0, updatedAt: 0, terminalAt: null,
+  cleanup: 'pending', resources: [],
 }
 
 async function setup(options: { owner?: TaskRun; persisted?: boolean } = {}) {

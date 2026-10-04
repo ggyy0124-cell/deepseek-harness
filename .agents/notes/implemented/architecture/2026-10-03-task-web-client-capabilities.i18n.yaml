@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-03-task-web-client-capabilities.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-03-task-web-client-capabilities.md
+/agent-note-task-backend-capabilities-for-the-web-client:
+  en: a79485469a9bb0b5
+  zh: 5a264b26d7698142
+/agent-note-task-backend-capabilities-for-the-web-client/problem:
+  en: 9ff37bf6a6a8b1f0
+  zh: 2499e2d5892c9d9c
+/agent-note-task-backend-capabilities-for-the-web-client/decision:
+  en: f23a4d7d1aa40f0c
+  zh: 38fd92c863745235
+/agent-note-task-backend-capabilities-for-the-web-client/alternatives-considered:
+  en: b5c46a1172ec0571
+  zh: fa4ec6c54c1578bc
+/agent-note-task-backend-capabilities-for-the-web-client/consequences:
+  en: 24f411780d8db77b
+  zh: 3269989cb7432528

@@ -53,6 +53,8 @@ export interface TaskDefinitionView {
   readonly config: TaskConfig
   readonly nextDueAt: number | null
   readonly forms?: TaskForms
+  /** Why the scheduler disabled future triggers itself; null when enabled or paused by a caller. Enabling clears it. */
+  readonly blockedReason: string | null
 }
 /** Ordered input consumed with a stage checkpoint commit. */
 export interface TaskInput {
@@ -65,9 +67,29 @@ export interface TaskInput {
 export interface TaskWait {
   readonly id: TaskWaitId
   readonly revision: number
+  /** Plugin content; a string is its title, and a {@link TaskWaitContent} object carries a Markdown body and attachments. */
   readonly prompt: JsonValue
   readonly schema?: JsonValue
   readonly expiresAt?: number
+  /** Commit time of the wait; absent on waits recorded before this field existed. */
+  readonly createdAt?: number
+}
+/** Structured business wait content recognized by clients; other prompt values remain opaque JSON. */
+export interface TaskWaitContent {
+  readonly title: string
+  /** Markdown shown below the title. */
+  readonly body?: string
+  /** Attachment identities of the owning Run. */
+  readonly attachments?: readonly string[]
+}
+/** Terminal decision recorded when settlement begins; it survives pending or blocked cleanup. */
+export type TaskOutcome = 'succeeded' | 'failed' | 'cancelled'
+/** Schedule instant that admitted a polling or calendar execution. */
+export interface TaskOccurrence {
+  /** Due instant of the poll or calendar occurrence. */
+  readonly scheduledAt: number
+  /** Range of calendar occurrences coalesced into this execution; null for a single occurrence. */
+  readonly missed: { readonly from: number; readonly through: number; readonly count: number } | null
 }
 /** Immutable execution snapshot returned by reads and stage admission. */
 export interface TaskRun {
@@ -91,6 +113,10 @@ export interface TaskRun {
   readonly retryAt: number | null
   readonly result: JsonValue
   readonly reason: string | null
+  /** Terminal decision once settlement begins; equals `status` after the run ends. */
+  readonly outcome: TaskOutcome | null
+  /** Admitting schedule instant of a polling or calendar run; null for manual and ordinary runs. */
+  readonly occurrence: TaskOccurrence | null
   readonly createdAt: number
   readonly updatedAt: number
   readonly terminalAt: number | null
@@ -132,6 +158,7 @@ export type TaskCommand =
   | { readonly kind: 'input'; readonly runId: TaskRunId; readonly input: JsonValue }
   | { readonly kind: 'respond'; readonly runId: TaskRunId; readonly waitId: TaskWaitId; readonly revision: number; readonly response: JsonValue }
   | { readonly kind: 'cancel'; readonly runId: TaskRunId }
+  | { readonly kind: 'cleanup'; readonly runId: TaskRunId }
 /** Original admission result, retained even after the task changes. */
 export type TaskCommandResult =
   | { readonly kind: 'retirement'; readonly retirement: TaskRetirement }
@@ -150,6 +177,17 @@ export interface TaskForms {
   readonly version: number
   readonly business: Record<string, JsonValue>
   readonly input: Record<string, JsonValue>
+  /** Supplemental input accepted by unfinished runs; absent accepts any JSON input. */
+  readonly supplement?: Record<string, JsonValue>
+}
+/** One Agent question as asked, with its choices. */
+export interface TaskQuestion {
+  readonly id: string
+  readonly question: string
+  readonly detail: string | null
+  readonly header: string | null
+  readonly multiSelect: boolean
+  readonly options: readonly { readonly label: string; readonly description: string | null }[]
 }
 /** Persisted interactive request; a withdrawn runtime request cannot authorize a new tool call. */
 export interface TaskInteraction {
@@ -160,6 +198,10 @@ export interface TaskInteraction {
   readonly title: string
   readonly description: string
   readonly schema: JsonValue
+  /** Tool call awaiting approval; null for questions and for approvals without a call. */
+  readonly callId: string | null
+  /** Structured questions of an Agent question; null for tool approvals. */
+  readonly questions: readonly TaskQuestion[] | null
   readonly createdAt: number
   readonly expiresAt: number | null
   readonly state: 'waiting' | 'answered' | 'withdrawn'
@@ -234,7 +276,10 @@ export interface TaskRunQuery {
   readonly head?: TaskRunId
   readonly after?: TaskRunId
   readonly definitionId?: TaskDefinitionId
-  readonly status?: TaskStatus
+  /** Matches any listed current status; an empty list matches no run. */
+  readonly status?: readonly TaskStatus[]
+  /** Original dispatching run of ordinary executions. */
+  readonly parentRunId?: TaskRunId
   readonly kind?: TaskRun['kind']
   readonly businessKey?: string
   readonly createdFrom?: number

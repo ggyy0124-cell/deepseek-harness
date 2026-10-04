@@ -28,6 +28,8 @@ export interface AuthOptions {
 export interface TaskAuthentication {
   readonly principal: TaskPrincipalId
   readonly csrf: string | null
+  /** Browser session expiry; null for device bearer credentials. */
+  readonly expiresAt: number | null
 }
 /** Rejection carries no submitted credential value. */
 export class AuthenticationError extends Error {
@@ -83,36 +85,35 @@ export class TaskAuthenticationStore {
     })
   }
   /** Issue a short-lived browser bootstrap secret for a local application launcher.
-   * @returns the secret once; only its digest is stored.
+   * @returns the secret once with its stored expiry; only its digest is stored.
    */
-  async createLaunch(): Promise<string> {
+  async createLaunch(): Promise<{ token: string; expiresAt: number }> {
     const value = token()
+    const expiresAt = this.options.clock() + this.options.launchTtlMs
     await this.modify((grant) => {
       this.capacity(grant.launches.length)
-      grant.launches.push({
-        digest: digest(value),
-        expiresAt: this.options.clock() + this.options.launchTtlMs,
-      })
+      grant.launches.push({ digest: digest(value), expiresAt })
     })
-    return value
+    return { token: value, expiresAt }
   }
   /** Exchange a single-use launch for a signed browser cookie.
    * @param value - launch secret from the browser body, never a URL query.
-   * @returns cookie value and browser CSRF token.
+   * @returns cookie value, browser CSRF token and session expiry.
    */
-  async exchange(value: string): Promise<{ cookie: string; csrf: string }> {
+  async exchange(value: string): Promise<{ cookie: string; csrf: string; expiresAt: number }> {
     let cookie = ''
     const csrf = token()
     const id = randomUUID()
+    const expiresAt = this.options.clock() + this.options.sessionTtlMs
     await this.modify((grant) => {
       const index = grant.launches.findIndex(entry => equal(entry.digest, digest(value)))
       if (index < 0) throw new AuthenticationError()
       this.capacity(grant.sessions.length)
       grant.launches.splice(index, 1)
-      grant.sessions.push({ id, csrf, expiresAt: this.options.clock() + this.options.sessionTtlMs })
+      grant.sessions.push({ id, csrf, expiresAt })
       cookie = `${id}.${signature(grant, id)}`
     })
-    return { cookie, csrf }
+    return { cookie, csrf, expiresAt }
   }
   /** Provision a native client credential through an authorized local caller.
    * @returns revocation identity and the secret once; no HTTP route exposes this method.
@@ -151,7 +152,7 @@ export class TaskAuthenticationStore {
         !grant.devices.some(entry => equal(entry.digest, digest(value)))
       )
         throw new AuthenticationError()
-      return { principal: brandString<TaskPrincipalId>(grant.principal), csrf: null }
+      return { principal: brandString<TaskPrincipalId>(grant.principal), csrf: null, expiresAt: null }
     }
     const match = /^([0-9a-f-]{36})\.([A-Za-z0-9_-]{43})$/.exec(credential)
     if (match?.[1] === undefined || match[2] === undefined || !equal(match[2], signature(grant, match[1])))
@@ -160,7 +161,7 @@ export class TaskAuthenticationStore {
       entry => entry.id === match[1] && entry.expiresAt > this.options.clock(),
     )
     if (session === undefined) throw new AuthenticationError()
-    return { principal: brandString<TaskPrincipalId>(grant.principal), csrf: session.csrf }
+    return { principal: brandString<TaskPrincipalId>(grant.principal), csrf: session.csrf, expiresAt: session.expiresAt }
   }
   /** Revoke an authenticated browser session.
    * @param cookie - signed cookie already authenticated by the gateway.

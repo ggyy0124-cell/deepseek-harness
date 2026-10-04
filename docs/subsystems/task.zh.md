@@ -12,7 +12,7 @@
 
 ## 阶段与外部操作
 
-[`TaskStage`](../../packages/task/task/src/index.ts)提供已获准入的快照、有序输入、保留的子 Session 身份、取消信号、模型调用、派发与持久外部操作。处理器结束时，其能力失效。`advance`、`wait`、`retry` 与 `block` 保留此次执行；`succeed` 与 `fail` 在提交结束状态前必须完成清理。
+[`TaskStage`](../../packages/task/task/src/index.ts)提供已获准入的快照、有序输入、保留的子 Session 身份、取消信号、模型调用、派发与持久外部操作。处理器结束时，其能力失效。`advance`、`wait`、`retry` 与 `block` 保留此次执行；`succeed` 与 `fail` 在提交结束状态前必须完成清理。清理开始时，Run 将该决定记录为 `outcome`，因此清理受阻及其重试都会保留业务结果。
 
 操作身份局限于一次执行。已确认结果直接复用；准备状态的操作调用插件核对逻辑，不盲目重复外部写入。业务更新与确认都是持久输入。确认引用特定等待及输入修订号；过期回复被拒绝。
 
@@ -24,7 +24,7 @@
 
 ## 管理命令
 
-`TaskPrincipalId` 标识经过认证的所有者，`TaskCommand` 选择配置、启停、触发、输入、回复或取消操作，`TaskCommandResult` 保存最初的受理快照。Task 提供者同时提交状态变更和回执。相同认证主体及请求键重放该快照，内容变化时返回冲突。取消受理先于异步清理完成。[Task 网关](../../packages/task/task-api-gateway/README.zh.md) 将这些操作投影为经过认证的 HTTP 资源，不暴露内部 Run 记录。
+`TaskPrincipalId` 标识经过认证的所有者，`TaskCommand` 选择配置、启停、触发、输入、回复、取消或重试清理操作，`TaskCommandResult` 保存最初的受理快照。重试清理只适用于清理受阻的 Run，并以其记录的终态完成。Task 提供者同时提交状态变更和回执。相同认证主体及请求键重放该快照，内容变化时返回冲突。取消受理先于异步清理完成。[Task 网关](../../packages/task/task-api-gateway/README.zh.md) 将这些操作投影为经过认证的 HTTP 资源，不暴露内部 Run 记录。
 
 `TaskDeviceId` 是本地 Gateway 签发方法返回的带品牌类型的撤销标识，不包含设备密钥。
 
@@ -48,9 +48,9 @@ HTTP Consumer of Task and Credentials; business plugins contribute no routes.
 
 ```ts cordis-catalog
 /** Create a browser launch secret for an authorized local application entry.
- * @returns single-use secret; never logged by the gateway.
+ * @returns single-use secret and its expiry; the gateway never logs the secret.
  */
-createLaunchToken(): Promise<string>
+createLaunchToken(): Promise<{ token: string; expiresAt: number }>
 
 /** Provision a device through an authorized local caller.
  * @returns device revocation identity and its secret once.
@@ -112,6 +112,11 @@ abstract listDefinitions(): readonly TaskDefinitionView[]
  * @returns detached waiting requests.
  */
 abstract interactions(id: TaskRunId): readonly TaskInteraction[]
+
+/** Read outstanding tool approvals and model questions across executions.
+ * @returns detached waiting requests ordered by creation time; business waits remain on their runs.
+ */
+abstract waitingInteractions(): readonly TaskInteraction[]
 
 /** Check proposed configuration without saving it.
  * @param id - installed definition.

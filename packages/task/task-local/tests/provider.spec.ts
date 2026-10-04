@@ -105,9 +105,11 @@ describe('Local Task provider', () => {
     const run = ctx.tasks.triggerManual(id, request('runtime'), null)
     await expect.poll(() => ctx.tasks.interactions(run.id).length).toBe(1)
     const pending = ctx.tasks.interactions(run.id)[0]!
+    expect(ctx.tasks.waitingInteractions()).toEqual([pending])
     ctx.tasks.respond(run.id, pending.id, pending.revision, request('approval'), 'allowed-once')
     await expect.poll(() => ctx.tasks.getRun(run.id)?.status).toBe('succeeded')
     expect(ctx.tasks.interactions(run.id)).toEqual([])
+    expect(ctx.tasks.waitingInteractions()).toEqual([])
     expect(ctx.tasks.getRun(run.id)?.result).toMatchObject({ approval: 'allowed-once' })
     expect(ctx.tasks.listRuns()).toHaveLength(2)
   })

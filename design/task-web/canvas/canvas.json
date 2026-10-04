@@ -1,0 +1,263 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-09-30T07:56:14Z"
+ },
+ "title": "DSH Task Web 原型",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Login.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "连接任务服务",
+   "is_interactive": false
+  },
+  "Main.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "概览",
+   "is_interactive": true
+  },
+  "OverviewDark.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "概览 · 深色",
+   "is_interactive": true
+  },
+  "Diagnostics.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "诊断",
+   "is_interactive": true
+  },
+  "Definitions.dc.html": {
+   "x": 0,
+   "y": 1480,
+   "w": 1440,
+   "h": 900,
+   "title": "任务",
+   "is_interactive": true
+  },
+  "Definition.dc.html": {
+   "x": 1520,
+   "y": 1480,
+   "w": 1440,
+   "h": 1940,
+   "title": "任务配置 · 轮询",
+   "is_interactive": true
+  },
+  "Schedule.dc.html": {
+   "x": 3040,
+   "y": 1480,
+   "w": 1440,
+   "h": 1580,
+   "title": "任务配置 · 定时",
+   "is_interactive": true
+  },
+  "Conflict.dc.html": {
+   "x": 4560,
+   "y": 1480,
+   "w": 1440,
+   "h": 900,
+   "title": "配置冲突 409",
+   "is_interactive": true
+  },
+  "Retire.dc.html": {
+   "x": 6080,
+   "y": 1480,
+   "w": 1440,
+   "h": 900,
+   "title": "插件退役",
+   "is_interactive": true
+  },
+  "Trigger.dc.html": {
+   "x": 7600,
+   "y": 1480,
+   "w": 1440,
+   "h": 900,
+   "title": "手动触发",
+   "is_interactive": true
+  },
+  "Runs.dc.html": {
+   "x": 0,
+   "y": 3800,
+   "w": 1440,
+   "h": 1040,
+   "title": "执行记录",
+   "is_interactive": true
+  },
+  "RunDetail.dc.html": {
+   "x": 1520,
+   "y": 3800,
+   "w": 1440,
+   "h": 900,
+   "title": "执行详情 · 运行中",
+   "is_interactive": true
+  },
+  "RunInteraction.dc.html": {
+   "x": 3040,
+   "y": 3800,
+   "w": 1440,
+   "h": 1000,
+   "title": "执行详情 · 等待输入",
+   "is_interactive": true
+  },
+  "RunResult.dc.html": {
+   "x": 4560,
+   "y": 3800,
+   "w": 1440,
+   "h": 1240,
+   "title": "执行详情 · 已成功",
+   "is_interactive": true
+  },
+  "RunBlocked.dc.html": {
+   "x": 6080,
+   "y": 3800,
+   "w": 1440,
+   "h": 900,
+   "title": "执行详情 · 已阻塞",
+   "is_interactive": true
+  },
+  "RunCleanup.dc.html": {
+   "x": 7600,
+   "y": 3800,
+   "w": 1440,
+   "h": 940,
+   "title": "执行详情 · 清理受阻",
+   "is_interactive": true
+  },
+  "RunPoll.dc.html": {
+   "x": 9120,
+   "y": 3800,
+   "w": 1440,
+   "h": 900,
+   "title": "执行详情 · 轮询与派发",
+   "is_interactive": true
+  },
+  "Inbox.dc.html": {
+   "x": 0,
+   "y": 5420,
+   "w": 1440,
+   "h": 980,
+   "title": "待处理",
+   "is_interactive": true
+  },
+  "Settings.dc.html": {
+   "x": 1520,
+   "y": 5420,
+   "w": 1440,
+   "h": 900,
+   "title": "设置",
+   "is_interactive": true
+  },
+  "Components.dc.html": {
+   "x": 3040,
+   "y": 5420,
+   "w": 1440,
+   "h": 2420,
+   "title": "组件与状态",
+   "is_interactive": false
+  }
+ },
+ "order": [
+  "Login.dc.html",
+  "Main.dc.html",
+  "OverviewDark.dc.html",
+  "Diagnostics.dc.html",
+  "Definitions.dc.html",
+  "Definition.dc.html",
+  "Schedule.dc.html",
+  "Conflict.dc.html",
+  "Retire.dc.html",
+  "Trigger.dc.html",
+  "Runs.dc.html",
+  "RunDetail.dc.html",
+  "RunInteraction.dc.html",
+  "RunResult.dc.html",
+  "RunBlocked.dc.html",
+  "RunCleanup.dc.html",
+  "RunPoll.dc.html",
+  "Inbox.dc.html",
+  "Settings.dc.html",
+  "Components.dc.html"
+ ],
+ "notes": {
+  "row1": {
+   "x": 0,
+   "y": -260,
+   "text": "01 接入与总览",
+   "kind": "title1",
+   "maxW": 6000
+  },
+  "row1-api": {
+   "x": -640,
+   "y": 0,
+   "text": "接口：dsh --profile task --launch-link（终端输出一次性链接，密钥在 #launch= 片段中，不进入 HTTP 请求）· POST /auth/exchange · GET /auth/session（含会话过期时间）· POST /auth/logout · GET /ready · GET /diagnostics · GET /definitions · GET /runs · GET /interactions · GET /events（任务 SSE：先收到 ready 游标再取 REST 快照，断线后用 Last-Event-ID 续传）",
+   "w": 560,
+   "maxH": 520,
+   "color": "blue",
+   "size": "m"
+  },
+  "row2": {
+   "x": 0,
+   "y": 1220,
+   "text": "02 任务定义",
+   "kind": "title1",
+   "maxW": 9040
+  },
+  "row2-api": {
+   "x": -640,
+   "y": 1480,
+   "text": "接口：GET /definitions（availability + reason）· GET /definitions/{id} · PUT …/config（revision + configSchemaVersion）· PUT …/enabled（重新启用会清除调度受阻原因）· POST …/config/check · POST …/config/options · GET /catalog（预设含名称与说明）· POST …/runs（manualInputSchema）· POST/GET …/retirement · GET /credentials · GET/PUT /credentials/{reference}。表单控件由 x-dsh-widget 声明：textarea / credential / options。所有写操作带 Idempotency-Key；浏览器写请求带 X-CSRF-Token。",
+   "w": 560,
+   "maxH": 520,
+   "color": "teal",
+   "size": "m"
+  },
+  "row3": {
+   "x": 0,
+   "y": 3540,
+   "text": "03 执行",
+   "kind": "title1",
+   "maxW": 10560
+  },
+  "row3-api": {
+   "x": -640,
+   "y": 3800,
+   "text": "接口：GET /runs（definitionId / status 逗号分隔多选 / kind / businessKey / parentRunId / createdFrom–To，游标分页）· GET /runs/{id}（outcome · occurrence · supplementalInputSchema）· GET …/transcript · GET …/events（会话 SSE，独立游标）· POST …/inputs · GET …/interactions · POST …/interactions/{waitId}/responses（revision）· POST …/cancellation（202）· POST …/cleanup（202，只重试受阻的清理，结论不变）· GET/POST …/attachments · GET …/attachments/{id}（Range）· GET …/session-attachments/{sequence}/{index}",
+   "w": 560,
+   "maxH": 520,
+   "color": "purple",
+   "size": "m"
+  },
+  "row4": {
+   "x": 0,
+   "y": 5160,
+   "text": "04 待处理、设置与规范",
+   "kind": "title1",
+   "maxW": 4480
+  },
+  "row4-api": {
+   "x": -640,
+   "y": 5420,
+   "text": "待处理来自 GET /interactions（跨执行，按创建时间排序）；409 stale_interaction 时提示重新查看。设置页覆盖连接、凭据（GET /credentials 列出引用，值只写不读）、设备令牌说明与版本信息。组件页列出全部状态取值、错误码与上游令牌。",
+   "w": 560,
+   "maxH": 520,
+   "color": "orange",
+   "size": "m"
+  }
+ },
+ "designSystems": []
+}

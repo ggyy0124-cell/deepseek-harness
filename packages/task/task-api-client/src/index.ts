@@ -1,6 +1,7 @@
 /** Fetch-based Task JSON API client with no Cordis runtime or browser plugin registration. */
 import {
   attachmentSchema,
+  credentialListSchema,
   problemSchema,
   taskCursorSchema,
   taskJsonRoutes,
@@ -91,6 +92,13 @@ export class TaskApiClient {
     )
       throw new Error('Invalid credential status response')
     return { configured: result.configured, writable: result.writable }
+  }
+  /** List credential references named by installed definitions; values are never returned.
+   * @returns value-free presence, writability and naming definitions per reference.
+   */
+  async credentials(): Promise<z.output<typeof credentialListSchema>['items']> {
+    const response = await this.fileRequest('credentials')
+    return credentialListSchema.parse(await response.json()).items
   }
   /** List immutable files associated with an execution.
    * @param runId - owning execution.

@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.client.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "lib/types",
+    "types": []
+  },
+  "include": ["src", "tests"],
+  // The browser acceptance test drives the Node host and Playwright; tsconfig.host.json checks it.
+  "exclude": ["tests/**/*.e2e.ts"],
+  "references": [
+    { "path": "../../packages/task/task-api-client" },
+    { "path": "../../packages/task/task-api-protocol" },
+    { "path": "../../packages/client/ui-primitives" }
+  ]
+}

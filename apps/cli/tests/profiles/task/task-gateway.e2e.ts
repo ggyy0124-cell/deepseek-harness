@@ -36,8 +36,13 @@ describe('Task REST gateway', () => {
       }, { timeout: 30000 }).toBe(true).catch((error: unknown) => { throw new Error(diagnostics, { cause: error }) })
       if (auth === undefined) throw new Error('missing test credentials')
       const origin = `http://127.0.0.1:${auth.port}`
-      expect((await fetch(origin + '/')).status).toBe(404)
-      expect((await fetch(origin + '/index.html')).status).toBe(404)
+      expect((await fetch(origin + '/runs/unknown')).status).toBe(404)
+      for (const path of ['/', '/index.html', '/runs/unknown']) {
+        const page = await fetch(origin + path, { headers: { Accept: 'text/html' } })
+        expect(page.status).toBe(200)
+        expect(page.headers.get('content-security-policy')).toContain("script-src 'self'")
+        expect(await page.text()).toContain('<div id="root"></div>')
+      }
       expect(diagnostics).not.toContain('#launch=')
       const baseUrl = `${origin}/api/task/v1/`
       const bearer = auth.device.token
@@ -95,6 +100,9 @@ describe('Task REST gateway', () => {
       const interactions = await client.request('listInteractions', { params: { runId: initial.id } })
       const wait = interactions.items[0]
       if (wait === undefined) throw new Error('missing business interaction')
+      expect(await client.request('listWaitingInteractions', {})).toEqual({ items: [wait] })
+      expect(wait).toMatchObject({ runId: initial.id, source: 'business', callId: null, questions: null, attachments: [] })
+      expect(await client.credentials()).toEqual([])
       await client.request('respond', { params: { runId: initial.id, waitId: wait.id }, body: { revision: wait.revision, response: true }, idempotencyKey: 'reply-one' })
       await expect(client.request('respond', { params: { runId: initial.id, waitId: wait.id }, body: { revision: wait.revision, response: false }, idempotencyKey: 'reply-stale' }))
         .rejects.toMatchObject({ problem: { status: 409, code: 'stale_interaction' } })
@@ -137,7 +145,22 @@ describe('Task REST gateway', () => {
       const cookieHeader = exchange.headers.get('set-cookie') ?? ''
       expect(cookieHeader).toContain('HttpOnly; SameSite=Strict')
       const cookie = cookieHeader.split(';')[0] ?? ''
-      const session = await exchange.json() as { csrf: string }
+      const session = await exchange.json() as { csrf: string; expiresAt: string }
+      const administration = taskProfileLaunch(['--launch-link', '--port', String(auth.port)], mode)
+      const linked = await execa(administration.command, administration.args, {
+        cwd: repository, env: { ...administration.env, DSH_HOME: join(directory, '.dsh'), DSH_TELEMETRY_DISABLED: '1' }, timeout: 30000, reject: false,
+      })
+      expect(linked.exitCode, linked.stderr).toBe(0)
+      const link = JSON.parse(linked.stdout.split('\n').find(line => line.startsWith('{"url":')) ?? '{}') as { url: string; expiresAt: string }
+      const issued = /^(http:\/\/127\.0\.0\.1:\d+)\/#launch=([A-Za-z0-9_-]{43})$/.exec(link.url)
+      expect(issued?.[1]).toBe(origin)
+      expect(Date.parse(link.expiresAt)).toBeGreaterThan(Date.now())
+      const linkedExchange = await raw('auth/exchange', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: issued?.[2] }) })
+      expect(linkedExchange.status).toBe(200)
+      const linkedSession = await linkedExchange.json() as { csrf: string; expiresAt: string }
+      expect(linkedSession.csrf).not.toBe(session.csrf)
+      expect(Date.parse(linkedSession.expiresAt)).toBeGreaterThan(Date.now())
       expect((await raw('auth/exchange', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ token: auth.launch }) })).status).toBe(401)
       expect(await (await raw('auth/session', { headers: { Cookie: cookie } })).json()).toEqual(session)
       const browserWrite = { method: 'PUT', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/json', 'Idempotency-Key': 'browser-enable' }, body: JSON.stringify({ revision: 2, enabled: true }) }

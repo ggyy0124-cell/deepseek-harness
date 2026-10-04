@@ -36,7 +36,7 @@ dsh rescue
 | Profile | 参数 |
 |---|---|
 | `web` | `--host`、`--port`、可重复的 `--trusted-host`、`--no-open` |
-| `task` | `--host`（仅环回地址）、`--port`、`--token-create`、`--token-revoke <id>`、`--backup <directory>`、`--restore <directory>` |
+| `task` | `--host`（仅环回地址）、`--port`、`--token-create`、`--token-revoke <id>`、`--launch-link`、`--backup <directory>`、`--restore <directory>` |
 | `headless` | 任务文本，作为位置参数 |
 | `sdk` | 无选项；stdio 携带 JSON-RPC 协议 |
 | `sdk-minimal` | 无选项；stdio 携带相同的 JSON-RPC 协议 |

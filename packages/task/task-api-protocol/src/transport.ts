@@ -1,14 +1,16 @@
 /** Transport operations that use cookies, event streams or multipart bodies instead of JSON commands. */
 import { z } from 'zod'
+import { credentialReferencePattern } from '@deepseek-ai/dsh-task/schema'
 import {
   idSchema,
   attachmentSchema,
+  browserSessionSchema,
+  credentialListSchema,
   sessionStreamEventSchema,
   taskCursorSchema,
   taskStreamEventSchema,
 } from './schemas.ts'
 const exchangeSchema = z.strictObject({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/) })
-const sessionSchema = z.strictObject({ csrf: z.string() })
 /** Extend the generated JSON API document with the gateway's transport operations.
  * @param document - owned mutable OpenAPI document.
  * @returns the same document with authentication, streaming, files and maintenance reads.
@@ -25,8 +27,8 @@ export function addTransportOperations(document: Record<string, unknown>): Recor
       },
       responses: {
         '200': {
-          description: 'Signed HttpOnly cookie and CSRF token',
-          content: { 'application/json': { schema: z.toJSONSchema(sessionSchema) } },
+          description: 'Signed HttpOnly cookie, CSRF token and session expiry',
+          content: { 'application/json': { schema: z.toJSONSchema(browserSessionSchema) } },
         },
       },
     },
@@ -37,8 +39,8 @@ export function addTransportOperations(document: Record<string, unknown>): Recor
       security: [{ browserSession: [] }],
       responses: {
         '200': {
-          description: 'Current CSRF token',
-          content: { 'application/json': { schema: z.toJSONSchema(sessionSchema) } },
+          description: 'Current CSRF token and session expiry',
+          content: { 'application/json': { schema: z.toJSONSchema(browserSessionSchema) } },
         },
       },
     },
@@ -172,7 +174,7 @@ export function addTransportOperations(document: Record<string, unknown>): Recor
       name: 'reference',
       in: 'path',
       required: true,
-      schema: { type: 'string', pattern: '^[A-Za-z_][A-Za-z0-9_]*$' },
+      schema: { type: 'string', pattern: credentialReferencePattern.source },
     },
   ]
   const credentialResult = {
@@ -183,6 +185,18 @@ export function addTransportOperations(document: Record<string, unknown>): Recor
           type: 'object',
           required: ['configured', 'writable'],
           properties: { configured: { type: 'boolean' }, writable: { type: 'boolean' } },
+        },
+      },
+    },
+  }
+  paths['/credentials'] = {
+    get: {
+      operationId: 'listCredentials',
+      security: auth,
+      responses: {
+        '200': {
+          description: 'Credential references named by installed definitions, with value-free presence',
+          content: { 'application/json': { schema: z.toJSONSchema(credentialListSchema) } },
         },
       },
     },

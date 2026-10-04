@@ -9,7 +9,7 @@ export async function apply(ctx, config) {
   const device = await ctx.taskGateway.createDeviceToken()
   const revoked = await ctx.taskGateway.createDeviceToken()
   await ctx.taskGateway.revokeDeviceToken(revoked.id)
-  const launch = await ctx.taskGateway.createLaunchToken()
+  const { token: launch } = await ctx.taskGateway.createLaunchToken()
   ctx.tasks.register(ctx, {
     id: 'gateway-smoke', title: 'Gateway smoke', codeVersion: '1',
     config: { schedule: { kind: 'manual' }, concurrency: 1, preset: 'standard', permissionPreset: 'read-only', workspacePath: config.workspace, business: null },

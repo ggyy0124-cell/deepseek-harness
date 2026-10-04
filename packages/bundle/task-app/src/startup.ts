@@ -10,7 +10,7 @@ export const inject = ['cmdlineArgs']
 export interface TaskStartup {
   readonly host: '127.0.0.1'
   readonly port: number
-  readonly command: 'serve' | 'token-create' | 'token-revoke' | 'backup' | 'restore'
+  readonly command: 'serve' | 'token-create' | 'token-revoke' | 'launch-link' | 'backup' | 'restore'
   readonly target: string
 }
 declare module '@deepseek-ai/cordis' {
@@ -29,6 +29,7 @@ export function apply(ctx: Context): void {
     .option('--port <port>', 'listen port; 0 selects a free port', '3081')
     .option('--token-create', 'issue a native client credential without starting the server')
     .option('--token-revoke <id>', 'revoke a native client credential')
+    .option('--launch-link', 'issue a one-time browser launch link for the Task host on --port')
     .option('--backup <directory>', 'back up an inactive Task store to a new directory')
     .option('--restore <directory>', 'restore a verified backup into an empty Task store')
   program.action(() => {
@@ -37,13 +38,14 @@ export function apply(ctx: Context): void {
       port: string
       tokenCreate?: boolean
       tokenRevoke?: string
+      launchLink?: boolean
       backup?: string
       restore?: string
     }>()
     if (flags.host !== '127.0.0.1' || !/^\d+$/.test(flags.port) || Number(flags.port) > 65535)
       program.error('Task requires a loopback host and port 0–65535')
     if (
-      [flags.tokenCreate, flags.tokenRevoke, flags.backup, flags.restore].filter(
+      [flags.tokenCreate, flags.tokenRevoke, flags.launchLink, flags.backup, flags.restore].filter(
         value => value !== undefined,
       ).length > 1
     )
@@ -55,11 +57,13 @@ export function apply(ctx: Context): void {
         ? 'token-create'
         : flags.tokenRevoke !== undefined
           ? 'token-revoke'
-          : flags.backup !== undefined
-            ? 'backup'
-            : flags.restore !== undefined
-              ? 'restore'
-              : 'serve',
+          : flags.launchLink
+            ? 'launch-link'
+            : flags.backup !== undefined
+              ? 'backup'
+              : flags.restore !== undefined
+                ? 'restore'
+                : 'serve',
       target: flags.tokenRevoke ?? flags.backup ?? flags.restore ?? '',
     } satisfies TaskStartup)
   })

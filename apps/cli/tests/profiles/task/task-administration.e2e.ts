@@ -20,6 +20,12 @@ describe('Task administration profile', () => {
       const device = JSON.parse(created.stdout.split('\n').find(line => line.startsWith('{"id":')) ?? '{}') as { id: string; token: string }
       expect(/^[a-f0-9-]{36}\.[A-Za-z0-9_-]{43}$/.test(device.token)).toBe(true)
       expect((await run(['--token-revoke', device.id])).exitCode).toBe(0)
+      const linked = await run(['--launch-link', '--port', '4310'])
+      expect(linked.exitCode, linked.stderr).toBe(0)
+      const link = JSON.parse(linked.stdout.split('\n').find(line => line.startsWith('{"url":')) ?? '{}') as { url: string; expiresAt: string }
+      expect(link.url).toMatch(/^http:\/\/127\.0\.0\.1:4310\/#launch=[A-Za-z0-9_-]{43}$/)
+      expect(Date.parse(link.expiresAt) - Date.now()).toBeLessThanOrEqual(60000)
+      expect((await run(['--launch-link', '--token-create'])).exitCode).not.toBe(0)
       await mkdir(join(home, 'tasks'), { recursive: true })
       const db = new TaskDatabase(join(home, 'tasks', 'tasks.sqlite')); db.close()
       const backup = join(root, 'backup')
