@@ -67,7 +67,7 @@ export function addTransportOperations(document: Record<string, unknown>): Recor
       security: [{ bearerAuth: [] }, { browserSession: [] }],
       parameters: [
         { name: 'runId', in: 'path', required: true, schema: z.toJSONSchema(idSchema) },
-        { name: 'cursor', in: 'query', schema: { type: 'string', maxLength: 1024 } },
+        { name: 'cursor', in: 'query', schema: { type: 'string', maxLength: 2048 } },
       ],
       responses: {
         '200': {

@@ -7,13 +7,15 @@ import { dirname } from 'node:path'
 import { z } from 'zod'
 import { TaskCommandError } from '@deepseek-ai/dsh-task'
 import { taskQuestionSchema } from '@deepseek-ai/dsh-task/schema'
-import type { TaskRunQuery, TaskRunPage, TaskResourceRecord, TaskDiagnostics, TaskRetirement, TaskDefinitionId, TaskInteraction, TaskDefinitionView, TaskInput, TaskJournalEntry, TaskRun, TaskRunId, TaskStoreId } from '@deepseek-ai/dsh-task'
+import type { TaskRunQuery, TaskRunPage, TaskResourceRecord, TaskDiagnostics, TaskRetirement, TaskDefinitionId, TaskInteraction, TaskDefinitionView, TaskInput, TaskInputRecord, TaskJournalEntry, TaskRun, TaskRunId, TaskStoreId } from '@deepseek-ai/dsh-task'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { retirementRecordSchema, definitionSchema, runSchema } from './schema.ts'
 
 /** Monotonic database schema generation. */
 export const SCHEMA_VERSION = 9
+/** Request identity prefix of the input recorded when a business wait expires. */
+export const TIMEOUT_REQUEST_PREFIX = 'timeout:'
 
 /** One foreground child belongs to one model operation of a Task Run. */
 export interface TaskChildRecord {
@@ -37,6 +39,10 @@ function childRecord(raw: unknown): TaskChildRecord {
     modelKey: row.model_key, state: row.state,
   }
 }
+
+const storedInputSchema = z.object({
+  id: z.string(), revision: z.number().int(), kind: z.enum(['input', 'response', 'update']), value: z.json(),
+})
 
 const calendarScanSchema = z.object({
   from: z.number(), through: z.number(), count: z.number().int().nonnegative(), last: z.number().nullable(),
@@ -486,7 +492,30 @@ export class TaskDatabase {
    */
   inputs(id: TaskRunId, includeConsumed = false): TaskInput[] {
     return (this.db.prepare('SELECT value FROM inputs WHERE run_id=? AND (? OR consumed=0) ORDER BY revision').all(id, Number(includeConsumed)) as Document[])
-      .map(row => z.object({ id: z.string(), revision: z.number().int(), kind: z.enum(['input', 'response', 'update']), value: z.json() }).parse(JSON.parse(row.value)) as TaskInput)
+      .map(row => storedInputSchema.parse(JSON.parse(row.value)) as TaskInput)
+  }
+  /** Read the people-authored inputs of a run with their arrival times.
+   * @param id - run.
+   * @returns supplemental inputs and business-wait replies by revision, consumed ones included; plugin dispatches and wait timeouts are
+   * omitted.
+   */
+  inputHistory(id: TaskRunId): TaskInputRecord[] {
+    // Accepting an input journals one `input.<kind>` record in the same transaction, so the nth record of a kind is the nth input of
+    // that kind.
+    const arrivals: Record<'input' | 'response', number[]> = { input: [], response: [] }
+    for (const row of this.db.prepare("SELECT event,at FROM journal WHERE run_id=? AND event IN ('input.input','input.response') ORDER BY sequence").all(id))
+      arrivals[row['event'] === 'input.input' ? 'input' : 'response'].push(Number(row['at']))
+    const taken = { input: 0, response: 0 }
+    const records: TaskInputRecord[] = []
+    for (const row of this.db.prepare('SELECT value,consumed FROM inputs WHERE run_id=? ORDER BY revision').all(id)) {
+      const input = storedInputSchema.parse(JSON.parse(String(row['value'])))
+      if (input.kind === 'update') continue
+      const at = arrivals[input.kind][taken[input.kind]++]
+      if (at === undefined) throw new Error(`task journal lacks the arrival of input ${input.revision}`)
+      if (input.id.startsWith(TIMEOUT_REQUEST_PREFIX)) continue
+      records.push({ revision: input.revision, kind: input.kind, value: input.value, at, consumed: row['consumed'] === 1 })
+    }
+    return records
   }
   /** Append incoming data.
    * @param id - run.

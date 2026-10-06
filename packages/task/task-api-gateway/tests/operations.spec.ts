@@ -42,6 +42,18 @@ describe('Task REST operations', () => {
     expect(interactions).toHaveBeenCalledWith(runId)
   })
 
+  it('lists the inputs people gave an execution with UTC arrival times and rejects unknown executions', () => {
+    const inputs = vi.fn(() => [{ revision: 1, kind: 'response' as const, value: { decision: 'approve' }, at: 1, consumed: true }])
+    const getRun = vi.fn<TaskService['getRun']>().mockReturnValueOnce(run).mockReturnValueOnce(undefined)
+    const tasks = stub<TaskService>({ getRun, inputs })
+    expect(executeOperation(tasks, 'listInputs', { runId }, {}, undefined, principal, requestId, 20)).toEqual({ items: [
+      { revision: 1, kind: 'response', value: { decision: 'approve' }, at: '1970-01-01T00:00:00.001Z', consumed: true },
+    ] })
+    expect(() => executeOperation(tasks, 'listInputs', { runId }, {}, undefined, principal, requestId, 20))
+      .toThrow(expect.objectContaining({ status: 404 }))
+    expect(inputs).toHaveBeenCalledOnce()
+  })
+
   it('collects business waits from every page and runtime requests across runs in creation order', () => {
     const wait = (id: string, createdAt: number): TaskRun => ({ ...run, id: brandString<TaskRunId>(id),
       wait: { id: brandString<TaskWaitId>(`${id}-wait`), revision: 0, prompt: id, createdAt } })

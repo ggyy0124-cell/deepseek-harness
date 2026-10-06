@@ -1,5 +1,6 @@
-/** Run detail: transcript, interactions, result, attachments, lineage and the information panel. */
-import { useState, type ReactNode } from 'react'
+/** Run detail: conversation and trajectory, interactions, result, attachments, lineage and the right sidebar. */
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import clsx from 'clsx'
 import {
   Button, IconChecklistOutlineRegular, IconEllipsisOutlineRegular, IconPaperclipOutlineRegular, IconQuestionOutlineRegular,
   IconQueueOutlineRegular, IconRefreshOutlineRegular, IconSendOutlineRegular, IconStopFillRegular, IconWarningOutlineRegular,
@@ -11,18 +12,39 @@ import { commandKey, describeFailure } from '../support/connection.ts'
 import { definitionTitle, failureText, formatTime, runName, shortId } from '../support/format.ts'
 import { useResource } from '../support/resource.ts'
 import { Link, paths, useRouter } from '../support/router.tsx'
+import { useStickToBottom } from '../support/scroll.ts'
+import type { DetailTab } from '../support/presentation.ts'
+import { useRunSidebar } from '../support/sidebar.ts'
 import { useTranscript } from '../support/transcript.ts'
-import { acceptsInput, type Attachment, type Json, type Run } from '../support/types.ts'
+import { buildTrajectory } from '../support/trajectory.ts'
+import { acceptsInput, type Attachment, type Json, type Run, type RunInput } from '../support/types.ts'
 import {
   Card, CopyButton, Dot, EmptyState, KeyValue, Mono, Notice, StatusMark, StatusTag, Tabs, Time,
 } from '../components/ui.tsx'
 import { MetaLine, Transcript } from '../components/Transcript.tsx'
+import { RecordDetail } from '../components/RecordDetail.tsx'
+import { Sidebar, SidebarToggle, type SidebarTab } from '../components/Sidebar.tsx'
+import { TrajectoryView } from '../components/Trajectory.tsx'
 import { InteractionCard } from '../components/Interaction.tsx'
 import { ResultView } from '../components/Result.tsx'
 import { AttachmentsPanel, useUpload } from '../components/Attachments.tsx'
 import { hasFormControls, SchemaForm, schemaDefault } from '../components/SchemaForm.tsx'
 
 type Tab = 'session' | 'interactions' | 'result' | 'files' | 'lineage'
+
+/** How the Session tab shows the stored messages. */
+type SessionView = 'chat' | 'trajectory'
+
+/** Tabs of the right sidebar; the record tab exists while a trajectory record is selected. */
+type SideTab = 'status' | 'record'
+
+const NO_INPUTS: readonly RunInput[] = []
+
+/** Consecutive failed reads before the Session tab names the failure; the first one is a routine reconnect. */
+const STREAM_FAILURES_BEFORE_NOTICE = 2
+
+/** Tallest the supplemental input grows, in px, before it scrolls. */
+const COMPOSER_MAX_PX = 240
 
 /** Run detail page.
  * @param props.id - Run identity.
@@ -80,8 +102,18 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
   const interactions = useResource(`run-interactions:${run.id}`, async signal => (await connection.call('listInteractions',
     { params: { runId: run.id }, signal })).items,
   { affects: runId => runId === run.id })
+  const inputs = useResource(`run-inputs:${run.id}`, async signal => (await connection.call('listInputs',
+    { params: { runId: run.id }, signal })).items, { affects: runId => runId === run.id })
   const attachments = useResource(`attachments:${run.id}`, () => connection.guard(() => connection.client.attachments(run.id)),
     { affects: runId => runId === run.id })
+  const scroller = useRef<HTMLDivElement | null>(null)
+  const sidebar = useRunSidebar()
+  const [view, setView] = useState<SessionView>('chat')
+  const [selection, setSelection] = useState<{ readonly id: string; readonly tab: DetailTab } | null>(null)
+  const [sideTab, setSideTab] = useState<SideTab>('status')
+  const toggle = useRef<HTMLButtonElement | null>(null)
+  const activeSideTab = useRef<HTMLButtonElement | null>(null)
+  const focusAfter = useRef<'toggle' | 'sidebar' | null>(null)
   const definition = shared.definitions.value?.find(item => item.id === run.definitionId)
   const name = run.businessKey ?? `${t.runs.execution(t.kind[run.kind])} · ${formatTime(run.createdAt)}`
   const waiting = (interactions.value ?? []).filter(item => run.terminalAt === null && item.runId === run.id)
@@ -91,13 +123,50 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
   const open = acceptsInput(run)
   const working = !ended && (run.status === 'running' || run.status === 'provisioning' || run.status === 'recovering')
   const files = attachments.value ?? []
+  const lastMessage = transcript.entries.at(-1)
+  const chatting = tab === 'session' && view === 'chat'
+  useStickToBottom(scroller, `${lastMessage?.sequence ?? 0}:${inputs.value?.length ?? 0}:${waiting.map(item => `${item.id}:${item.revision}`).join()}`,
+    chatting)
+  const selectedId = selection?.id ?? null
+  const needsTrajectory = selectedId !== null || (tab === 'session' && view === 'trajectory')
+  const trajectory = useMemo(
+    () => (needsTrajectory ? buildTrajectory(transcript.entries, inputs.value ?? NO_INPUTS, transcript.requests) : undefined),
+    [needsTrajectory, transcript.entries, transcript.requests, inputs.value])
+  const activeSide: SideTab = selectedId !== null && sideTab === 'record' ? 'record' : 'status'
+  const sideTabs: readonly SidebarTab<SideTab>[] = [
+    { id: 'status', label: t.run.sidebar.status },
+    ...(selectedId === null ? [] : [{ id: 'record' as const, label: t.run.sidebar.event, closeLabel: t.run.sidebar.closeEvent }]),
+  ]
+  // Focus follows an explicit open or collapse; selecting a trajectory row opens the sidebar without taking focus from the table.
+  useEffect(() => {
+    const wanted = focusAfter.current
+    if (wanted === 'sidebar' && sidebar.open) activeSideTab.current?.focus()
+    else if (wanted === 'toggle' && !sidebar.open) toggle.current?.focus()
+    else return
+    focusAfter.current = null
+  }, [sidebar.open])
+  const expandSidebar = () => { focusAfter.current = 'sidebar'; sidebar.setOpen(true) }
+  const collapseSidebar = () => { focusAfter.current = 'toggle'; sidebar.setOpen(false) }
+  const { setOpen: setSidebarOpen } = sidebar
+  // The tab stays while the reader moves between records, so comparing the timing of two tool calls takes one click each.
+  const selectRecord = useCallback((id: string, detailTab?: DetailTab) => {
+    setSelection(current => ({ id, tab: detailTab ?? current?.tab ?? 'overview' }))
+    setSideTab('record')
+    setSidebarOpen(true)
+  }, [setSidebarOpen])
+  const selectDetailTab = (detailTab: DetailTab) => {
+    setSelection(current => (current === null ? null : { id: current.id, tab: detailTab }))
+  }
+  const closeRecord = () => { setSelection(null); setSideTab('status') }
   const callArguments = (callId: string | null) => {
     if (callId === null) return undefined
     for (const entry of transcript.entries) for (const block of entry.blocks) if (block.kind === 'tool_call'
       && block.callId === callId) return block.arguments
     return undefined
   }
-  const refreshAll = () => { reload(); interactions.reload(); attachments.reload(); shared.interactions.reload(); shared.active.reload() }
+  const refreshAll = () => {
+    reload(); interactions.reload(); inputs.reload(); attachments.reload(); shared.interactions.reload(); shared.active.reload()
+  }
 
   const cancel = () => {
     setConfirmCancel(false)
@@ -111,6 +180,7 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
         (error: unknown) => { toast(`${t.run.cleanupFailed}：${failureText(describeFailure(error), t)}`, 'error') })
   }
   const outcomeLabel = t.status[run.outcome ?? 'failed']
+  const column = clsx('tw-run-column', tab === 'session' && view === 'trajectory' && 'tw-run-column-wide')
   const tabs: { value: Tab; label: string; count?: number | undefined }[] = [
     { value: 'session', label: t.run.tabs.session },
     { value: 'interactions', label: t.run.tabs.interactions, count: waiting.length || undefined },
@@ -133,6 +203,7 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
           <Tag tone="outline">{t.kind[run.kind]}</Tag>
         </div>
         <div className="tw-inline-flex tw-gap-8">
+          {!sidebar.open && <SidebarToggle label={t.run.sidebar.open} onClick={expandSidebar} buttonRef={toggle} />}
           {canCancel && <Button variant="outline" size="sm" className="tw-page-button tw-danger-button" icon={<IconStopFillRegular
             size={14} />} onClick={() => { setConfirmCancel(true) }}>{t.run.cancel}</Button>}
           {cleanupBlocked && <Button variant="primary" size="sm" className="tw-page-button" icon={<IconRefreshOutlineRegular size={14} />}
@@ -153,19 +224,25 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
       <div className="tw-run-body">
         <div className="tw-run-center">
           <div className="tw-run-tabs">
-            <div className="tw-run-column tw-row-between">
+            <div className={clsx(column, 'tw-row-between')}>
               <Tabs label={t.run.tabsLabel} value={tab} onChange={setTab} items={ordered} />
               {!ended && (
                 <span className="tw-inline-flex tw-muted-small">
                   <Dot state={transcript.state === 'live' ? 'done' : 'warning'} />
                   {transcript.state === 'live' ? t.run.sessionLive : transcript.state === 'pending' ? t.run.sessionPending
-                    : t.run.sessionConnecting}
+                    : transcript.state === 'reconnecting' ? t.run.sessionReconnecting : t.run.sessionConnecting}
                 </span>
               )}
             </div>
+            {tab === 'session' && (
+              <div className={column}>
+                <Tabs variant="underline" label={t.run.views.label} value={view} onChange={setView}
+                  items={[{ value: 'chat', label: t.run.views.chat }, { value: 'trajectory', label: t.run.views.trajectory }]} />
+              </div>
+            )}
           </div>
-          <div className="tw-run-scroll">
-            <div className="tw-run-column tw-stack-16">
+          <div className="tw-run-scroll" ref={scroller}>
+            <div className={clsx(column, 'tw-stack-16', 'tw-run-content')}>
               {notice?.kind === 'cancel' && !ended && <Notice kind="info" title={t.run.cancelAccepted}>{t.run.cancelAcceptedBody}</Notice>}
               {notice?.kind === 'cleanup' && !ended && <Notice kind="info"
                 title={t.run.cleanupAccepted}>{t.run.cleanupAcceptedBody(outcomeLabel)}</Notice>}
@@ -189,8 +266,21 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
                   {run.status === 'waiting_retry' && run.retryAt !== null && (
                     <Notice kind="info" title={t.status.waiting_retry}>{run.reason ?? ''} {t.run.retrying(formatTime(run.retryAt))}</Notice>
                   )}
-                  <Transcript run={run} entries={transcript.entries} working={working} startLabel={startLabel(run, t)} />
+                  {transcript.failure !== undefined && transcript.failure.count >= STREAM_FAILURES_BEFORE_NOTICE && (
+                    <Notice kind="warning" title={t.run.streamFailed}
+                      actions={<Button variant="outline" size="sm" onClick={transcript.retry}>{t.run.retryNow}</Button>}>
+                      {t.run.streamFailedBody(transcript.failure.error.kind === 'problem' ? failureText(transcript.failure.error, t)
+                        : transcript.failure.error.detail)}
+                    </Notice>
+                  )}
+                  {view === 'chat' || trajectory === undefined
+                    ? <Transcript run={run} entries={transcript.entries} inputs={inputs.value ?? NO_INPUTS} working={working}
+                      startLabel={startLabel(run, t)} />
+                    : <TrajectoryView run={run} trajectory={trajectory} working={working} selectedId={selectedId}
+                      onSelect={selectRecord} />}
                   {waiting.length > 0 && <MetaLine text={t.status.waiting_input} />}
+                  {waiting.map(item => <InteractionCard key={`${item.id}:${item.revision}`} interaction={item} runName={name}
+                    callArguments={callArguments(item.callId)} onDone={refreshAll} />)}
                 </>
               )}
               {tab === 'interactions' && (
@@ -208,18 +298,19 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
               {tab === 'lineage' && <Lineage run={run} />}
             </div>
           </div>
-          {tab === 'session' && waiting.length > 0 && (
-            <div className="tw-run-dock"><div className="tw-run-column tw-stack-12">
-              {waiting.map(item => <InteractionCard key={`${item.id}:${item.revision}`} interaction={item} runName={name}
-                callArguments={callArguments(item.callId)} onDone={refreshAll} />)}
-            </div></div>
-          )}
-          {(tab !== 'session' || waiting.length === 0) && (open
+          {open
             ? <Composer run={run} onSent={refreshAll} onUploaded={attachments.reload} />
-            : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} />)}
+            : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} />}
         </div>
-        <InfoPanel run={run} definitionTitle={definitionTitle(shared.definitions.value, run.definitionId)}
-          definitionRevision={definition?.revision} />
+        <Sidebar open={sidebar.open} covering={sidebar.covering} width={sidebar.width} tabs={sideTabs} active={activeSide}
+          activeRef={activeSideTab} scrollKey={activeSide === 'record' ? `${selectedId ?? ''}:${selection?.tab ?? ''}` : activeSide} onSelect={setSideTab}
+          onCloseTab={closeRecord} onCollapse={collapseSidebar} onResize={sidebar.setWidth}>
+          {activeSide === 'record' && trajectory !== undefined && selection !== null
+            ? <RecordDetail run={run} trajectory={trajectory} id={selection.id} tab={selection.tab} onSelect={selectRecord}
+              onTab={selectDetailTab} />
+            : <RunStatus run={run} definitionTitle={definitionTitle(shared.definitions.value, run.definitionId)}
+              definitionRevision={definition?.revision} />}
+        </Sidebar>
       </div>
       {confirmCancel && (
         <Modal open title={t.run.cancelConfirm} closeLabel={t.common.close} description={t.run.cancelBody} backdropBlur={false}
@@ -338,11 +429,19 @@ function Composer({ run, onSent, onUploaded }: { run: Run; onSent: () => void; o
   const [form, setForm] = useState<Json>(() => (schema === null ? null : schemaDefault(schema, schema)))
   const [busy, setBusy] = useState(false)
   const [key, setKey] = useState(commandKey)
+  const area = useRef<HTMLTextAreaElement | null>(null)
   const { upload, uploading } = useUpload(run, onUploaded)
   const blocked = run.status === 'blocked'
+  const empty = !structured && text.trim() === ''
+  useLayoutEffect(() => {
+    const node = area.current
+    if (node === null) return
+    node.style.height = 'auto'
+    node.style.height = `${Math.min(node.scrollHeight + node.offsetHeight - node.clientHeight, COMPOSER_MAX_PX)}px`
+  }, [text])
   const send = () => {
+    if (busy || empty) return
     const input: Json = structured ? form : text.trim()
-    if (!structured && text.trim() === '') return
     setBusy(true)
     connection.call('sendInput', { params: { runId: run.id }, body: { input }, idempotencyKey: key }).then(() => {
       toast(t.run.sent)
@@ -350,28 +449,39 @@ function Composer({ run, onSent, onUploaded }: { run: Run; onSent: () => void; o
       setForm(schema === null ? null : schemaDefault(schema, schema))
       setKey(commandKey())
       onSent()
+      area.current?.focus()
     }, (error: unknown) => { toast(`${t.run.sendFailed}：${failureText(describeFailure(error), t)}`,
       'error') }).finally(() => { setBusy(false) })
   }
+  // Enter submits and Shift+Enter inserts a line break; the Enter that confirms an IME candidate is not a submit.
+  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== 'Enter' || event.shiftKey) return
+    // oxlint-disable-next-line typescript/no-deprecated -- Safari reports the IME-confirming Enter as keyCode 229.
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return
+    event.preventDefault()
+    send()
+  }
+  const sendLabel = blocked ? t.run.wake : t.run.send
   return (
     <div className="tw-composer-wrap">
       <div className="tw-composer">
+        <div className="tw-composer-title"><span className="tw-strong">{t.run.composerLabel}</span><span className="tw-muted-small">{t.run.composerHint}</span></div>
         {structured
           ? <div className="tw-composer-form"><SchemaForm schema={schema} value={form} onChange={setForm} layout="stack" /></div>
-          : <textarea aria-label={t.run.composer} rows={2} placeholder={blocked ? t.run.composerBlocked : t.run.composer} value={text}
-            onChange={(event) => { setText(event.target.value) }}
-            onKeyDown={(event) => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); send() } }} />}
+          : <textarea ref={area} className="tw-composer-input" aria-label={t.run.composerLabel} rows={3}
+            placeholder={blocked ? t.run.composerBlocked : t.run.composer} value={text}
+            onChange={(event) => { setText(event.target.value) }} onKeyDown={onKeyDown} />}
         <div className="tw-composer-bar">
-          <div className="tw-inline-flex tw-gap-4">
-            <label className="tw-icon-button" aria-label={t.run.upload} title={t.run.upload}>
-              <IconPaperclipOutlineRegular size={16} />
-              <input type="file" multiple hidden
+          <div className="tw-inline-flex tw-gap-8">
+            <label className="tw-attach" title={t.run.upload}>
+              <IconPaperclipOutlineRegular size={14} /><span>{t.run.attach}</span>
+              <input type="file" multiple hidden aria-label={t.run.upload}
                 onChange={(event) => { upload([...(event.target.files ?? [])]); event.target.value = '' }} />
             </label>
-            <span className="tw-muted-small">{uploading > 0 ? t.run.files.uploading(uploading) : t.run.composerHint}</span>
+            <span className="tw-muted-small">{uploading > 0 ? t.run.files.uploading(uploading) : structured ? '' : t.run.sendKeys}</span>
           </div>
-          <button type="button" className="tw-send" aria-label={blocked ? t.run.wake : t.run.send} title={blocked ? t.run.wake : t.run.send}
-            disabled={busy || (!structured && text.trim() === '')} onClick={send}><IconSendOutlineRegular size={16} /></button>
+          <Button variant="primary" size="sm" icon={<IconSendOutlineRegular size={14} />} disabled={busy || empty}
+            onClick={send}>{sendLabel}</Button>
         </div>
       </div>
     </div>
@@ -386,13 +496,13 @@ function ReadonlyBar({ run, definitionNext }: { run: Run; definitionNext: string
   return <div className="tw-composer-wrap"><div className="tw-readonly-bar" role="status">{text}</div></div>
 }
 
-function InfoPanel({ run, definitionTitle: title,
+function RunStatus({ run, definitionTitle: title,
   definitionRevision }: { run: Run; definitionTitle: string; definitionRevision: number | undefined }) {
   const t = useT()
   const { definitions } = useShared()
   const definition = definitions.value?.find(item => item.id === run.definitionId)
   return (
-    <aside aria-label={t.run.panel.label} className="tw-info-panel">
+    <>
       <section>
         <h2>{t.run.panel.run}</h2>
         <KeyValue label={t.run.panel.status}><StatusTag status={run.status} /></KeyValue>
@@ -434,7 +544,7 @@ function InfoPanel({ run, definitionTitle: title,
         <KeyValue label={t.runs.columns.cleanup}><Tag tone={run.cleanup === 'blocked' ? 'danger' : run.cleanup === 'complete' ? 'quiet'
           : 'neutral'}>{t.cleanup[run.cleanup]}</Tag></KeyValue>
       </section>
-    </aside>
+    </>
   )
 }
 

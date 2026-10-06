@@ -10,7 +10,9 @@ import { streamTaskEvents } from '../src/events.ts'
 import { stub } from '../../task-local/tests/stub.ts'
 
 const storeId = brandString<TaskStoreId>('00000000-0000-0000-0000-000000000001')
-const options = { eventPollMs: 1, eventHeartbeatMs: 1000, eventBatchSize: 1, eventBufferBytes: 1024, eventDrainTimeoutMs: 10 }
+const options = {
+  eventPollMs: 1, eventHeartbeatMs: 1000, eventBatchSize: 1, eventBufferBytes: 1024, eventDrainTimeoutMs: 10, transcriptPageBytes: 65536,
+}
 class SocketResponse extends EventEmitter {
   writableLength = 0
   destroyed = false
@@ -84,7 +86,7 @@ describe('Task event replay', () => {
 describe('Session event transport', () => {
   function session(count = 1) {
     const events = Array.from({ length: count }, (_, seq) => ({
-      seq, time: seq, type: 'user/message', surfaceOp: 'append', data: { content: [{ type: 'text', text: `hello-${seq}` }] },
+      seq, time: seq, type: 'user/message', surfaceOp: 'append', data: { content: [{ type: 'text', text: `hello-${seq}` }], source: { kind: 'user' } },
     }))
     const close = vi.fn(async () => {})
     // The read-only transport needs only ownership lookup and a bounded disposable handle.
@@ -135,6 +137,16 @@ describe('Session event transport', () => {
       if (++checks === 3) socket.destroy()
     }, { ...options, eventBufferBytes: 4096 })
     expect(socket.frames.filter(frame => frame.includes('event: session\n'))).toHaveLength(2)
+  })
+  it('splits stored messages over the transcript byte budget into consecutive frames', async () => {
+    const { tasks, persistence } = session(3)
+    const socket = new SocketResponse()
+    let checks = 0
+    await streamSessionEvents(tasks, persistence, 'run', socket.response(), undefined, async () => {
+      if (++checks === 4) socket.destroy()
+    }, { ...options, eventBatchSize: 10, eventBufferBytes: 8192, transcriptPageBytes: 1 })
+    const frames = socket.frames.filter(frame => frame.includes('event: session\n'))
+    expect(frames.map(frame => frame.match(/hello-\d/g))).toEqual([['hello-0'], ['hello-1'], ['hello-2']])
   })
   it('emits a Session heartbeat page when no new event has arrived', async () => {
     const { tasks, persistence } = session()

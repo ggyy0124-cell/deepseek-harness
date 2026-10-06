@@ -39,6 +39,7 @@ export async function streamSessionEvents(
       runId,
       position === undefined ? {} : { cursor: position },
       Math.min(options.eventBatchSize, 200),
+      options.transcriptPageBytes,
       lifetime.signal,
     ).then(value => transcriptPageSchema.parse(value))
   const write = async (event: string, id: string, data: unknown) => {

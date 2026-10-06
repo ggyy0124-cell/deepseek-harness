@@ -25,7 +25,7 @@ import {
 } from '@deepseek-ai/dsh-task-api-protocol'
 import { z } from 'zod'
 import { HttpProblem, validate } from './http.ts'
-import { projectRetirement, projectDefinition, projectInteractions, projectRun, projectRuntimeInteraction } from './projection.ts'
+import { projectInput, projectRetirement, projectDefinition, projectInteractions, projectRun, projectRuntimeInteraction } from './projection.ts'
 
 type Operation = Exclude<
   (typeof taskJsonRoutes)[number]['operationId'],
@@ -96,6 +96,9 @@ export function executeOperation(
     }
     case 'getRun':
       return projectRun(run())
+    case 'listInputs':
+      run()
+      return { items: tasks.inputs(runId).map(projectInput) }
     case 'listInteractions':
       return { items: [...projectInteractions(run()), ...tasks.interactions(runId).map(projectRuntimeInteraction)] }
     case 'listWaitingInteractions': {

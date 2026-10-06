@@ -16,6 +16,7 @@ import {
   inputSchema,
   interactionSchema,
   responseSchema,
+  runInputSchema,
   runSchema,
   runsPageSchema,
   runsQuerySchema,
@@ -143,6 +144,14 @@ export const taskJsonRoutes = [
     params: runParams,
     body: inputSchema,
     response: runSchema,
+    status: 200,
+  },
+  {
+    operationId: 'listInputs',
+    method: 'get',
+    path: '/runs/{runId}/inputs',
+    params: runParams,
+    response: z.strictObject({ items: z.array(runInputSchema) }),
     status: 200,
   },
   {

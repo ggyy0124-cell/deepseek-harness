@@ -1,8 +1,8 @@
 /** Explicit Task DTO projection; private run fields never cross the HTTP API. */
-import type { TaskDefinitionView, TaskInteraction, TaskRetirement, TaskRun } from '@deepseek-ai/dsh-task'
+import type { TaskDefinitionView, TaskInputRecord, TaskInteraction, TaskRetirement, TaskRun } from '@deepseek-ai/dsh-task'
 import { waitContentSchema } from '@deepseek-ai/dsh-task/schema'
 import {
-  availabilitySchema, definitionSchema, interactionSchema, runSchema, diagnosticsSchema, retirementSchema,
+  availabilitySchema, definitionSchema, interactionSchema, runInputSchema, runSchema, diagnosticsSchema, retirementSchema,
 } from '@deepseek-ai/dsh-task-api-protocol'
 import type { z } from 'zod'
 
@@ -41,6 +41,13 @@ export function projectRun(run: TaskRun): z.infer<typeof runSchema> {
     retryAt: time(run.retryAt),
     supplementalInputSchema: run.forms?.supplement ?? null,
   })
+}
+/** Expose one input a person gave the execution.
+ * @param value - durable input record.
+ * @returns validated public fields with a UTC arrival time.
+ */
+export function projectInput(value: TaskInputRecord): z.infer<typeof runInputSchema> {
+  return runInputSchema.parse({ ...value, at: new Date(value.at).toISOString() })
 }
 /** Derive a definition's admission state from its record and latest retirement.
  * @param definition - installed or retained definition.

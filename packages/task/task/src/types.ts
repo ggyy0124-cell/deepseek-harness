@@ -63,6 +63,18 @@ export interface TaskInput {
   readonly kind: 'update' | 'response' | 'input'
   readonly value: JsonValue
 }
+/** One input a person gave an execution, in arrival order; plugin dispatches and wait timeouts are not people. */
+export interface TaskInputRecord {
+  /** Position among the execution's inputs. */
+  readonly revision: number
+  /** `input` is supplemental information; `response` answers a business wait. */
+  readonly kind: 'input' | 'response'
+  readonly value: JsonValue
+  /** Wall time at which the execution accepted the input. */
+  readonly at: number
+  /** True once a committed stage has consumed the input. */
+  readonly consumed: boolean
+}
 /** A durable, revision-bound interaction. */
 export interface TaskWait {
   readonly id: TaskWaitId

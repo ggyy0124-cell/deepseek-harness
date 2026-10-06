@@ -124,8 +124,87 @@ describe('Task Web client', () => {
     await dialog.getByRole('textbox', { name: 'Focus' }).fill('Task Web client')
     await dialog.getByRole('button', { name: '触发' }).click()
     await page.waitForURL(/\/runs\//)
-    await page.getByRole('region', { name: '业务确认' }).getByRole('button', { name: '批准' }).click({ timeout: 30000 })
+    const card = page.getByRole('region', { name: '业务确认' })
+    await card.getByRole('button', { name: '批准' }).waitFor({ timeout: 30000 })
+    const composer = page.getByRole('textbox', { name: '补充信息' })
+    const [cardBox, composerBox] = [await card.boundingBox(), await composer.boundingBox()]
+    if (cardBox === null || composerBox === null) throw new Error('The confirmation card and the composer must both be visible')
+    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(composerBox.y)
+    await composer.fill('first line')
+    await composer.press('Shift+Enter')
+    await composer.pressSequentially('second line')
+    expect(await composer.inputValue()).toBe('first line\nsecond line')
+    await composer.press('Enter')
+    await page.locator('.tw-user-message').filter({ hasText: 'second line' }).waitFor({ timeout: 30000 })
+    expect(await composer.inputValue()).toBe('')
+    await card.getByRole('button', { name: '批准' }).click({ timeout: 30000 })
     await page.locator('.tw-run-header').getByText('已成功').waitFor({ timeout: 30000 })
+    await page.locator('.tw-user-message').filter({ hasText: '确认回复' }).filter({ hasText: '批准' }).waitFor({ timeout: 30000 })
+  }, 60000)
+
+  it('shows the Run facts in a resizable sidebar and the Session as a trajectory with a timeline, search and a record inspector', async () => {
+    const sidebar = page.getByRole('complementary', { name: '右侧边栏' })
+    await sidebar.getByRole('tab', { name: '状态' }).waitFor()
+    await sidebar.getByText('Performance review').waitFor()
+    const handle = sidebar.getByRole('separator', { name: '调整侧边栏宽度' })
+    const width = Number(await handle.getAttribute('aria-valuenow'))
+    await handle.focus()
+    await handle.press('ArrowLeft')
+    await expect.poll(async () => Number(await handle.getAttribute('aria-valuenow'))).toBe(width + 16)
+
+    await sidebar.getByRole('button', { name: '收起右侧边栏' }).click()
+    await expect.poll(() => sidebar.isVisible()).toBe(false)
+    await page.reload()
+    await page.getByRole('button', { name: '打开右侧边栏' }).waitFor()
+    expect(await sidebar.isVisible()).toBe(false)
+    await page.getByRole('button', { name: '打开右侧边栏' }).click()
+    await sidebar.getByRole('tab', { name: '状态' }).waitFor()
+    expect(Number(await handle.getAttribute('aria-valuenow'))).toBe(width + 16)
+
+    await page.getByRole('tab', { name: '会话' }).click()
+    await page.getByRole('tab', { name: '轨迹' }).click()
+    const toolbar = page.getByRole('toolbar', { name: '轨迹工具栏' })
+    for (const name of ['使用实际时长', '收起所有轮次', '收起所有调用']) await toolbar.getByRole('button', { name }).waitFor()
+    const timeline = page.getByRole('region', { name: '轨迹时间线' })
+    await expect.poll(() => timeline.locator('.tw-tl-labels span').allInnerTexts()).toEqual(['输入', '模型', '工具'])
+    await expect.poll(() => timeline.locator('.tw-tl-span[data-kind="input"]').count()).toBeGreaterThan(0)
+
+    const search = toolbar.getByRole('searchbox', { name: '搜索轨迹' })
+    await search.fill('no such record')
+    await page.getByText('没有匹配的记录').waitFor()
+    await search.fill('')
+    const rows = page.getByRole('grid', { name: '轨迹' }).getByRole('row')
+    await rows.filter({ hasText: 'first line' }).click()
+    await sidebar.getByRole('tab', { name: '事件详情' }).waitFor()
+    await expect.poll(() => sidebar.getByRole('tab', { name: '概述' }).getAttribute('aria-selected')).toBe('true')
+    await sidebar.getByText('second line').first().waitFor()
+    await sidebar.getByRole('tab', { name: '原始内容' }).click()
+    await sidebar.locator('pre').filter({ hasText: 'second line' }).waitFor()
+    await sidebar.getByRole('button', { name: '关闭事件详情' }).click()
+    await sidebar.getByRole('tab', { name: '事件详情' }).waitFor({ state: 'detached' })
+    await page.getByRole('tab', { name: '对话' }).click()
+    await page.locator('.tw-user-message').filter({ hasText: 'second line' }).waitFor()
+  }, 60000)
+
+  it('keeps the trajectory toolbar flush with the top of the scroll area and leaves room above the composer', async () => {
+    await page.getByRole('tab', { name: '轨迹' }).click()
+    await page.setViewportSize({ width: 1440, height: 300 })
+    try {
+      const scroller = page.locator('.tw-run-scroll')
+      await expect.poll(() => scroller.evaluate(element => element.scrollHeight - element.clientHeight)).toBeGreaterThan(40)
+      await scroller.evaluate((element) => { element.scrollTop = 40 })
+      const [scrollerBox, headBox] = [await scroller.boundingBox(), await page.locator('.tw-traj-head').boundingBox()]
+      if (scrollerBox === null || headBox === null) throw new Error('The scroll area and the trajectory toolbar must both be visible')
+      expect(headBox.y).toBeCloseTo(scrollerBox.y, 0)
+
+      await scroller.evaluate((element) => { element.scrollTop = element.scrollHeight })
+      const [cardBox, footerBox] = [await page.locator('.tw-traj').boundingBox(), await page.locator('.tw-composer-wrap').boundingBox()]
+      if (cardBox === null || footerBox === null) throw new Error('The trajectory and the composer area must both be visible')
+      expect(footerBox.y - (cardBox.y + cardBox.height)).toBeGreaterThanOrEqual(16)
+    } finally {
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await page.getByRole('tab', { name: '对话' }).click()
+    }
   }, 60000)
 
   it('retries a blocked cleanup and keeps the recorded outcome', async () => {

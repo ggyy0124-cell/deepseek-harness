@@ -367,6 +367,9 @@ describe('Task gateway composition', () => {
     const first = await client.request('triggerManual', { params, body: { input: null }, idempotencyKey: 'first' })
     const second = await client.request('triggerManual', { params, body: { input: null }, idempotencyKey: 'second' })
     await client.request('sendInput', { params: { runId: first.id }, body: { input: 'extra' }, idempotencyKey: 'input' })
+    expect(await client.request('listInputs', { params: { runId: first.id } }))
+      .toMatchObject({ items: [{ revision: 1, kind: 'input', value: 'extra', consumed: false }] })
+    await expect(client.request('listInputs', { params: { runId: 'missing' } })).rejects.toMatchObject({ problem: { status: 404 } })
     const page = await client.request('listRuns', { query: { limit: '1', definitionId: definition.id, kind: 'manual',
       createdFrom: '2020-01-01T00:00:00.000Z', createdTo: '2099-01-01T00:00:00.000Z' } })
     expect(page.items[0]?.id).toBe(second.id)

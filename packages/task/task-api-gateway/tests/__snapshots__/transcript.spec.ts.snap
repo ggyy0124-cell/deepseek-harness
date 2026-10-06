@@ -11,9 +11,18 @@ exports[`Task transcript windows > pages over internal events and projects messa
       },
     ],
     "callId": null,
+    "firstTokenAt": null,
     "isError": false,
+    "model": null,
     "role": "user",
     "sequence": 1,
+    "source": {
+      "kind": "user",
+    },
+    "startedAt": null,
+    "step": null,
+    "turn": 1,
+    "usage": null,
   },
 ]
 `;

@@ -10,9 +10,13 @@ import { commandKey, describeFailure, isProblem } from '../support/connection.ts
 import { bytes, failureText, formatTime, relative } from '../support/format.ts'
 import { saveBlob } from '../support/download.ts'
 import type { Attachment, Interaction, Json } from '../support/types.ts'
+import { Clamp } from './Clamp.tsx'
 import { Markdown } from './markdown.tsx'
 import { hasFormControls, resolveSchema, SchemaForm, schemaChoices, schemaDefault, type SchemaNode } from './SchemaForm.tsx'
 import { FileChip, argumentSummary } from './Transcript.tsx'
+
+/** Height in px at which a long card body collapses behind an expand control. */
+const BODY_CLAMP_PX = 200
 
 type Choice = { value: Json; label: string; description?: string | undefined }
 type ReplyMode =
@@ -143,7 +147,9 @@ function BusinessCard({ interaction, runName, onDone }: { interaction: Interacti
       <Strip tone="warning" icon={<IconQuestionOutlineRegular size={16} />}>{strip}</Strip>
       <div className="tw-interaction-head">
         <h3>{interaction.title}</h3>
-        {interaction.description !== '' && <div className="tw-interaction-body"><Markdown text={interaction.description} compact /></div>}
+        {interaction.description !== '' && (
+          <div className="tw-interaction-body"><Clamp maxHeight={BODY_CLAMP_PX}><Markdown text={interaction.description} compact /></Clamp></div>
+        )}
         {attachments.length > 0 && (
           <div className="tw-chip-row">
             {attachments.map(item => (
@@ -229,7 +235,7 @@ function ToolApprovalCard({ interaction, onDone,
       <div className="tw-interaction-head">
         <span className="tw-interaction-title">{interaction.title}</span>
         {callArguments !== undefined && <span className="tw-mono tw-muted-text tw-break">{argumentSummary(callArguments)}</span>}
-        {interaction.description !== '' && <span className="tw-secondary-text">{interaction.description}</span>}
+        {interaction.description !== '' && <Clamp maxHeight={BODY_CLAMP_PX}><span className="tw-secondary-text">{interaction.description}</span></Clamp>}
       </div>
       {error !== undefined && <p className="tw-interaction-error" role="alert">{error}</p>}
       {stale
@@ -265,7 +271,7 @@ function QuestionCard({ interaction, onDone }: { interaction: Interaction; onDon
           <div className="tw-interaction-head">
             {question.header !== null && <span className="tw-question-header"><Tag tone="neutral">{question.header}</Tag></span>}
             <h3>{question.question}</h3>
-            {question.detail !== null && <span className="tw-secondary-text">{question.detail}</span>}
+            {question.detail !== null && <Clamp maxHeight={BODY_CLAMP_PX}><span className="tw-secondary-text">{question.detail}</span></Clamp>}
           </div>
           {!stale && question.options.length > 0 && (
             <OptionList choices={question.options.map(option => ({ value: option.label, label: option.label,

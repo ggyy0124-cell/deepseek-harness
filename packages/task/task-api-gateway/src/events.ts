@@ -14,6 +14,7 @@ export interface StreamOptions {
   readonly eventBatchSize: number
   readonly eventBufferBytes: number
   readonly eventDrainTimeoutMs: number
+  readonly transcriptPageBytes: number
 }
 /** Hold one authenticated SSE connection until disconnect, revocation or backpressure failure.
  * @param tasks - durable journal owner.
