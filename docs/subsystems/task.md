@@ -30,7 +30,7 @@ Only explicit stage model calls add business instructions to model context. Each
 
 `TaskJournalCursor` combines the durable database identity and committed sequence. The bounded journal reader supports Task SSE replay, while the legacy diagnostic reader retains its complete-history behavior. A fresh stream publishes its cursor before clients acquire REST snapshots; resumed streams replay after their last delivered cursor. The event payload excludes journal details and Session content.
 
-The Task REST transcript reader opens only the Run-owned Session in read mode. Its public messages omit provider replay and storage metadata; pagination advances across internal records without exposing them. The [gateway reference](../../packages/task/task-api-gateway/README.md) owns cursor, visibility and unsupported-content behavior.
+The Task REST transcript reader opens only the Run-owned Session in read mode. Its public messages carry the loop turn and step, the source of user messages, the model name, token usage and request and first-token times of assistant messages and the start of tool calls, and each page lists the request headers (model options and tool schemas) logged in it; they omit provider replay and storage metadata, and pagination advances across internal records without exposing them. The [gateway reference](../../packages/task/task-api-gateway/README.md) owns cursor, visibility and unsupported-content behavior.
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -112,6 +112,12 @@ abstract listDefinitions(): readonly TaskDefinitionView[]
  * @returns detached waiting requests.
  */
 abstract interactions(id: TaskRunId): readonly TaskInteraction[]
+
+/** Read the people-authored inputs of one execution.
+ * @param id - execution identity.
+ * @returns supplemental information and business-wait replies in arrival order, with consumed inputs included.
+ */
+abstract inputs(id: TaskRunId): readonly TaskInputRecord[]
 
 /** Read outstanding tool approvals and model questions across executions.
  * @returns detached waiting requests ordered by creation time; business waits remain on their runs.

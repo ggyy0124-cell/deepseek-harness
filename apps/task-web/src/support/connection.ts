@@ -53,6 +53,11 @@ export function isProblem(error: unknown, ...codes: string[]): error is TaskApiE
 
 const READY_POLL_MS = 2000
 
+/** Largest SSE frame the page accepts. A Session frame carries a whole transcript page, and one stored message can exceed the
+ * gateway's page byte budget by itself.
+ */
+const EVENT_FRAME_LIMIT_BYTES = 4 * 1024 * 1024
+
 /** Owns the CSRF secret of the cookie session and the state machine around it. */
 export class TaskConnection {
   /** API base on the page origin; the gateway scopes its cookie to this path. */
@@ -69,6 +74,7 @@ export class TaskConnection {
       baseUrl: this.base.href,
       fetch: (input, init) => globalThis.fetch(input, init),
       authentication: () => ({ csrf: this.csrf }),
+      eventLimitBytes: EVENT_FRAME_LIMIT_BYTES,
     })
   }
 

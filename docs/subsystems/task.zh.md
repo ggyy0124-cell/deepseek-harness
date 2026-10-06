@@ -30,7 +30,7 @@
 
 `TaskJournalCursor` 组合持久化数据库标识和已提交序号。有界日志读取支持 Task SSE 重放，原有诊断读取仍保留完整历史行为。新连接在客户端读取 REST 快照前发布游标，恢复连接从最后交付的游标后继续重放。事件载荷不包含日志详情和 Session 内容。
 
-Task REST 会话读取器仅以只读模式打开 Run 所属 Session。公开消息排除提供者重放数据和存储元数据；分页跨过内部记录但不暴露其内容。[网关参考](../../packages/task/task-api-gateway/README.zh.md) 定义游标、可见性和不支持内容的行为。
+Task REST 会话读取器仅以只读模式打开 Run 所属 Session。公开消息包含循环轮次和步骤、用户消息的来源、助手消息的模型名称、token 用量及请求和首 token 时间、工具调用的开始时间，每页还列出其中记录的请求头（模型选项和工具 Schema）；排除提供者重放数据和存储元数据，分页跨过内部记录但不暴露其内容。[网关参考](../../packages/task/task-api-gateway/README.zh.md) 定义游标、可见性和不支持内容的行为。
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -112,6 +112,12 @@ abstract listDefinitions(): readonly TaskDefinitionView[]
  * @returns detached waiting requests.
  */
 abstract interactions(id: TaskRunId): readonly TaskInteraction[]
+
+/** Read the people-authored inputs of one execution.
+ * @param id - execution identity.
+ * @returns supplemental information and business-wait replies in arrival order, with consumed inputs included.
+ */
+abstract inputs(id: TaskRunId): readonly TaskInputRecord[]
 
 /** Read outstanding tool approvals and model questions across executions.
  * @returns detached waiting requests ordered by creation time; business waits remain on their runs.

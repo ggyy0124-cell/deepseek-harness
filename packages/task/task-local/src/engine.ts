@@ -25,7 +25,7 @@ import type {
   TaskStageResult,
   TaskWaitId,
 } from '@deepseek-ai/dsh-task'
-import { TaskDatabase } from './database.ts'
+import { TaskDatabase, TIMEOUT_REQUEST_PREFIX } from './database.ts'
 import { RuntimeInteractions } from './interactions.ts'
 import { compileForm as validateFormSchema, validateForm, validateForms } from './forms.ts'
 import { nextCalendar } from './calendar.ts'
@@ -486,7 +486,7 @@ export class TaskEngine {
         this.db.transaction(() => {
           this.addInput(
             run,
-            brandString<TaskRequestId>(`timeout:${wait.id}`),
+            brandString<TaskRequestId>(`${TIMEOUT_REQUEST_PREFIX}${wait.id}`),
             { kind: 'timeout', waitId: wait.id },
             'input',
           )

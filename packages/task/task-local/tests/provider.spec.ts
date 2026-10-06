@@ -128,6 +128,7 @@ describe('Local Task provider', () => {
     await expect.poll(() => ctx.tasks.getRun(run.id)?.status).toBe('succeeded')
     const other = ctx.tasks.triggerManual(id, request('other'), null)
     ctx.tasks.sendInput(other.id, request('input'), 'supplement')
+    expect(ctx.tasks.inputs(other.id)).toMatchObject([{ revision: 1, kind: 'input', value: 'supplement', consumed: false }])
     await ctx.tasks.cancel(other.id)
     expect(ctx.tasks.listRuns()).toHaveLength(2)
     expect(ctx.tasks.journal(0).length).toBeGreaterThan(0)

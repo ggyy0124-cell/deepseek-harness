@@ -52,6 +52,24 @@ export function formatTime(iso: string | number,
   return `${date}${weekday} ${clock}`
 }
 
+/** Wall-clock time of a recorded instant, to the millisecond.
+ * @param instant - epoch milliseconds.
+ * @returns text such as "14:03:27.512" in the preferred time zone.
+ */
+export function formatClock(instant: number): string {
+  const value = parts(instant, preferences.get().time)
+  return `${pad(value.hour)}:${pad(value.minute)}:${pad(value.second)}.${String(Math.floor(instant) % 1000).padStart(3, '0')}`
+}
+
+/** Date and wall-clock time of a recorded instant, to the millisecond.
+ * @param instant - epoch milliseconds.
+ * @returns text such as "2026-10-06 14:03:27.512" in the preferred time zone.
+ */
+export function formatInstant(instant: number): string {
+  const value = parts(instant, preferences.get().time)
+  return `${value.year}-${pad(value.month)}-${pad(value.day)} ${formatClock(instant)}`
+}
+
 /** UTC hover text for a displayed time.
  * @param iso - API timestamp.
  * @returns ISO string.
@@ -85,6 +103,62 @@ export function elapsed(from: string, t: Messages): string {
   const minutes = Math.max(0, Math.round((Date.now() - Date.parse(from)) / 60000))
   if (minutes < 60) return `${minutes} ${t.schedule.units.minutes}`
   return `${Math.floor(minutes / 60)} ${t.schedule.units.hours} ${minutes % 60} ${t.schedule.units.minutes}`
+}
+
+/** Length of a finished span as seconds, minutes or hours.
+ * @param ms - span length; anything shorter than a second reads as one second.
+ * @param t - copy.
+ * @returns text such as "42 s", "3 min 5 s" or "2 h 10 min".
+ */
+export function formatDuration(ms: number, t: Messages): string {
+  const total = Math.max(1, Math.round(ms / 1000))
+  const { seconds, minutes, hours } = t.schedule.units
+  if (total < 60) return `${total} ${seconds}`
+  if (total < 3600) {
+    const rest = total % 60
+    return `${Math.floor(total / 60)} ${minutes}${rest === 0 ? '' : ` ${rest} ${seconds}`}`
+  }
+  const rest = Math.floor((total % 3600) / 60)
+  return `${Math.floor(total / 3600)} ${hours}${rest === 0 ? '' : ` ${rest} ${minutes}`}`
+}
+
+/** Length of one request or tool call in a table cell, independent of the interface language.
+ * @param ms - span length.
+ * @returns text such as "850ms", "2.3s", "3m 05s" or "1h 02m".
+ */
+export function formatSpan(ms: number): string {
+  if (Math.round(ms) < 1000) return `${Math.round(ms)}ms`
+  const tenths = Math.round(ms / 100)
+  if (tenths < 600) return `${(tenths / 10).toFixed(1)}s`
+  const seconds = Math.round(ms / 1000)
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${pad(seconds % 60)}s`
+  const minutes = Math.floor(seconds / 60)
+  return `${Math.floor(minutes / 60)}h ${pad(minutes % 60)}m`
+}
+
+/** Length of one request or tool call in the sidebar and timeline tooltips, with the unit names of the interface language.
+ * @param ms - span length.
+ * @param t - copy.
+ * @returns text such as "850 ms" or "2.31 s".
+ */
+export function formatMillis(ms: number, t: Messages): string {
+  const unit = t.run.trajectory.unit
+  if (Math.round(ms) < 1000) return unit.milliseconds(String(Math.round(ms)))
+  return unit.seconds((ms / 1000).toFixed(ms < 10_000 ? 2 : 1))
+}
+
+/** Token count in a table cell.
+ * @param value - non-negative count.
+ * @returns the count itself below 1000, otherwise a rounded value with a "k" or "M" suffix.
+ */
+export function compactCount(value: number): string {
+  const scale = (size: number, suffix: string): string => {
+    const scaled = value / size
+    return `${scaled >= 100 ? Math.round(scaled) : Math.round(scaled * 10) / 10}${suffix}`
+  }
+  if (value >= 999_500) return scale(1_000_000, 'M')
+  if (value >= 1000) return scale(1000, 'k')
+  return String(value)
 }
 
 /** Human file size.

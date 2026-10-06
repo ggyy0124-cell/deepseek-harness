@@ -1,5 +1,5 @@
 /** Task Web building blocks over the upstream `ui-primitives` atoms. */
-import { useState, type ReactNode } from 'react'
+import { useState, type ReactNode, type Ref } from 'react'
 import clsx from 'clsx'
 import {
   IconCheckOutlineRegular, IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconCopyOutlineRegular,
@@ -194,11 +194,17 @@ export function Crumbs({ items }: { items: readonly { label: string; to?: string
 }
 
 /** Key/value row of an information panel.
+ * @param props.sub - the row details the row above it and is indented.
  * @returns row element.
  */
-export function KeyValue({ label, children, mono = false }: { label: string; children: ReactNode; mono?: boolean }) {
+export function KeyValue({ label, children, mono = false, sub = false }: {
+  label: string
+  children: ReactNode
+  mono?: boolean
+  sub?: boolean
+}) {
   return (
-    <div className="tw-kv">
+    <div className="tw-kv" data-sub={sub || undefined}>
       <span className="tw-kv-label">{label}</span>
       <span className={clsx('tw-kv-value', mono && 'tw-mono')}>{children}</span>
     </div>
@@ -223,18 +229,19 @@ export function EmptyState({ icon, title, children,
 /** Icon-only button with an accessible label and tooltip.
  * @returns button element.
  */
-export function IconButton({ label, icon, onClick, size = 28, disabled, tone }: {
+export function IconButton({ label, icon, onClick, size = 28, disabled, tone, buttonRef }: {
   label: string
   icon: ReactNode
   onClick?: () => void
   size?: 24 | 28
   disabled?: boolean
   tone?: 'muted' | 'caption'
+  buttonRef?: Ref<HTMLButtonElement>
 }) {
   return (
     <Tooltip label={label} side="bottom" delayMs={400}>
-      <button type="button" aria-label={label} className={clsx('tw-icon-button', size === 24 && 'tw-icon-button-sm', tone !== undefined
-        && `tw-icon-${tone}`)}
+      <button type="button" ref={buttonRef} aria-label={label} className={clsx('tw-icon-button', size === 24 && 'tw-icon-button-sm',
+        tone !== undefined && `tw-icon-${tone}`)}
       onClick={onClick} disabled={disabled}>{icon}</button>
     </Tooltip>
   )
@@ -349,17 +356,19 @@ export function Progress({ value, label, height = 6 }: { value: number; label: s
   )
 }
 
-/** Tab strip that renders as page-level segmented tabs.
+/** Tab strip that renders as page-level segmented tabs, or as underlined tabs for a view switch inside a page.
+ * @param props.variant - `segmented` for page tabs; `underline` for the header tabs of a view switch.
  * @returns tablist element.
  */
-export function Tabs<Value extends string>({ items, value, onChange, label }: {
+export function Tabs<Value extends string>({ items, value, onChange, label, variant = 'segmented' }: {
   items: readonly { value: Value; label: string; count?: number | string | undefined }[]
   value: Value
   onChange: (value: Value) => void
   label: string
+  variant?: 'segmented' | 'underline'
 }) {
   return (
-    <div role="tablist" aria-label={label} className="tw-tabs">
+    <div role="tablist" aria-label={label} className={clsx('tw-tabs', variant === 'underline' && 'tw-tabs-underline')}>
       {items.map(item => (
         <button key={item.value} type="button" role="tab" aria-selected={item.value === value} className="tw-tab"
           onClick={() => { onChange(item.value) }}>

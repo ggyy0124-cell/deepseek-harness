@@ -2,7 +2,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { TaskRetirement, TaskRunQuery, TaskRunPage, TaskNotificationProvider, TaskResourceHandler, TaskDiagnostics, TaskForms, TaskInteraction, TaskCommand, TaskCommandResult, TaskPrincipalId, TaskConfig, TaskDefinitionId, TaskDefinitionView, TaskDispatchReceipt, TaskInput, TaskJournalCursor, TaskJournalEntry, TaskRequestId, TaskRun, TaskRunId, TaskStageResult, TaskWaitId } from './types.ts'
+import type { TaskRetirement, TaskRunQuery, TaskRunPage, TaskNotificationProvider, TaskResourceHandler, TaskDiagnostics, TaskForms, TaskInputRecord, TaskInteraction, TaskCommand, TaskCommandResult, TaskPrincipalId, TaskConfig, TaskDefinitionId, TaskDefinitionView, TaskDispatchReceipt, TaskInput, TaskJournalCursor, TaskJournalEntry, TaskRequestId, TaskRun, TaskRunId, TaskStageResult, TaskWaitId } from './types.ts'
 export type * from './types.ts'
 export { TaskCommandError, type TaskCommandErrorCode } from './errors.ts'
 
@@ -204,6 +204,11 @@ export abstract class TaskService extends Service {
    * @returns detached waiting requests.
    */
   abstract interactions(id: TaskRunId): readonly TaskInteraction[]
+  /** Read the people-authored inputs of one execution.
+   * @param id - execution identity.
+   * @returns supplemental information and business-wait replies in arrival order, with consumed inputs included.
+   */
+  abstract inputs(id: TaskRunId): readonly TaskInputRecord[]
   /** Read outstanding tool approvals and model questions across executions.
    * @returns detached waiting requests ordered by creation time; business waits remain on their runs.
    */

@@ -35,6 +35,7 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 | `bodyLimitBytes` / `responseLimitBytes` | 1048576 / 4194304 | 完整 JSON 的字节上限 |
 | `bodyTimeoutMs` | 30000 | 读取请求体的期限 |
 | `pageSize` | 50 | 默认 Run 分页大小，上限为 200 |
+| `transcriptPageBytes` | 131072 | 一个 transcript 窗口内已投影消息的 JSON 字节数上限，超出后窗口结束 |
 | `launchTtlMs` / `sessionTtlMs` | 60000 / 2592000000 | 登录凭据和浏览器凭据有效期 |
 | `credentialLimit` | 100 | 每种凭据最多保留的有效条目数 |
 | `eventPollMs` / `eventHeartbeatMs` | 1000 / 15000 | 日志轮询和心跳间隔 |
@@ -62,10 +63,10 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 
 `GET /events` 先发布 `ready` 游标，再发送已经提交的 Task 日志通知。新客户端先订阅，再读取 REST 基线；重连客户端通过 `Last-Event-ID` 或 `cursor` 查询参数传回最后收到的游标。游标包含数据库标识，不兼容或超前的位置在开始流传输前返回 409。载荷只包含事件名、Run 标识和 UTC 时间，不包含日志详情。客户端收到通知后重新读取受影响的资源。有界 SQLite 分页和套接字缓冲避免离线客户端积累内存重放队列。发送阻塞超时、认证过期或插件卸载会关闭连接，客户端重连后从日志补读。网关在每批重放前重新检查认证。
 
-`GET /runs/{runId}/transcript` 通过只读句柄读取现有 Session 持久化记录，不激活 Agent。`limit` 限制源事件数，因此仅含内部事件的页面可以为空，但游标仍会前进。`hasMore` 为真时继续使用 `nextCursor`，并保留最终游标用于后续追加。锚点缺失或改变返回 `cursor_stale`。仅公开原始用户、助手和工具结果消息，排除仅供模型使用的替换、回放状态和工具私有元数据。图片及文件块公开展示元数据。`/runs/{runId}/session-attachments/{sequence}/{index}` 验证可见消息的引用后，通过附件提供者传输字节。Session 尚未持久化时返回 `409 session_unavailable`；可见附件不存在时返回 404。网关卸载和客户端提前断开会中止下载并等待读取句柄关闭；响应成功写完后正常关闭。存储内部可能物化比请求窗口更多的数据。
+`GET /runs/{runId}/transcript` 通过只读句柄读取现有 Session 持久化记录，不激活 Agent。`limit` 限制源事件数，`transcriptPageBytes` 限制已投影消息的 JSON 字节数，因此仅含内部事件的页面可以为空而游标仍会前进，页面也可能在达到 `limit` 之前结束；超过字节上限的单条消息独占一页。`hasMore` 为真时继续使用 `nextCursor`，并保留最终游标用于后续追加。锚点缺失或改变返回 `cursor_stale`。仅公开原始用户、助手和工具结果消息，排除仅供模型使用的替换、回放状态和工具私有元数据。图片及文件块公开展示元数据。每条消息带有记录它的循环 `turn` 和 `step`，回合首步之前和回合之间为 null。用户消息带有 `source`（`kind` 及该类型的字段），用于区分人工输入和注入的上下文。助手消息带有模型名称、提供方为该次请求报告的 token 计数、请求的 `startedAt`（所在步骤的开始时间）和 `firstTokenAt`；工具结果带有对应工具调用的 `startedAt`；不适用或日志中缺失的字段为 null。每页的 `requests` 列出窗口内记录的请求头：序号、时间、原因、调用选项和模型看到的工具 Schema。不透明游标还携带循环位置和最多四个尚无结果的工具调用，因此这些字段在分页和实时轮询中保持准确；调用 id 长于 128 个字符时没有开始时间。`/runs/{runId}/session-attachments/{sequence}/{index}` 验证可见消息的引用后，通过附件提供者传输字节。Session 尚未持久化时返回 `409 session_unavailable`；可见附件不存在时返回 404。网关卸载和客户端提前断开会中止下载并等待读取句柄关闭；响应成功写完后正常关闭。存储内部可能物化比请求窗口更多的数据。
 
 
-`/runs/{runId}/events` 提供独立游标的 Session SSE，不激活 Agent。业务等待、工具审批和模型提问共用交互 API；`GET /interactions` 按创建顺序列出所有执行中等待回复的交互。取消及重启中断的运行时请求会撤销，插件恢复后需要重新请求工具批准。`POST /runs/{runId}/cleanup` 以开始结算时记录的终态重试被阻塞的清理，并返回 202。`/catalog` 提供模型、preset 和权限目录，preset 附带显示名称和说明；配置检查与动态选项获取接收取消信号。
+`GET /runs/{runId}/inputs` 按到达顺序列出人工给 Run 的补充信息和业务等待回复，并给出到达时间及阶段是否已消费；插件派发和等待超时不在其中。`/runs/{runId}/events` 提供独立游标的 Session SSE，不激活 Agent。业务等待、工具审批和模型提问共用交互 API；`GET /interactions` 按创建顺序列出所有执行中等待回复的交互。取消及重启中断的运行时请求会撤销，插件恢复后需要重新请求工具批准。`POST /runs/{runId}/cleanup` 以开始结算时记录的终态重试被阻塞的清理，并返回 202。`/catalog` 提供模型、preset 和权限目录，preset 附带显示名称和说明；配置检查与动态选项获取接收取消信号。
 
 `/runs/{runId}/attachments` 接收认证 multipart `files`，保存不可变 SHA-256 文件及主体范围内的重试回执，Run 处于取消中、清理受阻或终态时，以 `409 run_readonly` 拒绝新上传。下载按执行身份隔离，支持单个字节范围。`attachmentRoot` 必填；文件和请求默认上限分别为 52428800、209715200 字节，`attachmentUploadTimeoutMs` 默认 120000，`attachmentFileLimit` 默认 20。`configCheckTimeoutMs` 默认 60000，插件必须响应取消信号。
 

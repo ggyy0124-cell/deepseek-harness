@@ -637,6 +637,7 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   TaskDefinitionView: 'task.md',
   TaskDispatchReceipt: 'task.md',
   TaskInput: 'task.md',
+  TaskInputRecord: 'task.md',
   TaskJournalCursor: 'task.md',
   TaskJournalEntry: 'task.md',
   TaskRequestId: 'task.md',

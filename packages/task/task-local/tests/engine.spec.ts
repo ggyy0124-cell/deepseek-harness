@@ -1217,6 +1217,33 @@ describe('atomic administrative commands', () => {
     expect(db.inputs(run.id, true).map(entry => entry.kind)).toEqual(['input', 'response'])
   })
 
+  it('lists people-authored inputs with arrival times and consumption, omitting dispatches', async () => {
+    const { engine, db, turn, advance } = setup()
+    engine.register(definition({ runSpecial: async () => ({ kind: 'wait', checkpoint: null, prompt: 'review' }) }))
+    const start = Date.UTC(2026, 8, 10)
+    const run = engine.triggerManual(definitionId, request('start'), null)
+    await turn()
+    advance(1000)
+    engine.sendInput(run.id, request('note'), 'first note')
+    await turn()
+    const wait = db.run(run.id)!.wait!
+    advance(1000)
+    engine.respond(run.id, wait.id, wait.revision, request('reply'), true)
+    db.transaction(() => { db.putInput(run.id, { id: request('dispatch'), revision: 3, kind: 'update', value: 'plugin' }) })
+    expect(db.inputHistory(run.id)).toEqual([
+      { revision: 1, kind: 'input', value: 'first note', at: start + 1000, consumed: true },
+      { revision: 2, kind: 'response', value: true, at: start + 2000, consumed: false },
+    ])
+  })
+
+  it('rejects an input whose arrival record is missing from the journal', () => {
+    const { engine, db } = setup()
+    engine.register(definition())
+    const run = engine.triggerManual(definitionId, request('start'), null)
+    db.transaction(() => { db.putInput(run.id, { id: request('orphan'), revision: 1, kind: 'input', value: 'text' }) })
+    expect(() => db.inputHistory(run.id)).toThrow('arrival of input 1')
+  })
+
   it('rolls back nested savepoints without publishing their observers', () => {
     const { db } = setup()
     const observed: string[] = []
@@ -1449,6 +1476,7 @@ describe('Task forms and runtime interactions', () => {
     const run = engine.triggerManual(definitionId, request('expires'), null)
     await turn(); advance(101); await turn()
     expect(db.run(run.id)).toMatchObject({ status: 'succeeded', result: { kind: 'timeout' } })
+    expect(db.inputHistory(run.id)).toEqual([])
   })
 })
 

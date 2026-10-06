@@ -134,6 +134,15 @@ export const configureSchema = z.strictObject({
 export const enableSchema = z.strictObject({ revision: revisionSchema, enabled: z.boolean() })
 /** Input submitted to a manual trigger or the durable supplemental inbox. */
 export const inputSchema = z.strictObject({ input: z.json() })
+/** One input a person gave a Run: supplemental information or a business-wait reply, in arrival order. */
+export const runInputSchema = z.strictObject({
+  revision: revisionSchema,
+  kind: z.enum(['input', 'response']),
+  at: timestampSchema,
+  /** False while the input waits for a Task stage to consume it. */
+  consumed: z.boolean(),
+  value: z.json(),
+})
 /** Human response bound to the interaction revision observed by the client. */
 export const responseSchema = z.strictObject({ revision: revisionSchema, response: z.json() })
 /** Receipt acknowledges durable acceptance, not completion of cleanup. */
@@ -192,6 +201,15 @@ export const transcriptBlockSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('file'), name: z.string(), bytes: z.number().int().nonnegative(), mediaType: z.string() }),
   z.object({ kind: z.literal('unsupported'), type: z.string() }),
 ])
+/** Token counts of one model request; cached input is counted apart from `inputTokens`, and unreported counters are null. */
+export const transcriptUsageSchema = z.object({
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+  cacheReadTokens: z.number().int().nonnegative().nullable(),
+  cacheWriteTokens: z.number().int().nonnegative().nullable(),
+  reasoningTokens: z.number().int().nonnegative().nullable(),
+})
+const transcriptJsonSchema = z.record(z.string(), z.json())
 /** One original transcript message; context replacements and internal events are excluded. */
 export const transcriptEntrySchema = z.object({
   sequence: revisionSchema,
@@ -200,20 +218,52 @@ export const transcriptEntrySchema = z.object({
   blocks: z.array(transcriptBlockSchema),
   callId: z.string().nullable(),
   isError: z.boolean(),
+  /** Model that wrote an assistant message; null for the other roles. */
+  model: z.string().nullable(),
+  /** Token counts of the request behind an assistant message; null for the other roles and when the provider reported none. */
+  usage: transcriptUsageSchema.nullable(),
+  /** Loop turn that logged the message; null for a user message logged between turns. */
+  turn: z.number().int().nonnegative().nullable(),
+  /** Step of the turn that logged the message; null before the first step of a turn. */
+  step: z.number().int().nonnegative().nullable(),
+  /** Source of a user message: its `kind` and the fields that kind adds; null for assistant and tool messages. */
+  source: transcriptJsonSchema.nullable(),
+  /** Start of the model request (assistant message) or of the tool call (tool result); null for user messages and when the log lacks it. */
+  startedAt: timestampSchema.nullable(),
+  /** Arrival of the first streamed token of an assistant message; null for the other roles and when the stream recorded none. */
+  firstTokenAt: timestampSchema.nullable(),
+})
+/** One tool declaration of a model request, as the model saw it. */
+export const transcriptToolSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  /** JSON Schema of the tool arguments. */
+  parameters: transcriptJsonSchema,
+})
+/** Request header the Session logged when it changed: it holds for every assistant message after it until the next header. */
+export const transcriptRequestSchema = z.object({
+  sequence: revisionSchema,
+  at: timestampSchema,
+  /** Why the header was logged, such as `initial` or `change`. */
+  reason: z.string(),
+  /** Provider, model and generation options. */
+  config: transcriptJsonSchema,
+  tools: z.array(transcriptToolSchema),
 })
 /** Forward event window; an empty page can advance over internal records. */
 export const transcriptPageSchema = z.object({
   runId: idSchema,
   sessionId: idSchema,
   items: z.array(transcriptEntrySchema),
+  requests: z.array(transcriptRequestSchema),
   nextCursor: z.string(),
   hasMore: z.boolean(),
 })
 
 /** Session feed events carry an independent transcript cursor and bounded durable message windows. */
 export const sessionStreamEventSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('session_ready'), cursor: z.string().max(1024) }),
-  z.object({ kind: z.literal('session'), cursor: z.string().max(1024), page: transcriptPageSchema }),
+  z.object({ kind: z.literal('session_ready'), cursor: z.string().max(2048) }),
+  z.object({ kind: z.literal('session'), cursor: z.string().max(2048), page: transcriptPageSchema }),
 ])
 /** Public Session SSE event independent of shared Session implementation types. */
 export type SessionStreamEvent = z.infer<typeof sessionStreamEventSchema>

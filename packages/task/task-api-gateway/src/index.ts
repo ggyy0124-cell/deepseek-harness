@@ -67,6 +67,8 @@ export interface Config {
   readonly bodyTimeoutMs: number
   /** Default number of runs returned per page, at most 200. */
   readonly pageSize: number
+  /** JSON bytes of transcript messages after which one transcript window ends; a single larger message is delivered alone. */
+  readonly transcriptPageBytes: number
   /** Deadline for plugin configuration checks and option discovery. */
   readonly configCheckTimeoutMs: number
   /** Single-use browser launch lifetime in milliseconds. */
@@ -117,6 +119,7 @@ export class TaskApiGateway extends Service {
     responseLimitBytes: Schema.number().min(1024).step(1).default(4194304),
     bodyTimeoutMs: Schema.number().min(1).step(1).default(30000),
     pageSize: Schema.number().min(1).max(200).step(1).default(50),
+    transcriptPageBytes: Schema.number().min(1024).step(1).default(131072),
     launchTtlMs: Schema.number().min(1).step(1).default(60000),
     eventPollMs: Schema.number().min(1).step(1).default(1000),
     eventHeartbeatMs: Schema.number().min(1).step(1).default(15000),
@@ -250,6 +253,7 @@ export class TaskApiGateway extends Service {
         params['runId'] as string,
         query,
         this.config.pageSize,
+        this.config.transcriptPageBytes,
         controller.signal,
       )
     } finally {
@@ -489,7 +493,7 @@ export class TaskApiGateway extends Service {
         operation = sessionStream === null ? 'taskEvents' : 'sessionEvents'
         const input = validate(
           z.strictObject({
-            cursor: sessionStream === null ? taskCursorSchema.optional() : z.string().max(1024).optional(),
+            cursor: sessionStream === null ? taskCursorSchema.optional() : z.string().max(2048).optional(),
           }),
           query,
         )
