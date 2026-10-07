@@ -1,0 +1,59 @@
+apps/task-web/README.md
+  s_54627144e6491a::t_39f4f74fee96ab 25
+  s_54627144e6491a::t_d4b43a40cb4c4b 37
+  s_54627144e6491a::t_66f991934e3cf0 27
+apps/task-web/tests/transcript-feed.client.spec.tsx
+  s_54627144e6491a::t_8048d21215db3b 99-100,105,107,118,123,126,130,134,160-161,163,165,167,170-182
+  s_54627144e6491a::t_200bbfda8c6235 138-159,183
+  s_54627144e6491a::t_b33dddea9167af 116-117
+apps/task-web/tests/task-web.e2e.ts
+  s_54627144e6491a::t_47ee784729bc66 97-104,106-108
+  s_54627144e6491a::t_9d55ee69c9eec9 244,249,257
+  s_54627144e6491a::t_93496f3d355eac 118,123-125
+  s_54627144e6491a::t_898b39f148c9ff 229-230,232-235,237-243,245-248,250-256,258-264,266-286
+  s_54627144e6491a::t_e27d1fcf9648f2 236
+  s_54627144e6491a::t_52658eedc4329d 105
+  s_54627144e6491a::t_c33d1d4f77b10d 91-96
+  s_54627144e6491a::t_8504fcb85a6712 265
+  s_54627144e6491a::t_fea09e8a3d08c8 231
+apps/task-web/src/components/Interaction.tsx
+  s_54627144e6491a::t_163e86eb59d30c 12,146-148,173-174,181,190
+apps/task-web/README.zh.md
+  s_54627144e6491a::t_f7635c7d721e14 37
+  s_54627144e6491a::t_fdc9b1c2128b9d 27
+  s_54627144e6491a::t_3fb5a5ba5b2cab 25
+apps/task-web/README.i18n.yaml
+  s_54627144e6491a::t_bfe6670ae0d92b 9-10,12-13
+apps/task-web/src/i18n/zh-CN.ts
+  s_54627144e6491a::t_163e86eb59d30c 274
+apps/task-web/src/i18n/en.ts
+  s_54627144e6491a::t_163e86eb59d30c 276
+apps/task-web/src/support/scroll.ts
+  s_54627144e6491a::t_8528203f4ab5d7 16,20-25,33-36,39,46
+  s_54627144e6491a::t_163e86eb59d30c 1,9-11,13,15,29,37-38,42-43,47
+apps/task-web/tests/interaction.client.spec.tsx
+  s_54627144e6491a::t_77ff24fb2ad3c1 1-32,37-62,72-94,96-111,113-124
+  s_54627144e6491a::t_61e0fc4e873610 33-36
+  s_54627144e6491a::t_2dfe5355632910 95,112
+  s_54627144e6491a::t_87dfdafa799f4a 63-71
+apps/task-web/src/pages/Run.tsx
+  s_54627144e6491a::t_163e86eb59d30c 2,12,127-130,227,238,245,465
+apps/task-web/src/styles/app.css
+  s_54627144e6491a::t_163e86eb59d30c 392-393,395,561,578
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3a48988144e4bbd85e1f952101a43bc4e151fd11",
+  "prompts": {},
+  "sessions": {
+    "s_54627144e6491a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "71056ccd-e6e3-4c49-bf0b-df7ac4dea8b4",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
