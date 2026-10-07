@@ -1,6 +1,5 @@
 /** Run detail: conversation and trajectory, interactions, result, attachments, lineage and the right sidebar. */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import clsx from 'clsx'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   Button, IconChecklistOutlineRegular, IconEllipsisOutlineRegular, IconPaperclipOutlineRegular, IconQuestionOutlineRegular,
   IconQueueOutlineRegular, IconRefreshOutlineRegular, IconSendOutlineRegular, IconStopFillRegular, IconWarningOutlineRegular,
@@ -10,6 +9,7 @@ import { useT, type Messages } from '../i18n/index.ts'
 import { useApp, useShared } from '../app/context.tsx'
 import { commandKey, describeFailure } from '../support/connection.ts'
 import { definitionTitle, failureText, formatTime, runName, shortId } from '../support/format.ts'
+import { sendOnEnter } from '../support/keys.ts'
 import { useResource } from '../support/resource.ts'
 import { Link, paths, useRouter } from '../support/router.tsx'
 import { useStickToBottom } from '../support/scroll.ts'
@@ -124,9 +124,10 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
   const working = !ended && (run.status === 'running' || run.status === 'provisioning' || run.status === 'recovering')
   const files = attachments.value ?? []
   const lastMessage = transcript.entries.at(-1)
-  const chatting = tab === 'session' && view === 'chat'
-  useStickToBottom(scroller, `${lastMessage?.sequence ?? 0}:${inputs.value?.length ?? 0}:${waiting.map(item => `${item.id}:${item.revision}`).join()}`,
-    chatting)
+  // Both Session views follow new messages, inputs, waiting confirmations and the activity line; each view starts from its end.
+  useStickToBottom(scroller,
+    `${lastMessage?.sequence ?? 0}:${inputs.value?.length ?? 0}:${waiting.map(item => `${item.id}:${item.revision}`).join()}:${working}`,
+    tab === 'session' ? view : null)
   const selectedId = selection?.id ?? null
   const needsTrajectory = selectedId !== null || (tab === 'session' && view === 'trajectory')
   const trajectory = useMemo(
@@ -180,7 +181,6 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
         (error: unknown) => { toast(`${t.run.cleanupFailed}：${failureText(describeFailure(error), t)}`, 'error') })
   }
   const outcomeLabel = t.status[run.outcome ?? 'failed']
-  const column = clsx('tw-run-column', tab === 'session' && view === 'trajectory' && 'tw-run-column-wide')
   const tabs: { value: Tab; label: string; count?: number | undefined }[] = [
     { value: 'session', label: t.run.tabs.session },
     { value: 'interactions', label: t.run.tabs.interactions, count: waiting.length || undefined },
@@ -224,7 +224,7 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
       <div className="tw-run-body">
         <div className="tw-run-center">
           <div className="tw-run-tabs">
-            <div className={clsx(column, 'tw-row-between')}>
+            <div className="tw-run-column tw-row-between">
               <Tabs label={t.run.tabsLabel} value={tab} onChange={setTab} items={ordered} />
               {!ended && (
                 <span className="tw-inline-flex tw-muted-small">
@@ -235,14 +235,14 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
               )}
             </div>
             {tab === 'session' && (
-              <div className={column}>
+              <div className="tw-run-column">
                 <Tabs variant="underline" label={t.run.views.label} value={view} onChange={setView}
                   items={[{ value: 'chat', label: t.run.views.chat }, { value: 'trajectory', label: t.run.views.trajectory }]} />
               </div>
             )}
           </div>
           <div className="tw-run-scroll" ref={scroller}>
-            <div className={clsx(column, 'tw-stack-16', 'tw-run-content')}>
+            <div className="tw-run-column tw-stack-16 tw-run-content">
               {notice?.kind === 'cancel' && !ended && <Notice kind="info" title={t.run.cancelAccepted}>{t.run.cancelAcceptedBody}</Notice>}
               {notice?.kind === 'cleanup' && !ended && <Notice kind="info"
                 title={t.run.cleanupAccepted}>{t.run.cleanupAcceptedBody(outcomeLabel)}</Notice>}
@@ -453,14 +453,6 @@ function Composer({ run, onSent, onUploaded }: { run: Run; onSent: () => void; o
     }, (error: unknown) => { toast(`${t.run.sendFailed}：${failureText(describeFailure(error), t)}`,
       'error') }).finally(() => { setBusy(false) })
   }
-  // Enter submits and Shift+Enter inserts a line break; the Enter that confirms an IME candidate is not a submit.
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key !== 'Enter' || event.shiftKey) return
-    // oxlint-disable-next-line typescript/no-deprecated -- Safari reports the IME-confirming Enter as keyCode 229.
-    if (event.nativeEvent.isComposing || event.keyCode === 229) return
-    event.preventDefault()
-    send()
-  }
   const sendLabel = blocked ? t.run.wake : t.run.send
   return (
     <div className="tw-composer-wrap">
@@ -470,7 +462,7 @@ function Composer({ run, onSent, onUploaded }: { run: Run; onSent: () => void; o
           ? <div className="tw-composer-form"><SchemaForm schema={schema} value={form} onChange={setForm} layout="stack" /></div>
           : <textarea ref={area} className="tw-composer-input" aria-label={t.run.composerLabel} rows={3}
             placeholder={blocked ? t.run.composerBlocked : t.run.composer} value={text}
-            onChange={(event) => { setText(event.target.value) }} onKeyDown={onKeyDown} />}
+            onChange={(event) => { setText(event.target.value) }} onKeyDown={sendOnEnter(send)} />}
         <div className="tw-composer-bar">
           <div className="tw-inline-flex tw-gap-8">
             <label className="tw-attach" title={t.run.upload}>

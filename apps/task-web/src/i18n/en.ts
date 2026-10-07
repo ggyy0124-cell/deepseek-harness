@@ -273,7 +273,7 @@ export const en: Messages = {
   interaction: {
     businessStrip: run => `Business confirmation · ${run}`, expires: when => `expires ${when}`, expired: 'Expired',
     revision: n => `Revision ${n} · the first valid reply wins`, stale: 'This interaction was updated or closed; review the latest content before replying', viewLatest: 'View latest',
-    note: 'Note (optional)', reply: 'Submit reply', replied: 'Reply submitted', answerPlaceholder: 'Type your reply',
+    note: 'Note (optional)', reply: 'Submit reply', replied: 'Reply submitted', answerPlaceholder: 'Type your reply', sendKeys: 'Enter to submit, Shift+Enter for a new line',
     approve: 'Approve', reject: 'Reject', toolStrip: 'Tool approval · needs your permission', allowOnce: 'Allow once', toolHint: 'The permission preset requires your confirmation for this tool call',
     questionStrip: 'Agent question', submitAnswer: 'Submit answer', custom: 'Custom answer', customPlaceholder: 'Type a custom answer (optional)',
     openRun: 'Open run',

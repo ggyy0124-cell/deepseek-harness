@@ -88,6 +88,24 @@ describe('Task Web client', () => {
     return printed.url
   }
 
+  async function widthOf(selector: string): Promise<number> {
+    const box = await page.locator(selector).boundingBox()
+    if (box === null) throw new Error(`${selector} must be visible`)
+    return box.width
+  }
+
+  /** Width of an element once two reads 100 ms apart agree; the right sidebar animates its width. */
+  async function settledWidth(selector: string): Promise<number> {
+    let previous = Number.NaN
+    await expect.poll(async () => {
+      const width = await widthOf(selector)
+      const settled = width === previous
+      previous = width
+      return settled
+    }, { interval: 100 }).toBe(true)
+    return previous
+  }
+
   it('signs in with a launch link and removes the secret from the address', async () => {
     await page.goto(origin + '/')
     await expect.poll(() => page.getByText('尚未登录').count()).toBe(1)
@@ -97,13 +115,14 @@ describe('Task Web client', () => {
     await page.getByText('Defect polling').first().waitFor()
   }, 60000)
 
-  it('answers a business confirmation from the inbox and shows the structured result', async () => {
+  it('answers a business confirmation from the inbox with Enter in its note box and shows the structured result', async () => {
     await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: /待处理/ }).click()
     const card = page.getByRole('region', { name: '业务确认' }).first()
     await card.waitFor({ timeout: 30000 })
     await card.getByRole('option', { name: /Approve and continue/ }).click()
-    await card.getByRole('textbox', { name: '补充说明（可选）' }).fill('ship after tests')
-    await card.getByRole('button', { name: '提交回复' }).click()
+    const note = card.getByRole('textbox', { name: '补充说明（可选）' })
+    await note.fill('ship after tests')
+    await note.press('Enter')
     await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '执行记录' }).click()
     await page.getByRole('button', { name: '已成功' }).click()
     await page.getByRole('row').filter({ hasText: 'BUG-' }).first().click()
@@ -206,6 +225,64 @@ describe('Task Web client', () => {
       await page.getByRole('tab', { name: '对话' }).click()
     }
   }, 60000)
+
+  it('fills the space the navigation and the sidebar leave with one column for both views and the composer', async () => {
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: /待处理/ }).click()
+    await page.getByRole('link', { name: '打开执行' }).first().click()
+    const sidebar = page.getByRole('complementary', { name: '右侧边栏' })
+    await sidebar.getByRole('tab', { name: '状态' }).waitFor()
+    // The column keeps a 24px gutter on each side of the area beside the sidebars and stops growing at 1120px (`--tw-run-column-max`).
+    const columns = async () => {
+      const expected = Math.min(1120, await settledWidth('.tw-run-center') - 48)
+      for (const view of ['对话', '轨迹']) {
+        await page.getByRole('tab', { name: view }).click()
+        expect(await widthOf('.tw-run-content')).toBeCloseTo(expected, 0)
+        expect(await widthOf('.tw-composer')).toBeCloseTo(expected, 0)
+      }
+      return expected
+    }
+    const beside = await columns()
+    expect(beside).toBeLessThan(1120)
+
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: '收起侧栏' }).click()
+    try {
+      expect(await columns()).toBeGreaterThan(beside)
+    } finally {
+      await page.getByRole('button', { name: '展开侧栏' }).click()
+    }
+    expect(await columns()).toBe(beside)
+
+    await sidebar.getByRole('button', { name: '收起右侧边栏' }).click()
+    try {
+      expect(await columns()).toBeGreaterThan(beside)
+    } finally {
+      await page.getByRole('button', { name: '打开右侧边栏' }).click()
+    }
+    expect(await columns()).toBe(beside)
+  }, 60000)
+
+  it('keeps a live Run at the end of its trajectory while input arrives and starts the other view from its end', async () => {
+    await page.setViewportSize({ width: 1440, height: 440 })
+    try {
+      await page.getByRole('tab', { name: '轨迹' }).click()
+      const scroller = page.locator('.tw-run-scroll')
+      const composer = page.getByRole('textbox', { name: '补充信息' })
+      const distanceToEnd = () => scroller.evaluate(element => element.scrollHeight - element.clientHeight - element.scrollTop)
+      for (let index = 1; index <= 6; index++) {
+        await composer.fill(`note ${index}`)
+        await composer.press('Enter')
+        await page.getByRole('grid', { name: '轨迹' }).getByRole('row').filter({ hasText: `note ${index}` }).waitFor({ timeout: 30000 })
+        await expect.poll(distanceToEnd).toBeLessThanOrEqual(1)
+      }
+      expect(await scroller.evaluate(element => element.scrollHeight - element.clientHeight)).toBeGreaterThan(150)
+
+      await scroller.evaluate((element) => { element.scrollTop = 0 })
+      await page.getByRole('tab', { name: '对话' }).click()
+      await expect.poll(distanceToEnd).toBeLessThanOrEqual(1)
+    } finally {
+      await page.setViewportSize({ width: 1440, height: 900 })
+    }
+  }, 90000)
 
   it('retries a blocked cleanup and keeps the recorded outcome', async () => {
     await page.getByRole('button', { name: '手动触发' }).first().click()
