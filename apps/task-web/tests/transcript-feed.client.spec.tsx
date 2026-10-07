@@ -96,14 +96,15 @@ describe('transcript feed', () => {
 })
 
 describe('conversation scrolling', () => {
-  function column(initial: { content: string; enabled: boolean }) {
+  interface Props { content: string; feed: string | null }
+  function column(initial: Props) {
     const geometry = { scrollHeight: 1000, clientHeight: 400 }
     vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(() => geometry.scrollHeight)
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => geometry.clientHeight)
     let node: HTMLDivElement | null = null
-    function Probe({ content, enabled }: { content: string; enabled: boolean }) {
+    function Probe({ content, feed }: Props) {
       const ref = useRef<HTMLDivElement | null>(null)
-      useStickToBottom(ref, content, enabled)
+      useStickToBottom(ref, content, feed)
       return <div ref={(value) => { ref.current = value; node = value }} />
     }
     const mounted = render(<Probe {...initial} />)
@@ -112,34 +113,72 @@ describe('conversation scrolling', () => {
       geometry,
       scrollTop: () => read()?.scrollTop,
       scrollTo: (top: number) => { const element = read(); if (element !== null) { element.scrollTop = top; element.dispatchEvent(new Event('scroll')) } },
-      update: (next: { content: string; enabled: boolean }) => { mounted.rerender(<Probe {...next} />) },
+      /** Deliver the scroll event of an earlier scroll at the current position, as a browser does after the next layout. */
+      deliverScroll: () => { read()?.dispatchEvent(new Event('scroll')) },
+      update: (next: Props) => { mounted.rerender(<Probe {...next} />) },
     }
   }
 
   it('follows new content until the reader scrolls away and again after returning to the end', () => {
-    const view = column({ content: 'one', enabled: true })
+    const view = column({ content: 'one', feed: 'chat' })
     expect(view.scrollTop()).toBe(1000)
     view.geometry.scrollHeight = 1400
-    view.update({ content: 'two', enabled: true })
+    view.update({ content: 'two', feed: 'chat' })
     expect(view.scrollTop()).toBe(1400)
     view.scrollTo(200)
     view.geometry.scrollHeight = 1800
-    view.update({ content: 'three', enabled: true })
+    view.update({ content: 'three', feed: 'chat' })
     expect(view.scrollTop()).toBe(200)
     view.scrollTo(1790)
     view.geometry.scrollHeight = 2000
-    view.update({ content: 'four', enabled: true })
+    view.update({ content: 'four', feed: 'chat' })
     expect(view.scrollTop()).toBe(2000)
   })
 
-  it('returns to the start while disabled and follows from the end once enabled again', () => {
-    const view = column({ content: 'one', enabled: true })
-    view.scrollTo(100)
-    view.update({ content: 'one', enabled: false })
-    expect(view.scrollTop()).toBe(0)
-    view.update({ content: 'changed while away', enabled: false })
-    expect(view.scrollTop()).toBe(0)
-    view.update({ content: 'changed while away', enabled: true })
+  it('keeps following when the event of its own scroll arrives after the content grew or the container shrank', () => {
+    const view = column({ content: 'one', feed: 'chat' })
     expect(view.scrollTop()).toBe(1000)
+    view.geometry.scrollHeight = 1800
+    view.geometry.clientHeight = 100
+    view.deliverScroll()
+    view.update({ content: 'two', feed: 'chat' })
+    expect(view.scrollTop()).toBe(1800)
+  })
+
+  it('follows again when the reader returns to the position the hook last scrolled to', () => {
+    const view = column({ content: 'one', feed: 'chat' })
+    view.scrollTo(200)
+    view.geometry.scrollHeight = 1400
+    view.update({ content: 'two', feed: 'chat' })
+    expect(view.scrollTop()).toBe(200)
+    view.scrollTo(1000)
+    view.geometry.scrollHeight = 1800
+    view.update({ content: 'three', feed: 'chat' })
+    expect(view.scrollTop()).toBe(1800)
+  })
+
+  it('returns to the start while no feed is shown and follows from the end once one is shown again', () => {
+    const view = column({ content: 'one', feed: 'chat' })
+    view.scrollTo(100)
+    view.update({ content: 'one', feed: null })
+    expect(view.scrollTop()).toBe(0)
+    view.update({ content: 'changed while away', feed: null })
+    expect(view.scrollTop()).toBe(0)
+    view.update({ content: 'changed while away', feed: 'chat' })
+    expect(view.scrollTop()).toBe(1000)
+  })
+
+  it('starts a different feed from its end, even when the reader had scrolled away from the previous one', () => {
+    const view = column({ content: 'one', feed: 'chat' })
+    view.scrollTo(100)
+    view.geometry.scrollHeight = 1600
+    view.update({ content: 'two', feed: 'chat' })
+    expect(view.scrollTop()).toBe(100)
+    view.update({ content: 'two', feed: 'trajectory' })
+    expect(view.scrollTop()).toBe(1600)
+    view.scrollTo(300)
+    view.geometry.scrollHeight = 1900
+    view.update({ content: 'three', feed: 'trajectory' })
+    expect(view.scrollTop()).toBe(300)
   })
 })

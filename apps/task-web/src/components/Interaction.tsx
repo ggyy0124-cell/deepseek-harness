@@ -9,6 +9,7 @@ import { useApp } from '../app/context.tsx'
 import { commandKey, describeFailure, isProblem } from '../support/connection.ts'
 import { bytes, failureText, formatTime, relative } from '../support/format.ts'
 import { saveBlob } from '../support/download.ts'
+import { sendOnEnter } from '../support/keys.ts'
 import type { Attachment, Interaction, Json } from '../support/types.ts'
 import { Clamp } from './Clamp.tsx'
 import { Markdown } from './markdown.tsx'
@@ -142,6 +143,9 @@ function BusinessCard({ interaction, runName, onDone }: { interaction: Interacti
   }
   const ready = mode.kind === 'choices' || mode.kind === 'choice-object' ? choice !== null : mode.kind === 'text' ? text.trim() !== ''
     : true
+  // Enter in a reply text box does what the reply button does, so it sends nothing before a choice is made or while a reply is in flight.
+  const onKeyDown = sendOnEnter(() => { if (!busy && ready) send() })
+  const typed = mode.kind === 'text' || (mode.kind === 'choice-object' && mode.notes.length > 0)
   return (
     <section aria-label={t.source.business} className="tw-interaction">
       <Strip tone="warning" icon={<IconQuestionOutlineRegular size={16} />}>{strip}</Strip>
@@ -166,14 +170,15 @@ function BusinessCard({ interaction, runName, onDone }: { interaction: Interacti
       {!stale && mode.kind === 'choice-object' && mode.notes.map(note => (
         <div key={note} className="tw-interaction-field">
           <textarea className="tw-textarea" rows={2} aria-label={t.interaction.note} placeholder={t.interaction.note}
-            value={notes[note] ?? ''} onChange={(event) => { setNotes(current => ({ ...current, [note]: event.target.value })) }} />
+            value={notes[note] ?? ''} onChange={(event) => { setNotes(current => ({ ...current, [note]: event.target.value })) }}
+            onKeyDown={onKeyDown} />
         </div>
       ))}
       {!stale && mode.kind === 'text' && (
         <div className="tw-interaction-field">
           <textarea className="tw-textarea" rows={3} aria-label={t.interaction.answerPlaceholder}
             placeholder={t.interaction.answerPlaceholder}
-            value={text} onChange={(event) => { setText(event.target.value) }} />
+            value={text} onChange={(event) => { setText(event.target.value) }} onKeyDown={onKeyDown} />
         </div>
       )}
       {!stale && mode.kind === 'form' && (
@@ -182,7 +187,7 @@ function BusinessCard({ interaction, runName, onDone }: { interaction: Interacti
       {error !== undefined && <p className="tw-interaction-error" role="alert">{error}</p>}
       {stale
         ? <StaleFooter onRefresh={onDone} />
-        : <Footer left={t.interaction.revision(interaction.revision)}
+        : <Footer left={typed ? `${t.interaction.revision(interaction.revision)} · ${t.interaction.sendKeys}` : t.interaction.revision(interaction.revision)}
           actions={mode.kind === 'boolean'
             ? <>
               <Button variant="outline" disabled={busy} onClick={() => { submit(false) }}>{t.interaction.reject}</Button>

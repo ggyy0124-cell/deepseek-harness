@@ -271,7 +271,7 @@ export const zhCN = {
   interaction: {
     businessStrip: (run: string) => `业务确认 · ${run}`, expires: (when: string) => `${when}过期`, expired: '已过期',
     revision: (n: number) => `修订 ${n} · 首个有效回复生效`, stale: '此交互已更新或已关闭，请查看最新内容后再回复', viewLatest: '查看最新',
-    note: '补充说明（可选）', reply: '提交回复', replied: '已提交回复', answerPlaceholder: '输入回复内容',
+    note: '补充说明（可选）', reply: '提交回复', replied: '已提交回复', answerPlaceholder: '输入回复内容', sendKeys: 'Enter 提交，Shift+Enter 换行',
     approve: '批准', reject: '拒绝', toolStrip: '工具审批 · 需要你的许可', allowOnce: '允许一次', toolHint: '按权限预设，这次工具调用需要你的确认',
     questionStrip: 'Agent 提问', submitAnswer: '提交回答', custom: '自定义回答', customPlaceholder: '输入自定义回答（可选）',
     openRun: '打开执行',
