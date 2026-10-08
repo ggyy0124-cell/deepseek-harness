@@ -24,7 +24,7 @@ kind: "package-library"
 
 从包根导入请求 Schema 或 `createTaskOpenApi()`。解析器拒绝未知请求字段。已提交的 [OpenAPI 文档](openapi.json) 描述 JSON 操作、认证、SSE、附件和健康检查；协议测试检查文档是否与生成结果一致。[Task 子系统](../../../docs/subsystems/task.zh.md) 定义执行语义。
 
-Run DTO 排除私有 checkpoint、初始输入和操作回执。它包含开始结算时记录的 `outcome`、轮询与日历执行的调度时刻 `occurrence`、重来已失败或已取消 Run 时的 `restartedFrom`，以及执行快照中的补充输入 schema。定义通过 `availability` 报告可用状态，并附带调度器给出的 `reason`；交互记录包含所属 Run、工具调用 ID、结构化问题或业务附件。执行查询接受逗号分隔的 `status` 和 `parentRunId`。插件注册必须单独编译并限制业务 JSON Schema。本库校验 API 外层字段，不判断任意业务 JSON 是否包含凭据。
+Run DTO 排除私有 checkpoint、初始输入和操作回执。它包含开始结算时记录的 `outcome`、轮询与日历执行的调度时刻 `occurrence`、重新执行已失败或已取消 Run 时的 `restartedFrom`，以及执行快照中的补充输入 schema。定义通过 `availability` 报告可用状态，并附带调度器给出的 `reason`；交互记录包含所属 Run、工具调用 ID、结构化问题或业务附件。执行查询接受逗号分隔的 `status` 和 `parentRunId`。插件注册必须单独编译并限制业务 JSON Schema。本库校验 API 外层字段，不判断任意业务 JSON 是否包含凭据。
 
 [Task 网关](../task-api-gateway/README.zh.md) 挂载声明的路由并提供生成的文档。Task 和 Session 事件 Schema 校验 SSE 载荷。会话记录 Schema 公开原始消息及其循环位置、用户消息的来源、助手消息的模型、token 用量和计时、工具调用的开始时间，以及每页中记录的请求头，输入列表 Schema 公开人工给 Run 的补充信息和业务等待回复及其到达时间；Session 附件下载区分可见内容缺失（404）和 Session 持久化不可用（409）。
 

@@ -342,16 +342,16 @@ describe('Task Web client', () => {
     await page.getByRole('row').filter({ hasText: 'BUG-' }).first().click()
     await page.getByText('Plan rejected by reviewer').first().waitFor({ timeout: 30000 })
     const stopped = page.url()
-    await page.getByRole('button', { name: '重来' }).click()
+    await page.getByRole('button', { name: '重新执行' }).click()
     await page.waitForURL(url => url.href !== stopped)
     // The new Run waits for the same confirmation again and names the Run it restarted.
     const sidebar = page.getByRole('complementary', { name: '右侧边栏' })
-    await sidebar.getByText('重来自').waitFor({ timeout: 30000 })
+    await sidebar.getByText('重新执行自').waitFor({ timeout: 30000 })
     await page.getByRole('tab', { name: /交互\s*1/ }).waitFor({ timeout: 30000 })
-    await sidebar.getByText('重来自').locator('..').getByRole('link').click()
+    await sidebar.getByText('重新执行自').locator('..').getByRole('link').click()
     await page.waitForURL(stopped)
     await page.getByText('该业务对象已有更新的执行').waitFor({ timeout: 30000 })
-    expect(await page.getByRole('button', { name: '重来' }).count()).toBe(0)
+    expect(await page.getByRole('button', { name: '重新执行' }).count()).toBe(0)
   }, 90000)
 
   it('edits a definition, pauses it and stores a credential without echoing its value', async () => {

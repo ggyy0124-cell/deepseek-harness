@@ -66,7 +66,7 @@ describe('restartable runs', () => {
 describe('restart card', () => {
   it('restarts the newest run of the business key and opens the new run', async () => {
     const { sent, onRestarted } = mount(stopped, stopped)
-    fireEvent.click(await screen.findByRole('button', { name: '重来' }))
+    fireEvent.click(await screen.findByRole('button', { name: '重新执行' }))
     await waitFor(() => { expect(location.pathname).toBe('/runs/restarted-run') })
     expect(sent[0]).toMatchObject({ method: 'GET', path: '/api/task/v1/runs' })
     expect(Object.fromEntries(new URLSearchParams(sent[0]?.search))).toEqual({
@@ -82,15 +82,15 @@ describe('restart card', () => {
     const link = await screen.findByRole('link', { name: 'restarte' })
     expect(link.getAttribute('href')).toBe('/runs/restarted-run')
     expect(screen.getByText('该业务对象已有更新的执行')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: '重来' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '重新执行' })).toBeNull()
     expect(sent.every(request => request.method === 'GET')).toBe(true)
   })
 
   it('names a refused restart and lets the user try again', async () => {
     const { toast, onRestarted } = mount(stopped, stopped, () => problem(409, 'invalid_state'))
-    const button = await screen.findByRole('button', { name: '重来' })
+    const button = await screen.findByRole('button', { name: '重新执行' })
     fireEvent.click(button)
-    await waitFor(() => { expect(toast).toHaveBeenCalledWith('无法重来：该业务对象已有更新的执行，或任务已停用', 'error') })
+    await waitFor(() => { expect(toast).toHaveBeenCalledWith('无法重新执行：该业务对象已有更新的执行，或任务已停用', 'error') })
     expect(onRestarted).not.toHaveBeenCalled()
     expect(location.pathname).toBe('/runs/stopped-run')
     expect(button.hasAttribute('disabled')).toBe(false)
@@ -98,15 +98,15 @@ describe('restart card', () => {
 
   it('reports other failures with their own text', async () => {
     const { toast } = mount(stopped, stopped, () => problem(404, 'not_found'))
-    fireEvent.click(await screen.findByRole('button', { name: '重来' }))
+    fireEvent.click(await screen.findByRole('button', { name: '重新执行' }))
     await waitFor(() => { expect(toast).toHaveBeenCalledOnce() })
-    expect(toast.mock.calls[0]?.[0]).toMatch(/^无法重来：/)
+    expect(toast.mock.calls[0]?.[0]).toMatch(/^无法重新执行：/)
     expect(toast.mock.calls[0]?.[0]).not.toContain('已有更新的执行')
   })
 
   it('shows nothing and reads nothing for a run that is not restartable', () => {
     const { sent } = mount(run('succeeded-run', { status: 'succeeded' }), stopped)
-    expect(screen.queryByRole('button', { name: '重来' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '重新执行' })).toBeNull()
     expect(sent).toHaveLength(0)
   })
 })

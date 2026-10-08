@@ -19,7 +19,7 @@
   zh: b29fe8b700709549
 /deepseek-ai-dsh-task-local/understand-the-implementation:
   en: b2a69fb21b1609f1
-  zh: bb71b177725e182e
+  zh: 308d27350e062add
 /deepseek-ai-dsh-task-local/no-runtime-invariant-companion-is-published-the-task-service-companion-compares-sqlite-execution-records-with-session-persistence-while-the-provider-enforces-transaction-and-lock-rules-before-admission:
   en: c0c53e9278bea5b2
   zh: 7ee7bc33d40ee71e
