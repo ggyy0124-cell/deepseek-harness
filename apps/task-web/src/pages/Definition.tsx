@@ -324,7 +324,7 @@ function ConfigEditor({ definition, onSaved, activeRuns,
       )}
       {conflict !== null && (
         <Modal open title={t.definition.conflictTitle} closeLabel={t.common.close} backdropBlur={false} className="tw-dialog-medium"
-          onClose={() => { setConflict(null) }}
+          contentClassName="tw-dialog-scroll" onClose={() => { setConflict(null) }}
           description={t.definition.conflictBody(base.revision, conflict.current.revision)}
           footer={<>
             <Button variant="outline" onClick={() => {

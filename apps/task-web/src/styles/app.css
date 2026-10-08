@@ -360,6 +360,14 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
 .tw-ack { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); font-size: 13px; line-height: 20px; cursor: pointer; }
 [role='dialog'].tw-dialog-wide { width: min(520px, 100%); }
 [role='dialog'].tw-dialog-medium { width: min(460px, 100%); }
+/* A dialog stops at the window height; its title, description and body scroll in `.tw-dialog-scroll` and the footer stays in view.
+   Every dialog with one of these widths passes `contentClassName="tw-dialog-scroll"`, otherwise the capped body would be clipped. */
+[role='dialog'].tw-dialog-wide, [role='dialog'].tw-dialog-medium { max-height: 100%; }
+.tw-dialog-scroll {
+  min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2); --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  --dsh-scrollbar-width: 9px; --dsh-scrollbar-thumb-border: 2px; --dsh-scrollbar-track-margin: 12px;
+}
 .tw-picker {
   box-sizing: border-box; width: 100%; height: 56px; padding: 0 14px 0 10px; display: flex; align-items: center; gap: 12px; border: 0.5px solid var(--dsw-alias-border-l3);
   border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); text-align: left; cursor: pointer;

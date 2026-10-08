@@ -20,7 +20,7 @@ Task Web 客户端是 Task Profile 的浏览器控制台。它实现 [Task Web �
 
 设置包括语言（简体中文或英文）、浅色、深色或跟随系统的外观、本机时区或 UTC 时间显示、连接信息与退出登录、只写凭据、设备令牌命令和版本信息。偏好保存在浏览器的本地存储中。
 
-业务插件不提供前端代码。表单来自插件的 JSON Schema：`x-dsh-widget: textarea` 显示多行字段，`credential` 保存凭据引用并链接到凭据编辑，`options` 通过 `POST …/config/options` 向插件请求选项。业务等待按回复 Schema 选择控件：封闭选项、带补充说明的选项、布尔值、文本或生成的表单。
+业务插件不提供前端代码。表单来自插件的 JSON Schema：`x-dsh-widget: textarea` 显示多行字段，`credential` 保存凭据引用并链接到凭据编辑，`options` 通过 `POST …/config/options` 向插件请求选项。业务等待按回复 Schema 选择控件：封闭选项、带补充说明的选项、布尔值、文本或生成的表单。对话框不会超出窗口高度：触发、退役和修订冲突对话框的标题与正文在内部滚动，底部按钮始终可见；触发被拒绝时，对话框滚动到第一个字段错误或失败提示。
 
 执行详情的会话按到达顺序列出每条阶段指令（过长时折叠）、Agent 的回答，以及人工提交的补充信息和确认回复（显示保存的值）。已结束回合的思考、工具调用和过程说明折叠为一行“用时 …”；Agent 工作中或执行需要处理时，最新回合保持展开。等待中的确认是执行的“交互”标签页和“待处理”页中的卡片；会话末尾显示一行“等待输入”，不显示卡片。卡片中过长的文字折叠在展开控件之后。输入框和确认卡片的回复文本框按 Enter 发送，按 Shift+Enter 换行。读取会话连续失败时，页面显示原因并提供立即重试。
 
@@ -34,6 +34,6 @@ pnpm exec vitest run apps/task-web/tests
 pnpm exec vitest run --config vitest.web.config.ts apps/task-web/tests/task-web.e2e.ts
 ```
 
-`build:task-web` 写出 Task 应用提供的 `dist/`；`pnpm run build` 包含这一步。客户端使用 `dsh-task-api-client`、`dsh-task-api-protocol` 和 `dsh-client-ui-primitives` 的构建产物 `lib/`，以及 `dsh-client-ui-theme` 的 `--dsw-*` 令牌样式。单元测试覆盖 Cron 预览、格式化、配置合并、Schema 表单、会话时间线、滚动跟随、确认卡片的回复按键、轨迹投影、轨迹概览与表格、记录详情、侧边栏布局和会话状态机。浏览器测试需要构建好的客户端；它用 [示例业务插件](tests/fixtures/demo-business.mjs) 启动 Task Profile，通过启动链接登录，并执行待处理回复、补充输入、执行详情的栏宽、实时轨迹对新输入的跟随、轨迹的工具栏、时间线与记录详情、侧边栏、手动触发、重试清理、配置编辑、凭据和退出登录。缺少 Playwright 固定版本的浏览器时，`DSH_PLAYWRIGHT_EXECUTABLE_PATH` 选择本机 Chromium。
+`build:task-web` 写出 Task 应用提供的 `dist/`；`pnpm run build` 包含这一步。客户端使用 `dsh-task-api-client`、`dsh-task-api-protocol` 和 `dsh-client-ui-primitives` 的构建产物 `lib/`，以及 `dsh-client-ui-theme` 的 `--dsw-*` 令牌样式。单元测试覆盖 Cron 预览、格式化、配置合并、Schema 表单、会话时间线、滚动跟随、确认卡片的回复按键、轨迹投影、轨迹概览与表格、记录详情、侧边栏布局和会话状态机。浏览器测试需要构建好的客户端；它用 [示例业务插件](tests/fixtures/demo-business.mjs) 启动 Task Profile，通过启动链接登录，并执行待处理回复、补充输入、执行详情的栏宽、实时轨迹对新输入的跟随、轨迹的工具栏、时间线与记录详情、侧边栏、手动触发（含窗口较矮时的触发对话框）、重试清理、配置编辑、凭据和退出登录。缺少 Playwright 固定版本的浏览器时，`DSH_PLAYWRIGHT_EXECUTABLE_PATH` 选择本机 Chromium。
 
 需要带示例数据的本地预览时，在 `--patch` 文件中加入示例插件的行；其 `definition` 设置选择 `defects`、`weekly`、`review`、`cleanup` 或 `agent`。`pnpm --filter @deepseek-ai/dsh-task-web-frontend exec vite` 在 5180 端口提供热更新的客户端，并把 `/api/task/v1` 代理到 `DSH_TASK_WEB_GATEWAY`（默认 `http://127.0.0.1:3081`）；代理以网关自身的源发出请求，因此把输出的启动链接端口改为 5180 后打开即可。
