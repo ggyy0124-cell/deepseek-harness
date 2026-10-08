@@ -18,6 +18,17 @@ const decisionWithNote: Interaction['schema'] = {
 }
 const decisionOnly: Interaction['schema'] = { type: 'object', required: ['decision'], properties: { decision: { enum: ['approve', 'reject'] } } }
 const answer: Interaction['schema'] = { type: 'string' }
+/** A confirmation gate with an editable field group: not a choice plus text, so the card renders it as a form. */
+const gateWithFields: Interaction['schema'] = {
+  type: 'object', required: ['decision'], properties: {
+    decision: { oneOf: [{ const: 'continue', title: 'Continue' }, { const: 'revise', title: 'Revise' }] },
+    fields: { type: 'object', title: 'Bug facts', default: { branch: 'main', cause: 'null check' }, properties: {
+      branch: { type: 'string', title: 'Git branch', default: 'main' },
+      cause: { type: 'string', title: 'Cause', default: 'null check', 'x-dsh-widget': 'textarea' },
+    } },
+    note: { type: 'string', title: '备注 / 修改意见', 'x-dsh-widget': 'textarea' },
+  },
+}
 
 const waiting = (schema: Interaction['schema']): Interaction => ({
   id: idSchema.parse('wait-1'), runId: idSchema.parse('run-1'), revision: 3, source: 'business', title: 'Confirm the fix plan', description: '',
@@ -112,6 +123,29 @@ describe('reply text boxes', () => {
     await waitFor(() => { expect(screen.getByRole('button', { name: '提交回复' }).hasAttribute('disabled')).toBe(true) })
     fireEvent.keyDown(box, { key: 'Enter' })
     expect(sent).toHaveLength(1)
+  })
+
+  it('sends a form reply on Enter in the top-level note and breaks the line on Shift+Enter', async () => {
+    const sent = mount(gateWithFields)
+    const box = screen.getByRole('textbox', { name: /备注 \/ 修改意见/ })
+    fireEvent.change(box, { target: { value: 'use the release branch' } })
+    expect(fireEvent.keyDown(box, { key: 'Enter', shiftKey: true })).toBe(true)
+    expect(sent).toHaveLength(0)
+    expect(fireEvent.keyDown(box, { key: 'Enter' })).toBe(false)
+    await waitFor(() => { expect(sent).toHaveLength(1) })
+    expect(sent[0]?.body).toMatchObject({ revision: 3, response: { note: 'use the release branch', fields: { branch: 'main', cause: 'null check' } } })
+  })
+
+  it('keeps Enter as a line break in the multiline fields of a form group', () => {
+    const sent = mount(gateWithFields)
+    const cause = screen.getByRole('textbox', { name: /Cause/ })
+    expect(fireEvent.keyDown(cause, { key: 'Enter' })).toBe(true)
+    expect(sent).toHaveLength(0)
+  })
+
+  it('names the keys beside the note of a form reply', () => {
+    mount(gateWithFields)
+    expect(screen.getByText(/Enter 提交，Shift\+Enter 换行/)).toBeTruthy()
   })
 
   it('names the keys beside a text box and shows no hint for closed choices', () => {

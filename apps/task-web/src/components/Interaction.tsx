@@ -13,7 +13,7 @@ import { sendOnEnter } from '../support/keys.ts'
 import type { Attachment, Interaction, Json } from '../support/types.ts'
 import { Clamp } from './Clamp.tsx'
 import { Markdown } from './markdown.tsx'
-import { hasFormControls, resolveSchema, SchemaForm, schemaChoices, schemaDefault, type SchemaNode } from './SchemaForm.tsx'
+import { hasEnterField, hasFormControls, resolveSchema, SchemaForm, schemaChoices, schemaDefault, type SchemaNode } from './SchemaForm.tsx'
 import { FileChip, argumentSummary } from './Transcript.tsx'
 
 /** Height in px at which a long card body collapses behind an expand control. */
@@ -144,8 +144,12 @@ function BusinessCard({ interaction, runName, onDone }: { interaction: Interacti
   const ready = mode.kind === 'choices' || mode.kind === 'choice-object' ? choice !== null : mode.kind === 'text' ? text.trim() !== ''
     : true
   // Enter in a reply text box does what the reply button does, so it sends nothing before a choice is made or while a reply is in flight.
-  const onKeyDown = sendOnEnter(() => { if (!busy && ready) send() })
+  // A form reply (a decision, editable fields and a note) sends from its top-level multiline fields;
+  // fields inside groups keep Enter as a line break.
+  const sendIfReady = () => { if (!busy && ready) send() }
+  const onKeyDown = sendOnEnter(sendIfReady)
   const typed = mode.kind === 'text' || (mode.kind === 'choice-object' && mode.notes.length > 0)
+    || (mode.kind === 'form' && hasEnterField(schema))
   return (
     <section aria-label={t.source.business} className="tw-interaction">
       <Strip tone="warning" icon={<IconQuestionOutlineRegular size={16} />}>{strip}</Strip>
@@ -182,7 +186,7 @@ function BusinessCard({ interaction, runName, onDone }: { interaction: Interacti
         </div>
       )}
       {!stale && mode.kind === 'form' && (
-        <div className="tw-interaction-field"><SchemaForm schema={schema} value={form} onChange={setForm} layout="stack" /></div>
+        <div className="tw-interaction-field"><SchemaForm schema={schema} value={form} onChange={setForm} layout="stack" context={{ onEnter: sendIfReady }} /></div>
       )}
       {error !== undefined && <p className="tw-interaction-error" role="alert">{error}</p>}
       {stale

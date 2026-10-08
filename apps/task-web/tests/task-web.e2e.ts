@@ -131,7 +131,7 @@ describe('Task Web client', () => {
     await expect.poll(() => page.getByRole('cell', { name: '128 passed' }).count()).toBe(1)
   }, 60000)
 
-  it('triggers a manual task with its input form and approves its boolean confirmation', async () => {
+  it('triggers a manual task with its input form and approves its boolean confirmation from the Interactions tab', async () => {
     await page.getByRole('button', { name: '手动触发' }).first().click()
     const dialog = page.getByRole('dialog', { name: '手动触发' })
     await dialog.getByRole('button', { name: '选择任务' }).click()
@@ -143,12 +143,12 @@ describe('Task Web client', () => {
     await dialog.getByRole('textbox', { name: 'Focus' }).fill('Task Web client')
     await dialog.getByRole('button', { name: '触发' }).click()
     await page.waitForURL(/\/runs\//)
+    // The Session says the Run waits and counts the confirmation on the Interactions tab, but holds no card.
+    const interactions = page.getByRole('tab', { name: /交互\s*1/ })
+    await interactions.waitFor({ timeout: 30000 })
     const card = page.getByRole('region', { name: '业务确认' })
-    await card.getByRole('button', { name: '批准' }).waitFor({ timeout: 30000 })
+    expect(await card.count()).toBe(0)
     const composer = page.getByRole('textbox', { name: '补充信息' })
-    const [cardBox, composerBox] = [await card.boundingBox(), await composer.boundingBox()]
-    if (cardBox === null || composerBox === null) throw new Error('The confirmation card and the composer must both be visible')
-    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(composerBox.y)
     await composer.fill('first line')
     await composer.press('Shift+Enter')
     await composer.pressSequentially('second line')
@@ -156,8 +156,11 @@ describe('Task Web client', () => {
     await composer.press('Enter')
     await page.locator('.tw-user-message').filter({ hasText: 'second line' }).waitFor({ timeout: 30000 })
     expect(await composer.inputValue()).toBe('')
+    expect(await card.count()).toBe(0)
+    await interactions.click()
     await card.getByRole('button', { name: '批准' }).click({ timeout: 30000 })
     await page.locator('.tw-run-header').getByText('已成功').waitFor({ timeout: 30000 })
+    await page.getByRole('tab', { name: '会话' }).click()
     await page.locator('.tw-user-message').filter({ hasText: '确认回复' }).filter({ hasText: '批准' }).waitFor({ timeout: 30000 })
   }, 60000)
 

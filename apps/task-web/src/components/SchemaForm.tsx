@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { Button, IconRefreshOutlineRegular, Pill, Switch, Tag } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useT } from '../i18n/index.ts'
+import { sendOnEnter } from '../support/keys.ts'
 import type { Json } from '../support/types.ts'
 import { IconButton, Mono, Select, SettingsRow } from './ui.tsx'
 
@@ -21,6 +22,23 @@ export interface SchemaFormContext {
   readonly editCredential?: ((reference: string) => void) | undefined
   /** Disable every control. */
   readonly readOnly?: boolean | undefined
+  /** Called for a plain Enter in a multiline field of the top-level object; Shift+Enter breaks the line.
+   * Fields inside nested groups keep Enter as a line break. */
+  readonly onEnter?: (() => void) | undefined
+}
+
+/** Whether the top-level object of a schema has a multiline text field, the fields {@link SchemaFormContext.onEnter} applies to.
+ * @param schema - root schema.
+ * @returns true when Enter can send from a field of the form.
+ */
+export function hasEnterField(schema: SchemaNode): boolean {
+  const resolved = resolveSchema(schema, schema)
+  const properties = isNode(resolved['properties']) ? resolved['properties'] : {}
+  return Object.values(properties).some((child) => {
+    if (!isNode(child)) return false
+    const node = resolveSchema(child, schema)
+    return node['x-dsh-widget'] === 'textarea' && typeOf(node) === 'string'
+  })
 }
 
 const credentialPattern = /^[A-Za-z_][A-Za-z0-9_]*$/
@@ -314,9 +332,11 @@ function Control({ node, value, onChange, path, context }: {
       )
     case 'string':
       if (widget === 'textarea') {
+        const enter = context.onEnter
         return <textarea id={id} className="tw-textarea" rows={3} disabled={disabled} value={typeof value === 'string' ? value : ''}
           placeholder={typeof node['examples'] === 'string' ? node['examples'] : undefined}
-          onChange={(event) => { onChange(event.target.value) }} />
+          onChange={(event) => { onChange(event.target.value) }}
+          {...(enter === undefined || path.includes('.') ? {} : { onKeyDown: sendOnEnter(enter) })} />
       }
       return <input id={id} type="text" className="tw-input tw-input-wide" disabled={disabled} value={typeof value === 'string' ? value
         : ''}
