@@ -1,0 +1,685 @@
+apps/cli/package.json
+  s_54627144e6491a::t_dd191c9f1601ef 4
+apps/desktop-host/package.json
+  s_54627144e6491a::t_3aa2928e8f7256 4
+apps/desktop/package.json
+  s_54627144e6491a::t_e4a910c34b770a 4
+apps/task-web/package.json
+  s_54627144e6491a::t_72b88e43ddff32 4
+apps/web/package.json
+  s_54627144e6491a::t_e52d231ff8565d 4
+package.json
+  s_54627144e6491a::t_959791af59826d 3
+packages/acp/acp/package.json
+  s_54627144e6491a::t_1430ba746d595a 4
+packages/api/account-controller/package.json
+  s_54627144e6491a::t_b5916d60037089 4
+packages/api/gateway/package.json
+  s_54627144e6491a::t_965fe757ada96e 4
+packages/api/job-controller/package.json
+  s_54627144e6491a::t_2aa3adb01f1d6b 4
+packages/api/remotes/package.json
+  s_54627144e6491a::t_2ac4ed57809b72 4
+packages/api/session-controller/package.json
+  s_54627144e6491a::t_d3a06643edbf47 4
+packages/api/settings-controller/package.json
+  s_54627144e6491a::t_3958bc039e9552 4
+packages/api/terminal-controller/package.json
+  s_54627144e6491a::t_8223872fc6373f 4
+packages/api/workspace-controller/package.json
+  s_54627144e6491a::t_88a1b816796255 4
+packages/api/workspace-files/package.json
+  s_54627144e6491a::t_35e3c76b45567c 4
+packages/attachment/attachment-local/package.json
+  s_54627144e6491a::t_0302693e53e4e4 4
+packages/attachment/attachment/package.json
+  s_54627144e6491a::t_f6d987867325c3 4
+packages/boot/app-boot/package.json
+  s_54627144e6491a::t_fc314f5fa59b7e 4
+packages/boot/cmdline/package.json
+  s_54627144e6491a::t_f375f34f18a93b 4
+packages/boot/config-editor/package.json
+  s_54627144e6491a::t_aa9cf27c08289a 4
+packages/boot/hmr/package.json
+  s_54627144e6491a::t_2ccbd8d0537bad 4
+packages/boot/plugin-manager/package.json
+  s_54627144e6491a::t_a2d12e8dbf6580 4
+packages/browser-use/browser-use/package.json
+  s_54627144e6491a::t_28032b2d624e54 4
+packages/bundle/acp-app/package.json
+  s_54627144e6491a::t_72369dbe968550 4
+packages/bundle/base/package.json
+  s_54627144e6491a::t_3af159e52f4f8b 4
+packages/bundle/headless/package.json
+  s_54627144e6491a::t_80b20825900d2a 4
+packages/bundle/sdk-app/package.json
+  s_54627144e6491a::t_2f958f31ccce83 4
+packages/bundle/sdk-minimal/package.json
+  s_54627144e6491a::t_600e68fa44cd8b 4
+packages/bundle/task-app/package.json
+  s_54627144e6491a::t_95e189afed7e09 4
+packages/bundle/web-app/package.json
+  s_54627144e6491a::t_794b90f247fe1e 4
+packages/client/connection/package.json
+  s_54627144e6491a::t_72a4416681447a 4
+packages/client/file-upload/package.json
+  s_54627144e6491a::t_8f675c676f466f 4
+packages/client/hmr/package.json
+  s_54627144e6491a::t_95bbba8426cc31 4
+packages/client/locale/package.json
+  s_54627144e6491a::t_a78a65aace29b7 4
+packages/client/modules/package.json
+  s_54627144e6491a::t_84b86f4a80f33b 4
+packages/client/product-analytics/package.json
+  s_54627144e6491a::t_983811a1edf65e 4
+packages/client/resources/package.json
+  s_54627144e6491a::t_85d66b40f009b5 4
+packages/client/shortcuts/package.json
+  s_54627144e6491a::t_9fd77927e26f5b 4
+packages/client/store/package.json
+  s_54627144e6491a::t_a75c47e309d203 4
+packages/client/ui-agent-preset/package.json
+  s_54627144e6491a::t_e19fc17890943a 4
+packages/client/ui-approval/package.json
+  s_54627144e6491a::t_15ab04bdea3d34 4
+packages/client/ui-attachment/package.json
+  s_54627144e6491a::t_490abf4b97bdcf 4
+packages/client/ui-brand-official/package.json
+  s_54627144e6491a::t_b843952be7a583 4
+packages/client/ui-chat/package.json
+  s_54627144e6491a::t_ab87815126f205 4
+packages/client/ui-commands/package.json
+  s_54627144e6491a::t_8019667d874db6 4
+packages/client/ui-conversation/package.json
+  s_54627144e6491a::t_6dd31f9a85e953 4
+packages/client/ui-deliverables/package.json
+  s_54627144e6491a::t_a94712752e49ed 4
+packages/client/ui-directory-picker-browse/package.json
+  s_54627144e6491a::t_bcb21c0afb7dd7 4
+packages/client/ui-directory-picker-native/package.json
+  s_54627144e6491a::t_09ba3dcac2f753 4
+packages/client/ui-dockkit/package.json
+  s_54627144e6491a::t_45a8c4565db0bd 4
+packages/client/ui-goal/package.json
+  s_54627144e6491a::t_85c6961206a2c6 4
+packages/client/ui-input-trigger/package.json
+  s_54627144e6491a::t_90b7104fd63d90 4
+packages/client/ui-jobs/package.json
+  s_54627144e6491a::t_6d7e54124e393f 4
+packages/client/ui-layout/package.json
+  s_54627144e6491a::t_c524c3596d968d 4
+packages/client/ui-message-feedback/package.json
+  s_54627144e6491a::t_a48995e87881e3 4
+packages/client/ui-model-selection/package.json
+  s_54627144e6491a::t_3586e342ee0696 4
+packages/client/ui-open-in-app/package.json
+  s_54627144e6491a::t_0e7b130121811a 4
+packages/client/ui-permission-presets/package.json
+  s_54627144e6491a::t_97cc665f9b1d95 4
+packages/client/ui-plan/package.json
+  s_54627144e6491a::t_640f402b3e7c2d 4
+packages/client/ui-plugin-manager/package.json
+  s_54627144e6491a::t_2437136196d0af 4
+packages/client/ui-primitives/package.json
+  s_54627144e6491a::t_87709f25cf8d3b 4
+packages/client/ui-reference/package.json
+  s_54627144e6491a::t_1c2e6881e9d1f4 4
+packages/client/ui-renderer/package.json
+  s_54627144e6491a::t_24bf6471438f0f 4
+packages/client/ui-schedule/package.json
+  s_54627144e6491a::t_e4658f27caa949 4
+packages/client/ui-session/package.json
+  s_54627144e6491a::t_0d86c1a5022c99 4
+packages/client/ui-settings-account/package.json
+  s_54627144e6491a::t_0fa484b6c4e510 4
+packages/client/ui-settings-agent-loop/package.json
+  s_54627144e6491a::t_abdec8ed38d547 4
+packages/client/ui-settings-general/package.json
+  s_54627144e6491a::t_c38a26364e9014 4
+packages/client/ui-settings-models/package.json
+  s_54627144e6491a::t_7673ecb382da99 4
+packages/client/ui-settings-plugin-inventory/package.json
+  s_54627144e6491a::t_5ceae119476ad1 4
+packages/client/ui-settings-plugins/package.json
+  s_54627144e6491a::t_5d11fd03be398c 4
+packages/client/ui-settings-session-log/package.json
+  s_54627144e6491a::t_c04cfbec871f4e 4
+packages/client/ui-settings-shell/package.json
+  s_54627144e6491a::t_1eafbea6464559 4
+packages/client/ui-settings-subagent/package.json
+  s_54627144e6491a::t_c8b7cd6b74e25e 4
+packages/client/ui-settings-web-search/package.json
+  s_54627144e6491a::t_ca566972c2c5bd 4
+packages/client/ui-settings/package.json
+  s_54627144e6491a::t_d3ef835abc9e02 4
+packages/client/ui-shortcuts/package.json
+  s_54627144e6491a::t_9a26ba6239451c 4
+packages/client/ui-sidebar-browser/package.json
+  s_54627144e6491a::t_bf0c1640c5387a 4
+packages/client/ui-sidebar-documentpreview/package.json
+  s_54627144e6491a::t_9644fd9c0a5420 4
+packages/client/ui-sidebar-files/package.json
+  s_54627144e6491a::t_b91d2e38b2abd4 4
+packages/client/ui-sidebar-right/package.json
+  s_54627144e6491a::t_2274a5ebd5f970 4
+packages/client/ui-sidebar-terminal/package.json
+  s_54627144e6491a::t_075c3c64f28034 4
+packages/client/ui-sidebar/package.json
+  s_54627144e6491a::t_73e91a13dfc0ba 4
+packages/client/ui-skill/package.json
+  s_54627144e6491a::t_b8ea7ed606f7b5 4
+packages/client/ui-slots/package.json
+  s_54627144e6491a::t_1ee68a83c3e62a 4
+packages/client/ui-subagent/package.json
+  s_54627144e6491a::t_56dd212ec29bc6 4
+packages/client/ui-theme/package.json
+  s_54627144e6491a::t_eb929d9da105c1 4
+packages/client/ui-tool/package.json
+  s_54627144e6491a::t_ea22ec1e8a1df8 4
+packages/client/ui-trajectory/package.json
+  s_54627144e6491a::t_1dd38067e389a6 4
+packages/client/ui-user-questions/package.json
+  s_54627144e6491a::t_f87068937534dc 4
+packages/client/ui-workflow-run/package.json
+  s_54627144e6491a::t_8910587a2ff636 4
+packages/client/ui-workspace/package.json
+  s_54627144e6491a::t_8bd44fb2231ab4 4
+packages/client/web/package.json
+  s_54627144e6491a::t_34460e834c9c7d 4
+packages/compaction/command-compact/package.json
+  s_54627144e6491a::t_52e291359d3a83 4
+packages/compaction/compaction-basic/package.json
+  s_54627144e6491a::t_38ddcee56b0132 4
+packages/compaction/compaction-image-offload/package.json
+  s_54627144e6491a::t_e644d45436299b 4
+packages/compaction/compaction-tool-result-pruner/package.json
+  s_54627144e6491a::t_f32f3f8a551204 4
+packages/compaction/compaction/package.json
+  s_54627144e6491a::t_1efaa53b37d33f 4
+packages/computer-use/computer-use/package.json
+  s_54627144e6491a::t_a30e3c15a274c5 4
+packages/context/agent-instructions/package.json
+  s_54627144e6491a::t_1663e87d645f7f 4
+packages/context/file-reference-local/package.json
+  s_54627144e6491a::t_cb485f79b239c1 4
+packages/context/file-reference/package.json
+  s_54627144e6491a::t_83c7740333bbff 4
+packages/context/session-reference/package.json
+  s_54627144e6491a::t_3389df1ccd40d5 4
+packages/context/time-context/package.json
+  s_54627144e6491a::t_422e85947e0040 4
+packages/context/tmux-context/package.json
+  s_54627144e6491a::t_be76b08cc7759c 4
+packages/core/agent-default-model/package.json
+  s_54627144e6491a::t_3eff68125c7ccd 4
+packages/core/agent-loop/package.json
+  s_54627144e6491a::t_b0071167bf2b53 4
+packages/core/agent-tool-presentation/package.json
+  s_54627144e6491a::t_de3b4018312e4a 4
+packages/core/agent/package.json
+  s_54627144e6491a::t_305c8d65b92f22 4
+packages/core/scope/package.json
+  s_54627144e6491a::t_90faed046bcba8 4
+packages/core/session/package.json
+  s_54627144e6491a::t_c7921fb84167bb 4
+packages/core/system-prompt/package.json
+  s_54627144e6491a::t_ad674303b60c49 4
+packages/core/tools/package.json
+  s_54627144e6491a::t_a364016b7c54d8 4
+packages/credentials/authorization/package.json
+  s_54627144e6491a::t_a681f734dbed41 4
+packages/credentials/credentials-local/package.json
+  s_54627144e6491a::t_3f6cc50ec88221 4
+packages/credentials/credentials/package.json
+  s_54627144e6491a::t_5753bc84503087 4
+packages/credentials/deepseek-account-platform/package.json
+  s_54627144e6491a::t_1c046d981e8acc 4
+packages/credentials/deepseek-account/package.json
+  s_54627144e6491a::t_e7c9b078ab74cc 4
+packages/deliverables/tool-present/package.json
+  s_54627144e6491a::t_07e6e513a76ea2 4
+packages/deliverables/workspace-changes/package.json
+  s_54627144e6491a::t_3fa3af869137e6 4
+packages/document/office-to-pdf/package.json
+  s_54627144e6491a::t_a9386d999538be 4
+packages/experimental/agent-team-profile/package.json
+  s_54627144e6491a::t_4a970fe1e85cca 4
+packages/experimental/agent-team/package.json
+  s_54627144e6491a::t_f21a8933bc3d0f 4
+packages/experimental/api-speech-to-text/package.json
+  s_54627144e6491a::t_c4660ecca39a7a 4
+packages/experimental/auto-review/package.json
+  s_54627144e6491a::t_2951a1d835832d 4
+packages/experimental/browser-use-chrome-devtools-mcp/package.json
+  s_54627144e6491a::t_e0b6a370ebc2c1 4
+packages/experimental/browser-use-playwright-mcp/package.json
+  s_54627144e6491a::t_5ccb82a1639604 4
+packages/experimental/browser-use-runtime/package.json
+  s_54627144e6491a::t_d413dcbcaaae0d 4
+packages/experimental/browser-use-stagehand-native/package.json
+  s_54627144e6491a::t_0bfdb652c581af 4
+packages/experimental/client-ui-agent-team/package.json
+  s_54627144e6491a::t_ee776d36516855 4
+packages/experimental/client-ui-voice-input/package.json
+  s_54627144e6491a::t_b23fdc3cc0deca 4
+packages/experimental/computer-use-cua-driver-mcp/package.json
+  s_54627144e6491a::t_131be74bb2779c 4
+packages/experimental/computer-use-cua-driver-native/package.json
+  s_54627144e6491a::t_b08e1373bed2ba 4
+packages/experimental/inspector/package.json
+  s_54627144e6491a::t_89339acf57a2e3 4
+packages/experimental/ptc-runtime-python/package.json
+  s_54627144e6491a::t_734af3e123f89e 4
+packages/experimental/schedule-bundle/package.json
+  s_54627144e6491a::t_e81d28123827cc 4
+packages/experimental/speech-to-text-sensevoice/package.json
+  s_54627144e6491a::t_362132ace694b4 4
+packages/experimental/speech-to-text/package.json
+  s_54627144e6491a::t_285bfcddfe6587 4
+packages/experimental/tool-agent-team/package.json
+  s_54627144e6491a::t_523be42f828b9b 4
+packages/experimental/voice-input-bundle/package.json
+  s_54627144e6491a::t_e028dc49481c05 4
+packages/experimental/webworker-packer/package.json
+  s_54627144e6491a::t_a824a263268e1d 4
+packages/experimental/webworker-runtime/package.json
+  s_54627144e6491a::t_d366234bd7f2c6 4
+packages/extensions/cordis-client-runner/package.json
+  s_54627144e6491a::t_f8be30ea2cfcda 4
+packages/extensions/cordis-host-runner/package.json
+  s_54627144e6491a::t_403dd59aa7eb98 4
+packages/extensions/tool-cordis/package.json
+  s_54627144e6491a::t_f4fd871974699a 4
+packages/extensions/ui-cordis/package.json
+  s_54627144e6491a::t_586ab292219b4e 4
+packages/feedback/command-feedback/package.json
+  s_54627144e6491a::t_1b357ae2957278 4
+packages/feedback/message-feedback/package.json
+  s_54627144e6491a::t_c8dab44e8540e9 4
+packages/fs/fs-local/package.json
+  s_54627144e6491a::t_76f83a6e0b2e16 4
+packages/fs/fs-observation-policy/package.json
+  s_54627144e6491a::t_5f819ec80fdba1 4
+packages/fs/fs-sandbox/package.json
+  s_54627144e6491a::t_f4ba64eaeb39a0 4
+packages/fs/fs/package.json
+  s_54627144e6491a::t_554f1c7584f7db 4
+packages/fs/tool-fs-search/package.json
+  s_54627144e6491a::t_15fcae85b03816 4
+packages/fs/tool-fs/package.json
+  s_54627144e6491a::t_b4503b47adfc9b 4
+packages/fs/tool-str-replace-editor/package.json
+  s_54627144e6491a::t_9a9aace5c93f20 4
+packages/goal/command-goal/package.json
+  s_54627144e6491a::t_6ea25e56d443ec 4
+packages/goal/goal-round-driver/package.json
+  s_54627144e6491a::t_d300ae11836d8a 4
+packages/goal/goal/package.json
+  s_54627144e6491a::t_52e6f724209553 4
+packages/goal/tool-goal/package.json
+  s_54627144e6491a::t_7e74e53b6a2d29 4
+packages/guard/repeat-tool-reminder/package.json
+  s_54627144e6491a::t_7bec8a75390468 4
+packages/guard/timeout-policy/package.json
+  s_54627144e6491a::t_a210560d2f5bf6 4
+packages/hooks/hook-protocol/package.json
+  s_54627144e6491a::t_4fb66d04577ec7 4
+packages/hooks/hooks-claude-code/package.json
+  s_54627144e6491a::t_54c68e16c439c8 4
+packages/hooks/hooks-codex/package.json
+  s_54627144e6491a::t_79a9a192a52d86 4
+packages/host/directory-picker-auto/package.json
+  s_54627144e6491a::t_3f819a893f2c9c 4
+packages/host/directory-picker-browse/package.json
+  s_54627144e6491a::t_4054cd3772c2fa 4
+packages/host/directory-picker-native/package.json
+  s_54627144e6491a::t_e07576b155c75a 4
+packages/host/directory-picker/package.json
+  s_54627144e6491a::t_07568a49ba80c5 4
+packages/host/frontend-static/package.json
+  s_54627144e6491a::t_227fc88f3f46ec 4
+packages/host/open-in-app/package.json
+  s_54627144e6491a::t_ffc9bb091665ca 4
+packages/host/plugin-inventory/package.json
+  s_54627144e6491a::t_e679ec55de18b9 4
+packages/host/product-telemetry-otel/package.json
+  s_54627144e6491a::t_91d63d285d5473 4
+packages/host/webserver/package.json
+  s_54627144e6491a::t_f9ab3ca73ae6c1 4
+packages/identity/anonymous-user-id/package.json
+  s_54627144e6491a::t_009ac07b732cd9 4
+packages/interaction/commands/package.json
+  s_54627144e6491a::t_4b973ccfa0da5c 4
+packages/interaction/permission-presets/package.json
+  s_54627144e6491a::t_cad1d4b305f595 4
+packages/interaction/tool-ask-user/package.json
+  s_54627144e6491a::t_267c5e35fd6437 4
+packages/interaction/user-approval/package.json
+  s_54627144e6491a::t_97f592970f8692 4
+packages/interaction/user-questions/package.json
+  s_54627144e6491a::t_2303be91061f45 4
+packages/jobs/jobs-local/package.json
+  s_54627144e6491a::t_be80500576cad7 4
+packages/jobs/jobs/package.json
+  s_54627144e6491a::t_236139aa8c4b4d 4
+packages/jobs/tool-jobs/package.json
+  s_54627144e6491a::t_20ee556b2e9944 4
+packages/llm/deepseek-llm-api-extensions/package.json
+  s_54627144e6491a::t_60257129da1a37 4
+packages/llm/llm-deepseek-account/package.json
+  s_54627144e6491a::t_698b6dac88975d 4
+packages/llm/llm-deepseek-api-key/package.json
+  s_54627144e6491a::t_76510abfe54655 4
+packages/llm/llm-deepseek/package.json
+  s_54627144e6491a::t_60bda372e6e7f1 4
+packages/llm/llm-pi-ai/package.json
+  s_54627144e6491a::t_da499063b8cdcf 4
+packages/llm/llm-retry/package.json
+  s_54627144e6491a::t_fbb5e692a06624 4
+packages/llm/llm/package.json
+  s_54627144e6491a::t_baca32f569d9de 4
+packages/llm/plugin-package-inventory-deepseek/package.json
+  s_54627144e6491a::t_b9eef08fd423e9 4
+packages/llm/token-meter/package.json
+  s_54627144e6491a::t_633301e5ab1b44 4
+packages/lsp/lsp-stdio/package.json
+  s_54627144e6491a::t_71e837deed7d1b 4
+packages/lsp/lsp/package.json
+  s_54627144e6491a::t_a1c07f8b10daaa 4
+packages/lsp/tool-lsp/package.json
+  s_54627144e6491a::t_30f9f0e0ac41e7 4
+packages/mcp/mcp-client/package.json
+  s_54627144e6491a::t_b1299bed37b2fa 4
+packages/mcp/mcp-resources/package.json
+  s_54627144e6491a::t_b67f64fe859346 4
+packages/plan/plan-mode/package.json
+  s_54627144e6491a::t_2a62a8c9b8933e 4
+packages/preset/agent-preset-registry/package.json
+  s_54627144e6491a::t_50b0c67f930598 4
+packages/preset/agent-preset/package.json
+  s_54627144e6491a::t_89692a770ad186 4
+packages/preset/persona/package.json
+  s_54627144e6491a::t_e470884acfca07 4
+packages/ptc-runtime/ptc-runtime-node/package.json
+  s_54627144e6491a::t_a3694f583b1da8 4
+packages/ptc-runtime/ptc-runtime/package.json
+  s_54627144e6491a::t_e46c455f7c5c47 4
+packages/runtime-diagnostics/invariants/package.json
+  s_54627144e6491a::t_1fb2aa4e7bd38f 4
+packages/sandbox/sandbox-local/package.json
+  s_54627144e6491a::t_556ad732542e11 4
+packages/sandbox/sandbox-policy/package.json
+  s_54627144e6491a::t_aa4183cf273952 4
+packages/sandbox/sandbox-windows-acl/package.json
+  s_54627144e6491a::t_4e4fad7b8b1edc 4
+packages/sandbox/sandbox/package.json
+  s_54627144e6491a::t_4db63864d85f55 4
+packages/schedule/schedule/package.json
+  s_54627144e6491a::t_d1a80e1498255c 4
+packages/sdk/client/package.json
+  s_54627144e6491a::t_9c57191c2ca05f 4
+packages/sdk/protocol/package.json
+  s_54627144e6491a::t_b876afebeddd74 4
+packages/sdk/server/package.json
+  s_54627144e6491a::t_8832dfe1c1b2b8 4
+packages/session-query/session-log-export/package.json
+  s_54627144e6491a::t_b56cac0b9f145a 4
+packages/session-query/session-query-sqlite/package.json
+  s_54627144e6491a::t_e992461d05f81a 4
+packages/session-query/session-query/package.json
+  s_54627144e6491a::t_b5bce482346bb2 4
+packages/session-query/tool-session-query/package.json
+  s_54627144e6491a::t_1d504aac305b65 4
+packages/session/session-checkpoint-policy/package.json
+  s_54627144e6491a::t_f222dedf7b28c4 4
+packages/session/session-format-catalog/package.json
+  s_54627144e6491a::t_04adbf8d53cfcd 4
+packages/session/session-format-v0-to-v1/package.json
+  s_54627144e6491a::t_50e25bf1fa6700 4
+packages/session/session-format-v1-to-v2/package.json
+  s_54627144e6491a::t_2cf3c427915818 4
+packages/session/session-format-v2-to-v3/package.json
+  s_54627144e6491a::t_4bd59f6407c397 4
+packages/session/session-format-v3-to-v4/package.json
+  s_54627144e6491a::t_ab358c0244aa1d 4
+packages/session/session-format/package.json
+  s_54627144e6491a::t_8e6b0f9c1ef272 4
+packages/session/session-log-deepseek/package.json
+  s_54627144e6491a::t_a5c4d85eda93a5 4
+packages/session/session-persistence-jsonl/package.json
+  s_54627144e6491a::t_5c51fc40e44253 4
+packages/session/session-persistence/package.json
+  s_54627144e6491a::t_d284330fa658dc 4
+packages/session/session-projection-cache/package.json
+  s_54627144e6491a::t_618c6ff151e674 4
+packages/session/session-projection/package.json
+  s_54627144e6491a::t_0f13e1190b27a7 4
+packages/session/session-stats/package.json
+  s_54627144e6491a::t_42e2147b35a066 4
+packages/session/session-telemetry-otel/package.json
+  s_54627144e6491a::t_500078b0faf877 4
+packages/session/session-telemetry/package.json
+  s_54627144e6491a::t_b7e524fc6bd5be 4
+packages/session/session-title-all-prompts-llm/package.json
+  s_54627144e6491a::t_3588b993dc8a26 4
+packages/session/session-title-first-prompt-llm/package.json
+  s_54627144e6491a::t_be6bff3fd845f9 4
+packages/session/session-title-llm/package.json
+  s_54627144e6491a::t_ec7da7a20abc44 4
+packages/session/session-title/package.json
+  s_54627144e6491a::t_d432d2f770fdaf 4
+packages/session/session-turn-outline/package.json
+  s_54627144e6491a::t_b7851760664c08 4
+packages/settings/settings/package.json
+  s_54627144e6491a::t_bd160e6ea9580c 4
+packages/shell/bash-local/package.json
+  s_54627144e6491a::t_3c00fde2fde8b2 4
+packages/shell/bash-sandbox/package.json
+  s_54627144e6491a::t_b1da4cc68e9c8b 4
+packages/shell/pwsh-local/package.json
+  s_54627144e6491a::t_a4e01c3390210a 4
+packages/shell/pwsh-sandbox/package.json
+  s_54627144e6491a::t_e363b5d4736469 4
+packages/shell/shell-env/package.json
+  s_54627144e6491a::t_e9842c6570db53 4
+packages/shell/shell/package.json
+  s_54627144e6491a::t_a7da4e0d4d9400 4
+packages/shell/tool-bash-persistent/package.json
+  s_54627144e6491a::t_8988e010ab061a 4
+packages/shell/tool-bash/package.json
+  s_54627144e6491a::t_dfee4b45effc12 4
+packages/shell/tool-pwsh-persistent/package.json
+  s_54627144e6491a::t_626fdddf1aa4ac 4
+packages/shell/tool-pwsh/package.json
+  s_54627144e6491a::t_9d19166b55a86e 4
+packages/skill/skill-badge/package.json
+  s_54627144e6491a::t_1bcf585e8dccde 4
+packages/skill/skill-filesystem/package.json
+  s_54627144e6491a::t_112085d7a059a5 4
+packages/skill/skill-office/package.json
+  s_54627144e6491a::t_053273914d36dd 4
+packages/skill/skill/package.json
+  s_54627144e6491a::t_30f6d73075f51d 4
+packages/skill/tool-skill/package.json
+  s_54627144e6491a::t_c3b46738b9b924 4
+packages/skill/tool-workspace-dependencies/package.json
+  s_54627144e6491a::t_e763b8ca75ed5d 4
+packages/spill/spill-local/package.json
+  s_54627144e6491a::t_883bf1f9f99f48 4
+packages/spill/spill-policy/package.json
+  s_54627144e6491a::t_4aa15077172116 4
+packages/spill/spill/package.json
+  s_54627144e6491a::t_0389e01cb243c5 4
+packages/ssh/fs-ssh/package.json
+  s_54627144e6491a::t_7c552063cc97bd 4
+packages/ssh/sandbox-ssh/package.json
+  s_54627144e6491a::t_f6db0ba21452c9 4
+packages/ssh/ssh/package.json
+  s_54627144e6491a::t_fe0425a6a15d60 4
+packages/ssh/subprocess-ssh/package.json
+  s_54627144e6491a::t_a4689432685f94 4
+packages/storage/storage-domain/package.json
+  s_54627144e6491a::t_227c92463e3b5c 4
+packages/storage/storage-json/package.json
+  s_54627144e6491a::t_a51ec40e106007 4
+packages/storage/storage-sqlite/package.json
+  s_54627144e6491a::t_f7253eda88a86b 4
+packages/storage/storage/package.json
+  s_54627144e6491a::t_38e1225819c36d 4
+packages/subagent/subagent-acp/package.json
+  s_54627144e6491a::t_36077858f026e5 4
+packages/subagent/subagent-claude-code/package.json
+  s_54627144e6491a::t_5f005ccd6a5fb4 4
+packages/subagent/subagent-codex/package.json
+  s_54627144e6491a::t_db6415050174bb 4
+packages/subagent/subagent-dsh-sdk/package.json
+  s_54627144e6491a::t_b3f6c1f5aeb50d 4
+packages/subagent/subagent-fork-in-process/package.json
+  s_54627144e6491a::t_c469a7b05658b5 4
+packages/subagent/subagent-in-process-driver/package.json
+  s_54627144e6491a::t_8d4e391f62fc3f 4
+packages/subagent/subagent-spawn-in-process/package.json
+  s_54627144e6491a::t_3594f08ede094a 4
+packages/subagent/subagent/package.json
+  s_54627144e6491a::t_63a6a4b5194283 4
+packages/subagent/tool-subagent-control/package.json
+  s_54627144e6491a::t_e0af3c08e0930c 4
+packages/subagent/tool-subagent/package.json
+  s_54627144e6491a::t_559d392702098d 4
+packages/subprocess/subprocess-local/package.json
+  s_54627144e6491a::t_fe9b4598a67190 4
+packages/subprocess/subprocess/package.json
+  s_54627144e6491a::t_555803966b7fba 4
+packages/subprocess/win32-process/package.json
+  s_54627144e6491a::t_65785af188de7b 4
+packages/task/task-agent-loop/package.json
+  s_54627144e6491a::t_213732a29b5be9 4
+packages/task/task-agent-preset-registry/package.json
+  s_54627144e6491a::t_5d434356d1c3f8 4
+packages/task/task-agent/package.json
+  s_54627144e6491a::t_64b8df6d9075a7 4
+packages/task/task-api-client/package.json
+  s_54627144e6491a::t_c05e121a908aa4 4
+packages/task/task-api-gateway/package.json
+  s_54627144e6491a::t_915ac7c9acedf4 4
+packages/task/task-api-protocol/package.json
+  s_54627144e6491a::t_be60bb8da3b44d 4
+packages/task/task-local/package.json
+  s_54627144e6491a::t_85b3d4ddd0f899 4
+packages/task/task-session-persistence-jsonl/package.json
+  s_54627144e6491a::t_1642253719b87f 4
+packages/task/task-session/package.json
+  s_54627144e6491a::t_447c2b8e5cb5de 4
+packages/task/task/package.json
+  s_54627144e6491a::t_0928dcded8343a 4
+packages/task/tool-task-dispatch/package.json
+  s_54627144e6491a::t_a2b16dd8c421e0 4
+packages/telemetry/otel/package.json
+  s_54627144e6491a::t_ae1af80f69145c 4
+packages/terminal/terminal-bash/package.json
+  s_54627144e6491a::t_c9814f5fe446f0 4
+packages/terminal/terminal/package.json
+  s_54627144e6491a::t_b6c10a6100f486 4
+packages/terminal/tool-terminal/package.json
+  s_54627144e6491a::t_495a391c5a9ced 4
+packages/test-support/agent-loop-testkit/package.json
+  s_54627144e6491a::t_4247aef5242d2b 4
+packages/test-support/client-runtime/package.json
+  s_54627144e6491a::t_c1a7ffde69ef4b 4
+packages/test-support/llm-mock-server/package.json
+  s_54627144e6491a::t_49741253aad7e4 4
+packages/test-support/llm-replay/package.json
+  s_54627144e6491a::t_8a9dfe97cd3f4f 4
+packages/test-support/loader-smoke/package.json
+  s_54627144e6491a::t_b7061109ba06f2 4
+packages/test-support/remote-mock/package.json
+  s_54627144e6491a::t_13b6fd8d44af46 4
+packages/test-support/session-snapshot/package.json
+  s_54627144e6491a::t_9c69b29bdac5bc 4
+packages/todo/tool-todo/package.json
+  s_54627144e6491a::t_d337803ac81740 4
+packages/typert/generator/package.json
+  s_54627144e6491a::t_24dce92108cffb 4
+packages/typert/loader/package.json
+  s_54627144e6491a::t_52b7d265dc7abd 4
+packages/typert/protocol/package.json
+  s_54627144e6491a::t_6daac5817176dd 4
+packages/typert/registry/package.json
+  s_54627144e6491a::t_21f8cea59a4be9 4
+packages/util/atomic-write/package.json
+  s_54627144e6491a::t_ceb5c3e78399a1 4
+packages/util/brand/package.json
+  s_54627144e6491a::t_535d92d88c38da 4
+packages/util/chunked-list/package.json
+  s_54627144e6491a::t_66e0bf88a410b0 4
+packages/util/code-language/package.json
+  s_54627144e6491a::t_34caecfac3e47d 4
+packages/util/crypto/package.json
+  s_54627144e6491a::t_4910977ab27c27 4
+packages/util/deque/package.json
+  s_54627144e6491a::t_5a8da6ac51e86c 4
+packages/util/home-paths/package.json
+  s_54627144e6491a::t_61c3f6c5db97b3 4
+packages/util/http-proxy/package.json
+  s_54627144e6491a::t_6490b358f3c98e 4
+packages/util/launch-environment/package.json
+  s_54627144e6491a::t_46fd3ecad07cd1 4
+packages/util/lazy-require/package.json
+  s_54627144e6491a::t_909e08d1d9754a 4
+packages/util/native-command/package.json
+  s_54627144e6491a::t_066617dc4ae69d 4
+packages/util/output-retention/package.json
+  s_54627144e6491a::t_62b0787ba76ce4 4
+packages/util/package-manifest/package.json
+  s_54627144e6491a::t_41ae9a109422ee 4
+packages/util/time/package.json
+  s_54627144e6491a::t_c285338a70149f 4
+packages/util/timeout/package.json
+  s_54627144e6491a::t_fe062f35dba803 4
+packages/util/values/package.json
+  s_54627144e6491a::t_76a937a30610f5 4
+packages/util/workspace-path/package.json
+  s_54627144e6491a::t_940568b177bcef 4
+packages/web/tool-web/package.json
+  s_54627144e6491a::t_9623083c5a9e7a 4
+packages/web/web-fetch-http/package.json
+  s_54627144e6491a::t_818cae89a860f6 4
+packages/web/web-search-deepseek/package.json
+  s_54627144e6491a::t_48322eca3f7553 4
+packages/web/web-search-exa/package.json
+  s_54627144e6491a::t_e4ab662a889e03 4
+packages/web/web-search-perplexity/package.json
+  s_54627144e6491a::t_0498dfeee08db3 4
+packages/web/web/package.json
+  s_54627144e6491a::t_87415607add252 4
+packages/webhook/webhook-github/package.json
+  s_54627144e6491a::t_fad60e06a83bdc 4
+packages/webhook/webhook/package.json
+  s_54627144e6491a::t_d3ea78d4750029 4
+packages/workflow/tool-ralph/package.json
+  s_54627144e6491a::t_c435553492ba14 4
+packages/workflow/tool-workflow/package.json
+  s_54627144e6491a::t_3fbcdb1ce425b5 4
+packages/workflow/workflow-ptc/package.json
+  s_54627144e6491a::t_9d31e9914e6221 4
+packages/workflow/workflow/package.json
+  s_54627144e6491a::t_8f798d154134f7 4
+packages/workspace/workspace/package.json
+  s_54627144e6491a::t_adbb96298b43c9 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0dbf4d0c2c797867f348edc1c34bd0bed9a7dccb",
+  "prompts": {},
+  "sessions": {
+    "s_54627144e6491a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "71056ccd-e6e3-4c49-bf0b-df7ac4dea8b4",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
