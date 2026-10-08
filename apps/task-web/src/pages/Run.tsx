@@ -124,9 +124,9 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
   const working = !ended && (run.status === 'running' || run.status === 'provisioning' || run.status === 'recovering')
   const files = attachments.value ?? []
   const lastMessage = transcript.entries.at(-1)
-  // Both Session views follow new messages, inputs, waiting confirmations and the activity line; each view starts from its end.
-  useStickToBottom(scroller,
-    `${lastMessage?.sequence ?? 0}:${inputs.value?.length ?? 0}:${waiting.map(item => `${item.id}:${item.revision}`).join()}:${working}`,
+  // Both Session views follow new messages, inputs, the waiting-for-input line and the activity line; each view starts from its end.
+  // Waiting confirmations are answered in the Interactions tab and the Inbox, not in the Session.
+  useStickToBottom(scroller, `${lastMessage?.sequence ?? 0}:${inputs.value?.length ?? 0}:${waiting.length > 0}:${working}`,
     tab === 'session' ? view : null)
   const selectedId = selection?.id ?? null
   const needsTrajectory = selectedId !== null || (tab === 'session' && view === 'trajectory')
@@ -279,8 +279,6 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
                     : <TrajectoryView run={run} trajectory={trajectory} working={working} selectedId={selectedId}
                       onSelect={selectRecord} />}
                   {waiting.length > 0 && <MetaLine text={t.status.waiting_input} />}
-                  {waiting.map(item => <InteractionCard key={`${item.id}:${item.revision}`} interaction={item} runName={name}
-                    callArguments={callArguments(item.callId)} onDone={refreshAll} />)}
                 </>
               )}
               {tab === 'interactions' && (
