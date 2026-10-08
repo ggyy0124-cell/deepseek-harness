@@ -27,6 +27,7 @@ import { Sidebar, SidebarToggle, type SidebarTab } from '../components/Sidebar.t
 import { TrajectoryView } from '../components/Trajectory.tsx'
 import { InteractionCard } from '../components/Interaction.tsx'
 import { ResultView } from '../components/Result.tsx'
+import { RestartCard } from '../components/Restart.tsx'
 import { AttachmentsPanel, useUpload } from '../components/Attachments.tsx'
 import { hasFormControls, SchemaForm, schemaDefault } from '../components/SchemaForm.tsx'
 
@@ -288,7 +289,7 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
                   : waiting.map(item => <InteractionCard key={`${item.id}:${item.revision}`} interaction={item} runName={name}
                     callArguments={callArguments(item.callId)} onDone={refreshAll} />)
               )}
-              {tab === 'result' && <ResultTab run={run} attachments={files} />}
+              {tab === 'result' && <ResultTab run={run} attachments={files} onRestarted={refreshAll} />}
               {tab === 'files' && (
                 <AttachmentsPanel run={run} items={files} canUpload={open} onChanged={attachments.reload}
                   closedText={run.outcome !== null && !ended ? t.run.files.closedOutcome : t.run.files.closed} />
@@ -335,7 +336,7 @@ function Banner({ title, heading, steps, actions }: { title: string; heading: st
   )
 }
 
-function ResultTab({ run, attachments }: { run: Run; attachments: readonly Attachment[] }) {
+function ResultTab({ run, attachments, onRestarted }: { run: Run; attachments: readonly Attachment[]; onRestarted: () => void }) {
   const t = useT()
   if (run.terminalAt === null && run.outcome === null) {
     return <EmptyState icon={<IconChecklistOutlineRegular size={20} />} title={t.run.noResult}>{t.run.noResultBody}</EmptyState>
@@ -349,6 +350,7 @@ function ResultTab({ run, attachments }: { run: Run; attachments: readonly Attac
         : <Notice kind={kind}
           title={t.run.resultNotice(t.status[status as 'succeeded'])}>{t.run.resultEndedAt(formatTime(run.terminalAt))}</Notice>}
       {run.reason !== null && run.status !== 'succeeded' && <Card><p className="tw-result-text">{run.reason}</p></Card>}
+      <RestartCard run={run} onRestarted={onRestarted} />
       <ResultView run={run} attachments={attachments} />
     </>
   )
@@ -504,6 +506,8 @@ function RunStatus({ run, definitionTitle: title,
         <KeyValue label={t.run.panel.task}><Link to={paths.definition(run.definitionId)} className="tw-link">{title}</Link></KeyValue>
         {run.kind === 'ordinary' && <KeyValue label={t.run.panel.source}>{run.parentRunId === null ? t.common.none : <Link
           to={paths.run(run.parentRunId)} className="tw-link tw-mono">{shortId(run.parentRunId)}</Link>}</KeyValue>}
+        {run.restartedFrom !== null && <KeyValue label={t.run.panel.restartedFrom}><Link to={paths.run(run.restartedFrom)}
+          className="tw-link tw-mono">{shortId(run.restartedFrom)}</Link></KeyValue>}
         <KeyValue label={t.run.panel.configRevision}>{run.configRevision}{definitionRevision !== undefined
           && definitionRevision !== run.configRevision ? ` (${t.definition.revision(definitionRevision)})` : ''}</KeyValue>
         <KeyValue label={t.run.panel.codeVersion}>{run.codeVersion}</KeyValue>

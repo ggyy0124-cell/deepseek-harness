@@ -110,6 +110,8 @@ export interface TaskRun {
   readonly definitionId: TaskDefinitionId
   readonly kind: SpecialTaskKind | 'ordinary'
   readonly parentRunId: TaskRunId | null
+  /** Failed or cancelled ordinary run this run restarted; null for every other run. */
+  readonly restartedFrom: TaskRunId | null
   readonly businessKey: string | null
   readonly codeVersion: string
   readonly configRevision: number
@@ -171,6 +173,7 @@ export type TaskCommand =
   | { readonly kind: 'respond'; readonly runId: TaskRunId; readonly waitId: TaskWaitId; readonly revision: number; readonly response: JsonValue }
   | { readonly kind: 'cancel'; readonly runId: TaskRunId }
   | { readonly kind: 'cleanup'; readonly runId: TaskRunId }
+  | { readonly kind: 'restart'; readonly runId: TaskRunId }
 /** Original admission result, retained even after the task changes. */
 export type TaskCommandResult =
   | { readonly kind: 'retirement'; readonly retirement: TaskRetirement }

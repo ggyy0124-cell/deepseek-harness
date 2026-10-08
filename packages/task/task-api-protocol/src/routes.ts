@@ -194,4 +194,12 @@ export const taskJsonRoutes = [
     response: cancellationSchema,
     status: 202,
   },
+  {
+    operationId: 'restartRun',
+    method: 'post',
+    path: '/runs/{runId}/restart',
+    params: runParams,
+    response: runSchema,
+    status: 201,
+  },
 ] as const satisfies readonly TaskJsonRoute[]

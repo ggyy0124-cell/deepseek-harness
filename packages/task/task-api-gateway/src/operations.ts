@@ -154,6 +154,8 @@ export function executeOperation(
       return result(tasks, tasks.command(principal, requestId, { kind: 'cancel', runId }))
     case 'retryCleanup':
       return result(tasks, tasks.command(principal, requestId, { kind: 'cleanup', runId }))
+    case 'restartRun':
+      return result(tasks, tasks.command(principal, requestId, { kind: 'restart', runId }))
     /* v8 ignore next -- Operation is derived from the closed protocol route union. */
     default:
       return assertNever(operation)

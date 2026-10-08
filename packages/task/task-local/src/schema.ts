@@ -39,6 +39,8 @@ export const runSchema = z
     definitionId: identity,
     kind: z.enum(['polling', 'scheduled', 'manual', 'ordinary']),
     parentRunId: identity.nullable(),
+    // Records written before restarts existed restarted nothing.
+    restartedFrom: identity.nullable().default(null),
     businessKey: identity.nullable(),
     codeVersion: identity,
     configRevision: z.number().int().positive(),
@@ -86,7 +88,7 @@ export const runSchema = z
     cleanup: z.enum(['pending', 'blocked', 'complete']),
     resources: z.array(identity),
   })
-  .transform(({ id, sessionId, definitionId, parentRunId, forms, wait, outcome, ...rest }): TaskRun => ({
+  .transform(({ id, sessionId, definitionId, parentRunId, restartedFrom, forms, wait, outcome, ...rest }): TaskRun => ({
     ...rest,
     ...forms === undefined ? {} : { forms },
     outcome: outcome ?? (rest.terminalAt === null ? null : rest.status as TaskOutcome),
@@ -94,6 +96,7 @@ export const runSchema = z
     sessionId: brandString<SessionId>(sessionId),
     definitionId: brandString<TaskDefinitionId>(definitionId),
     parentRunId: parentRunId === null ? null : brandString<TaskRunId>(parentRunId),
+    restartedFrom: restartedFrom === null ? null : brandString<TaskRunId>(restartedFrom),
     wait: wait === null ? null : {
       id: brandString<TaskWaitId>(wait.id), revision: wait.revision, prompt: wait.prompt,
       ...wait.schema === undefined ? {} : { schema: wait.schema },

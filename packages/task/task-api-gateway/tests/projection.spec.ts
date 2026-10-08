@@ -23,7 +23,7 @@ const config = {
 }
 const run: TaskRun = {
   id: runId, sessionId: SessionId('projection-session'), definitionId, kind: 'manual', parentRunId: null,
-  businessKey: null, codeVersion: '1', configRevision: 2, config, input: { private: 'input' },
+  restartedFrom: null, businessKey: null, codeVersion: '1', configRevision: 2, config, input: { private: 'input' },
   checkpoint: { private: 'checkpoint' }, revision: 3, inputRevision: 1, status: 'waiting_input',
   wait: null, retryAt: null, result: null, reason: null, outcome: null, occurrence: null, createdAt: 0, updatedAt: 1,
   terminalAt: null, cleanup: 'pending', resources: ['private-resource'],
@@ -46,7 +46,8 @@ describe('Task API projections', () => {
     expect(projectRun({ ...run, terminalAt: 2, retryAt: 3 })).toMatchObject({
       terminalAt: '1970-01-01T00:00:00.002Z', retryAt: '1970-01-01T00:00:00.003Z',
     })
-    expect(projected).toMatchObject({ outcome: null, occurrence: null, supplementalInputSchema: null })
+    expect(projected).toMatchObject({ outcome: null, occurrence: null, supplementalInputSchema: null, restartedFrom: null })
+    expect(projectRun({ ...run, kind: 'ordinary', restartedFrom: brandString<TaskRunId>('stopped-run') }).restartedFrom).toBe('stopped-run')
   })
 
   it('projects recorded outcomes, schedule instants and captured supplemental input schemas', () => {

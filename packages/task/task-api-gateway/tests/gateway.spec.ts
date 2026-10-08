@@ -8,7 +8,7 @@ import { Context } from '@deepseek-ai/cordis'
 import WebServer from '@deepseek-ai/dsh-host-webserver'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { CredentialProvider, CredentialRecord, CredentialRef } from '@deepseek-ai/dsh-credentials'
-import { TaskCommandError, type TaskDefinition, type TaskDefinitionId } from '@deepseek-ai/dsh-task'
+import { TaskCommandError, type TaskDefinition, type TaskDefinitionId, type TaskRequestId } from '@deepseek-ai/dsh-task'
 import type { SessionHandle } from '@deepseek-ai/dsh-session-persistence'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { TaskApiClient } from '@deepseek-ai/dsh-task-api-client'
@@ -117,6 +117,29 @@ describe('Task gateway composition', () => {
       .toMatchObject({ runId: run.id, status: 'cancelling' })
     await expect.poll(async () => (await read()).status).toBe('succeeded')
     expect(await read()).toMatchObject({ cleanup: 'complete', outcome: 'succeeded', result: 'Completed' })
+  })
+
+  it('restarts a failed ordinary run once and refuses a restart of a run that has a newer one', async () => {
+    const { client, definition } = await gateway({
+      runSpecial: async (stage) => {
+        await stage.dispatch(brandString<TaskRequestId>('item'), { id: 1 })
+        return { kind: 'succeed', result: null }
+      },
+      runOrdinary: async stage => stage.run.restartedFrom === null
+        ? { kind: 'fail', reason: 'rejected' }
+        : { kind: 'wait', checkpoint: null, prompt: 'Wait' },
+      businessKey: () => 'item', compareUpdate: () => 'ignore',
+    })
+    await client.request('triggerManual', { params: { definitionId: definition.id }, body: { input: null }, idempotencyKey: 'restart-source' })
+    const ordinary = async () => (await client.request('listRuns', { query: { kind: 'ordinary', limit: '10' } })).items
+    await expect.poll(async () => (await ordinary())[0]?.status).toBe('failed')
+    const stopped = (await ordinary())[0]!
+    const restarted = await client.request('restartRun', { params: { runId: stopped.id }, idempotencyKey: 'restart-1' })
+    expect(restarted).toMatchObject({ kind: 'ordinary', businessKey: 'item', restartedFrom: stopped.id, parentRunId: stopped.parentRunId })
+    expect(await client.request('restartRun', { params: { runId: stopped.id }, idempotencyKey: 'restart-1' })).toEqual(restarted)
+    await expect(client.request('restartRun', { params: { runId: stopped.id }, idempotencyKey: 'restart-2' }))
+      .rejects.toMatchObject({ problem: { status: 409, code: 'invalid_state' } })
+    await expect.poll(async () => (await client.request('getRun', { params: { runId: restarted.id } })).status).toBe('waiting_input')
   })
 
   it('refuses a transcript read if its response was already destroyed', async () => {

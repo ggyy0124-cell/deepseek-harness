@@ -43,7 +43,7 @@ kind: "package-reference"
 
 [阶段 API](src/index.ts)区分模型调用、持久外部操作、派发和业务决策。[持久类型](src/types.ts)包含配置快照、检查点、来源关系、等待与清理状态。[不变量插件](src/invariant.ts)对比任务记录与独立持久化的 Session 事件。
 
-管理客户端通过 `command` 提交稳定的认证主体和重试键。相同请求返回最初的受理快照，即使任务已经完成或服务已经重启；同一键对应的请求发生变化时会冲突。配置和启停命令检查任务定义版本。取消命令在清理完成前返回受理结果；插件卸载仍通过 `cancel` 等待清理完成。
+管理客户端通过 `command` 提交稳定的认证主体和重试键。相同请求返回最初的受理快照，即使任务已经完成或服务已经重启；同一键对应的请求发生变化时会冲突。配置和启停命令检查任务定义版本。取消命令在清理完成前返回受理结果；插件卸载仍通过 `cancel` 等待清理完成。`restart` 为已失败或已取消的普通 Run 的业务键预留新的普通 Run；新 Run 的 `TaskRun.restartedFrom` 指向被接续的 Run，从哪里接着执行由插件决定。
 
 定义可声明带版本的 `forms`、确定性 `migrateConfig`，以及响应取消的 `checkConfig`/`options`。Schema 使用自包含 Draft 2020-12，不提供前端代码。Task 只支持 `x-dsh-widget` 一个注解：`textarea`、表示共享凭据引用名的 `credential`，或从 `options` 取值的 `options`；其他 `x-dsh-` 键会被拒绝。`./schema` 导出的 `credentialReferences` 收集配置使用的凭据名。可选的 `supplement` schema 校验发送给未结束执行的补充输入。提供方将 forms 保存在执行快照中；模型提问和工具审批使用持久化、版本绑定的交互记录。
 

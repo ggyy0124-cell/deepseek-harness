@@ -14,7 +14,7 @@ Task Web 客户端是 Task Profile 的浏览器控制台。它实现 [Task Web �
 | 任务 | `/definitions` | 启用或暂停任务；触发手动任务 |
 | 任务配置 | `/definitions/{id}` | 调度、执行和业务配置（生成的表单或 JSON）、插件检查、动态选项、修订冲突、执行记录和退役 |
 | 执行记录 | `/runs` | 按状态、类型、任务、业务键和创建时间筛选，游标分页 |
-| 执行详情 | `/runs/{id}` | 实时会话与轨迹、回复、结果文档、附件、关联执行、取消、重试清理和补充输入 |
+| 执行详情 | `/runs/{id}` | 实时会话与轨迹、回复、结果文档、附件、关联执行、取消、重试清理、重新执行已失败或已取消的执行、补充输入 |
 | 待处理 | `/inbox` | 所有执行中的业务确认、工具审批和 Agent 提问 |
 | 诊断 | `/diagnostics` | 运行计数、存储、资源、退役和实时事件 |
 
@@ -34,6 +34,6 @@ pnpm exec vitest run apps/task-web/tests
 pnpm exec vitest run --config vitest.web.config.ts apps/task-web/tests/task-web.e2e.ts
 ```
 
-`build:task-web` 写出 Task 应用提供的 `dist/`；`pnpm run build` 包含这一步。客户端使用 `dsh-task-api-client`、`dsh-task-api-protocol` 和 `dsh-client-ui-primitives` 的构建产物 `lib/`，以及 `dsh-client-ui-theme` 的 `--dsw-*` 令牌样式。单元测试覆盖 Cron 预览、格式化、配置合并、Schema 表单、会话时间线、滚动跟随、确认卡片的回复按键、轨迹投影、轨迹概览与表格、记录详情、侧边栏布局和会话状态机。浏览器测试需要构建好的客户端；它用 [示例业务插件](tests/fixtures/demo-business.mjs) 启动 Task Profile，通过启动链接登录，并执行待处理回复、补充输入、执行详情的栏宽、实时轨迹对新输入的跟随、轨迹的工具栏、时间线与记录详情、侧边栏、手动触发（含窗口较矮时的触发对话框）、重试清理、配置编辑、凭据和退出登录。缺少 Playwright 固定版本的浏览器时，`DSH_PLAYWRIGHT_EXECUTABLE_PATH` 选择本机 Chromium。
+`build:task-web` 写出 Task 应用提供的 `dist/`；`pnpm run build` 包含这一步。客户端使用 `dsh-task-api-client`、`dsh-task-api-protocol` 和 `dsh-client-ui-primitives` 的构建产物 `lib/`，以及 `dsh-client-ui-theme` 的 `--dsw-*` 令牌样式。单元测试覆盖 Cron 预览、格式化、配置合并、Schema 表单、会话时间线、滚动跟随、确认卡片的回复按键、已失败或已取消执行的重新执行卡片、轨迹投影、轨迹概览与表格、记录详情、侧边栏布局和会话状态机。浏览器测试需要构建好的客户端；它用 [示例业务插件](tests/fixtures/demo-business.mjs) 启动 Task Profile，通过启动链接登录，并执行待处理回复、补充输入、执行详情的栏宽、实时轨迹对新输入的跟随、轨迹的工具栏、时间线与记录详情、侧边栏、手动触发（含窗口较矮时的触发对话框）、重试清理、重新执行已失败的执行、配置编辑、凭据和退出登录。缺少 Playwright 固定版本的浏览器时，`DSH_PLAYWRIGHT_EXECUTABLE_PATH` 选择本机 Chromium。
 
 需要带示例数据的本地预览时，在 `--patch` 文件中加入示例插件的行；其 `definition` 设置选择 `defects`、`weekly`、`review`、`cleanup` 或 `agent`。`pnpm --filter @deepseek-ai/dsh-task-web-frontend exec vite` 在 5180 端口提供热更新的客户端，并把 `/api/task/v1` 代理到 `DSH_TASK_WEB_GATEWAY`（默认 `http://127.0.0.1:3081`）；代理以网关自身的源发出请求，因此把输出的启动链接端口改为 5180 后打开即可。

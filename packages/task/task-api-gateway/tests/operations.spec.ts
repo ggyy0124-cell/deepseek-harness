@@ -9,7 +9,7 @@ import { stub } from '../../task-local/tests/stub.ts'
 const runId = brandString<TaskRunId>('interaction-run')
 const run: TaskRun = {
   id: runId, sessionId: SessionId('interaction-session'), definitionId: brandString<TaskDefinitionId>('interaction'),
-  kind: 'manual', parentRunId: null, businessKey: null, codeVersion: '1', configRevision: 1,
+  kind: 'manual', parentRunId: null, restartedFrom: null, businessKey: null, codeVersion: '1', configRevision: 1,
   config: { schedule: { kind: 'manual' }, concurrency: 1, preset: 'task', permissionPreset: 'task', workspacePath: '/', business: null },
   input: null, checkpoint: null, revision: 1, inputRevision: 0, status: 'waiting_input', wait: null,
   retryAt: null, result: null, reason: null, outcome: null, occurrence: null, createdAt: 0, updatedAt: 0, terminalAt: null,
@@ -82,5 +82,13 @@ describe('Task REST operations', () => {
     expect(executeOperation(stub<TaskService>({ command }), 'retryCleanup', { runId }, {}, undefined, principal, requestId, 20))
       .toEqual({ runId, status: 'cancelling' })
     expect(command).toHaveBeenCalledWith(principal, requestId, { kind: 'cleanup', runId })
+  })
+
+  it('admits a restart and projects the run it reserved', () => {
+    const restarted: TaskRun = { ...run, id: brandString<TaskRunId>('restarted-run'), kind: 'ordinary', restartedFrom: runId, status: 'provisioning' }
+    const command = vi.fn<TaskService['command']>(() => ({ kind: 'run', run: restarted }))
+    expect(executeOperation(stub<TaskService>({ command }), 'restartRun', { runId }, {}, undefined, principal, requestId, 20))
+      .toMatchObject({ id: 'restarted-run', kind: 'ordinary', restartedFrom: runId, status: 'provisioning' })
+    expect(command).toHaveBeenCalledWith(principal, requestId, { kind: 'restart', runId })
   })
 })

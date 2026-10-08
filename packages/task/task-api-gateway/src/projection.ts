@@ -20,6 +20,7 @@ export function projectRun(run: TaskRun): z.infer<typeof runSchema> {
     definitionId: run.definitionId,
     kind: run.kind,
     parentRunId: run.parentRunId,
+    restartedFrom: run.restartedFrom,
     businessKey: run.businessKey,
     codeVersion: run.codeVersion,
     configRevision: run.configRevision,
