@@ -24,7 +24,7 @@
 
 ## 管理命令
 
-`TaskPrincipalId` 标识经过认证的所有者，`TaskCommand` 选择配置、启停、触发、输入、回复、取消或重试清理操作，`TaskCommandResult` 保存最初的受理快照。重试清理只适用于清理受阻的 Run，并以其记录的终态完成。Task 提供者同时提交状态变更和回执。相同认证主体及请求键重放该快照，内容变化时返回冲突。取消受理先于异步清理完成。[Task 网关](../../packages/task/task-api-gateway/README.zh.md) 将这些操作投影为经过认证的 HTTP 资源，不暴露内部 Run 记录。
+`TaskPrincipalId` 标识经过认证的所有者，`TaskCommand` 选择配置、启停、触发、输入、回复、取消、重试清理或重来操作，`TaskCommandResult` 保存最初的受理快照。重试清理只适用于清理受阻的 Run，并以其记录的终态完成。重来只适用于业务键最新的、已失败或已取消的普通 Run，并预留新的普通 Run，其 `restartedFrom` 指向停止的 Run。Task 提供者同时提交状态变更和回执。相同认证主体及请求键重放该快照，内容变化时返回冲突。取消受理先于异步清理完成。[Task 网关](../../packages/task/task-api-gateway/README.zh.md) 将这些操作投影为经过认证的 HTTP 资源，不暴露内部 Run 记录。
 
 `TaskDeviceId` 是本地 Gateway 签发方法返回的带品牌类型的撤销标识，不包含设备密钥。
 

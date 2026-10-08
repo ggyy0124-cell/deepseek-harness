@@ -85,6 +85,17 @@ interface Worker {
   readonly done: Promise<void>
 }
 type TerminalStatus = 'succeeded' | 'failed' | 'cancelled'
+/** Where a reserved run comes from; a run without an origin is a special run of its definition. */
+interface RunOrigin {
+  /** Special run that dispatches an ordinary run; the ordinary run inherits its configuration snapshot. */
+  readonly parent?: TaskRun
+  /** Business key of an ordinary run. */
+  readonly key?: string
+  /** Schedule instant that admitted a polling or calendar run. */
+  readonly occurrence?: TaskOccurrence | null
+  /** Stopped ordinary run that an ordinary run restarts; the new run keeps its dispatching parent but takes the current configuration. */
+  readonly restartedFrom?: TaskRun
+}
 
 /** Pure admission decisions plus transactional durable lifecycle changes. */
 export class TaskEngine {
@@ -385,6 +396,33 @@ export class TaskEngine {
       throw new TaskCommandError('invalid_state', 'only manual definitions accept manual triggers')
     return this.db.transaction(() => this.trigger(definition, requestId, input))
   }
+  /** Reserve a new ordinary execution for the business key of a failed or cancelled one.
+   *
+   * The stopped run stays unchanged. The new run takes the definition's current configuration and the latest data a dispatch
+   * observed for the stopped run, keeps its dispatching parent, and records `restartedFrom` so the plugin can continue from
+   * what the stopped run completed.
+   * @param id - failed or cancelled ordinary run; it must be the newest run of its business key.
+   * @returns snapshot of the reserved run.
+   */
+  restart(id: TaskRunId): TaskRun {
+    this.assertOpen()
+    return this.db.transaction(() => {
+      const stopped = this.requireRun(id)
+      if (
+        stopped.kind !== 'ordinary' || stopped.businessKey === null || stopped.terminalAt === null ||
+        (stopped.status !== 'failed' && stopped.status !== 'cancelled')
+      ) throw new TaskCommandError('invalid_state', 'only a failed or cancelled ordinary task restarts')
+      const definition = this.requireDefinition(stopped.definitionId)
+      if (!definition.enabled || !definition.installed || this.removing.has(definition.id))
+        throw new TaskCommandError('invalid_state', 'task definition is disabled or uninstalled')
+      const newest = this.db.queryRuns({ limit: 1, definitionId: stopped.definitionId, kind: 'ordinary', businessKey: stopped.businessKey })
+      if (newest.items[0]?.id !== stopped.id) throw new TaskCommandError('invalid_state', 'the business object has a newer task')
+      const input = json(this.plugin(definition.id).parseInput(this.db.observation(stopped.id) ?? stopped.input))
+      const run = this.reserve(definition, input, { key: stopped.businessKey, restartedFrom: stopped })
+      this.db.observe(run.id, input)
+      return run
+    })
+  }
   /** Commit command admission and its immutable response together.
    * @param principal - stable authenticated caller.
    * @param requestId - caller retry key.
@@ -469,6 +507,8 @@ export class TaskEngine {
         })
         return { kind: 'cancellation', runId: run.id, status: 'cancelling' }
       }
+      case 'restart':
+        return { kind: 'run', run: this.restart(command.runId) }
       /* v8 ignore next -- TaskCommand is a closed union decoded before admission. */
       default:
         return assertNever(command)
@@ -620,7 +660,7 @@ export class TaskEngine {
       const outcome = target === undefined ? 'created' : 'associated'
       let changed = false
       if (target === undefined) {
-        target = this.reserve(this.requireDefinition(parent.definitionId), input, parent, key)
+        target = this.reserve(this.requireDefinition(parent.definitionId), input, { parent, key })
         this.db.observe(target.id, input)
       } else if (target.status !== 'cancelling' && target.cleanup !== 'blocked') {
         const update = compareUpdate(this.db.observation(target.id), input)
@@ -915,21 +955,21 @@ export class TaskEngine {
     const plugin = this.plugin(definition.id)
     if (plugin.forms !== undefined) validateForm(plugin.forms.input, input)
     const value = json(plugin.parseInput(input))
-    const run = this.reserve(definition, value, undefined, undefined, occurrence)
+    const run = this.reserve(definition, value, { occurrence })
     this.db.putReceipt(`trigger:${definition.id}`, requestId, input, run.id)
     return run
   }
-  private reserve(
-    definition: TaskDefinitionView, input: JsonValue, parent?: TaskRun, key?: string, occurrence: TaskOccurrence | null = null,
-  ): TaskRun {
+  private reserve(definition: TaskDefinitionView, input: JsonValue, origin: RunOrigin = {}): TaskRun {
+    const { parent, key, occurrence = null, restartedFrom } = origin
     const now = this.options.clock()
     const forms = parent === undefined ? definition.forms : parent.forms
     const run: TaskRun = {
       id: brandString<TaskRunId>(randomUUID()),
       sessionId: brandString<SessionId>(`task-${randomUUID()}`),
       definitionId: definition.id,
-      kind: parent === undefined ? definition.config.schedule.kind : 'ordinary',
-      parentRunId: parent?.id ?? null,
+      kind: parent === undefined && restartedFrom === undefined ? definition.config.schedule.kind : 'ordinary',
+      parentRunId: parent?.id ?? restartedFrom?.parentRunId ?? null,
+      restartedFrom: restartedFrom?.id ?? null,
       businessKey: key ?? null,
       configRevision: parent?.configRevision ?? definition.revision,
       codeVersion: parent?.codeVersion ?? definition.codeVersion,
@@ -957,6 +997,7 @@ export class TaskEngine {
       sessionId: run.sessionId,
       definitionId: definition.id,
       kind: run.kind,
+      ...(restartedFrom === undefined ? {} : { restartedFrom: restartedFrom.id }),
     })
     return run
   }

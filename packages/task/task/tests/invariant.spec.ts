@@ -14,7 +14,7 @@ afterEach(async () => { for (const ctx of contexts.splice(0)) await ctx.fiber.di
 
 const run: TaskRun = {
   id: brandString<TaskRunId>('run'), sessionId: SessionId('session'), definitionId: brandString<TaskDefinitionId>('business'),
-  kind: 'manual', parentRunId: null, businessKey: null, codeVersion: '1', configRevision: 1,
+  kind: 'manual', parentRunId: null, restartedFrom: null, businessKey: null, codeVersion: '1', configRevision: 1,
   config: { schedule: { kind: 'manual' }, concurrency: 1, preset: 'test', permissionPreset: 'test', workspacePath: '/', business: null },
   input: null, checkpoint: null, revision: 2, inputRevision: 1, status: 'waiting_input', wait: null, retryAt: null,
   result: null, reason: null, outcome: null, occurrence: null, createdAt: 0, updatedAt: 0, terminalAt: null,

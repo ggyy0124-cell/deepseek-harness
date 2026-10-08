@@ -90,6 +90,8 @@ export const runSchema = z.object({
   definitionId: idSchema,
   kind: z.enum(['manual', 'polling', 'scheduled', 'ordinary']),
   parentRunId: idSchema.nullable(),
+  /** Failed or cancelled run this run restarted; null for every other run. */
+  restartedFrom: idSchema.nullable(),
   businessKey: z.string().nullable(),
   codeVersion: z.string(),
   configRevision: revisionSchema,

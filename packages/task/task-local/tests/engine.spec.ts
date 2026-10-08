@@ -910,6 +910,109 @@ describe('durable tasks', () => {
     expect(db.runs()).toHaveLength(2)
   })
 
+  describe('restarting a stopped ordinary run', () => {
+    const principal = brandString<TaskPrincipalId>('owner')
+    /** Items 1 to 3 dispatch ordinary runs that succeed, wait and fail; a restarted run waits. */
+    function restartable(overrides: Partial<TaskDefinition> = {}) {
+      const fixture = setup()
+      fixture.engine.register(definition({
+        runSpecial: async (stage) => {
+          for (const id of [1, 2, 3]) await stage.dispatch(request(`item-${id}`), { id })
+          return { kind: 'succeed', result: null }
+        },
+        runOrdinary: async (stage) => {
+          const { id } = stage.run.input as { id: number }
+          if (stage.run.restartedFrom !== null || id === 2) return { kind: 'wait', checkpoint: null, prompt: '?' }
+          return id === 1 ? { kind: 'succeed', result: null } : { kind: 'fail', reason: 'rejected' }
+        },
+        businessKey: input => String((input as { id: number }).id), compareUpdate: () => 'ignore', ...overrides,
+      }))
+      fixture.engine.triggerManual(definitionId, request('first'), null)
+      const settle = async () => { for (let round = 0; round < 6; round += 1) await fixture.turn() }
+      return { ...fixture, settle }
+    }
+    const ordinary = (runs: readonly TaskRun[], id: number) => runs.find(run => run.kind === 'ordinary' && run.businessKey === String(id))!
+
+    it('reserves a run for the same business key that reports the run it restarts', async () => {
+      const { engine, db, settle } = restartable()
+      await settle()
+      const stopped = ordinary(db.runs(), 3)
+      expect(stopped).toMatchObject({ status: 'failed', restartedFrom: null })
+
+      const result = engine.command(principal, request('restart'), { kind: 'restart', runId: stopped.id })
+      if (result.kind !== 'run') throw new Error('restart answers with the new run')
+      expect(result.run).toMatchObject({
+        kind: 'ordinary', status: 'provisioning', businessKey: '3', restartedFrom: stopped.id, parentRunId: stopped.parentRunId,
+        input: { id: 3 }, checkpoint: null,
+      })
+      expect(db.observation(result.run.id)).toEqual({ id: 3 })
+      expect(db.run(stopped.id)).toMatchObject({ status: 'failed', reason: 'rejected', terminalAt: stopped.terminalAt })
+      expect(db.journal(0).find(entry => entry.runId === result.run.id && entry.event === 'run.reserved')?.details)
+        .toMatchObject({ kind: 'ordinary', restartedFrom: stopped.id })
+
+      await settle()
+      expect(db.run(result.run.id)).toMatchObject({ status: 'waiting_input', restartedFrom: stopped.id })
+      expect(engine.command(principal, request('restart'), { kind: 'restart', runId: stopped.id })).toEqual(result)
+      expect(db.runs().filter(run => run.businessKey === '3')).toHaveLength(2)
+    })
+
+    it('takes the latest observed data and the current configuration for a cancelled run', async () => {
+      const parseInput = vi.fn((value: unknown) => value as TaskRun['input'])
+      const { engine, db, settle } = restartable({ parseInput })
+      await settle()
+      const waiting = ordinary(db.runs(), 2)
+      db.observe(waiting.id, { id: 2, note: 'rediscovered' })
+      await engine.cancel(waiting.id)
+      engine.updateConfig(definitionId, 1, { ...definition().config, concurrency: 3 })
+      parseInput.mockClear()
+
+      const restarted = engine.restart(waiting.id)
+      expect(parseInput).toHaveBeenCalledExactlyOnceWith({ id: 2, note: 'rediscovered' })
+      expect(restarted).toMatchObject({
+        restartedFrom: waiting.id, input: { id: 2, note: 'rediscovered' }, configRevision: 2, config: { concurrency: 3 },
+      })
+      expect(db.run(waiting.id)).toMatchObject({ status: 'cancelled', configRevision: 1 })
+    })
+
+    it('falls back to the input of a run that was never observed', async () => {
+      const { engine, db, settle } = restartable()
+      await settle()
+      const stopped = ordinary(db.runs(), 3)
+      db.observe(stopped.id, null)
+      expect(engine.restart(stopped.id)).toMatchObject({ input: { id: 3 } })
+    })
+
+    it('rejects runs that did not stop before finishing', async () => {
+      const { engine, db, settle } = restartable()
+      await settle()
+      const runs = db.runs()
+      for (const run of [runs.find(item => item.kind === 'manual')!, ordinary(runs, 1), ordinary(runs, 2)])
+        expect(() => engine.restart(run.id)).toThrow('only a failed or cancelled ordinary task restarts')
+    })
+
+    it('restarts only the newest run of a business key', async () => {
+      const { engine, db, settle } = restartable()
+      await settle()
+      const stopped = ordinary(db.runs(), 3)
+      const restarted = engine.restart(stopped.id)
+      expect(() => engine.restart(stopped.id)).toThrow('newer task')
+      await settle()
+      await engine.cancel(restarted.id)
+      expect(() => engine.restart(stopped.id)).toThrow('newer task')
+      expect(engine.restart(restarted.id)).toMatchObject({ restartedFrom: restarted.id, businessKey: '3' })
+    })
+
+    it('rejects a restart while the definition is disabled', async () => {
+      const { engine, db, settle } = restartable()
+      await settle()
+      const stopped = ordinary(db.runs(), 3)
+      engine.setEnabled(definitionId, false)
+      expect(() => engine.restart(stopped.id)).toThrow('disabled or uninstalled')
+      engine.setEnabled(definitionId, true)
+      expect(engine.restart(stopped.id).restartedFrom).toBe(stopped.id)
+    })
+  })
+
   it('releases execution slots while waiting but retains exclusive resources until cleanup', async () => {
     const { engine, db, turn } = setup(':memory:', 1)
     engine.register(definition({ resources: () => ['repo:one'], runSpecial: async () => ({ kind: 'wait', checkpoint: null, prompt: '?' }) }))
@@ -1517,7 +1620,7 @@ describe('Task presentation records', () => {
     } finally { raw.close() }
     const reopened = new TaskDatabase(path)
     disposers.push(async () => { reopened.close() })
-    expect(reopened.run(brandString<TaskRun['id']>('ended'))).toMatchObject({ outcome: 'succeeded', occurrence: null })
+    expect(reopened.run(brandString<TaskRun['id']>('ended'))).toMatchObject({ outcome: 'succeeded', occurrence: null, restartedFrom: null })
     expect(reopened.run(brandString<TaskRun['id']>('active'))).toMatchObject({ outcome: null, wait: { prompt: 'Old prompt' } })
     expect(reopened.run(brandString<TaskRun['id']>('active'))?.wait).not.toHaveProperty('createdAt')
     expect(reopened.definitions()[0]?.blockedReason).toBeNull()

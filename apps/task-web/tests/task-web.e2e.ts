@@ -331,6 +331,29 @@ describe('Task Web client', () => {
     await page.locator('.tw-run-header').getByText('已失败').waitFor({ timeout: 30000 })
   }, 60000)
 
+  it('restarts a failed ordinary run from its result and links the new run to it', async () => {
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: /待处理/ }).click()
+    const card = page.getByRole('region', { name: '业务确认' }).first()
+    await card.waitFor({ timeout: 30000 })
+    await card.getByRole('option', { name: /Reject/ }).click()
+    await card.getByRole('button', { name: '提交回复' }).click()
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '执行记录' }).click()
+    await page.getByRole('button', { name: '已失败' }).click()
+    await page.getByRole('row').filter({ hasText: 'BUG-' }).first().click()
+    await page.getByText('Plan rejected by reviewer').first().waitFor({ timeout: 30000 })
+    const stopped = page.url()
+    await page.getByRole('button', { name: '重来' }).click()
+    await page.waitForURL(url => url.href !== stopped)
+    // The new Run waits for the same confirmation again and names the Run it restarted.
+    const sidebar = page.getByRole('complementary', { name: '右侧边栏' })
+    await sidebar.getByText('重来自').waitFor({ timeout: 30000 })
+    await page.getByRole('tab', { name: /交互\s*1/ }).waitFor({ timeout: 30000 })
+    await sidebar.getByText('重来自').locator('..').getByRole('link').click()
+    await page.waitForURL(stopped)
+    await page.getByText('该业务对象已有更新的执行').waitFor({ timeout: 30000 })
+    expect(await page.getByRole('button', { name: '重来' }).count()).toBe(0)
+  }, 90000)
+
   it('edits a definition, pauses it and stores a credential without echoing its value', async () => {
     await page.goto(origin + '/definitions/demo.defects')
     await page.getByRole('button', { name: 'Product' }).getByText('Mobile App').waitFor()

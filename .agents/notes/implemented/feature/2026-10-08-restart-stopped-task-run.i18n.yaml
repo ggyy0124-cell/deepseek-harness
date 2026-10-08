@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-08-restart-stopped-task-run.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-08-restart-stopped-task-run.md
+/agent-note-restart-a-failed-or-cancelled-task-run:
+  en: 744b0db05c72afba
+  zh: 4b38c9e1a982ce8c
+/agent-note-restart-a-failed-or-cancelled-task-run/problem:
+  en: d3bce59bf1b59513
+  zh: 8f06bc1f70f16b5c
+/agent-note-restart-a-failed-or-cancelled-task-run/decision:
+  en: 6112bb58a9a58f3a
+  zh: b4393040411c0898
+/agent-note-restart-a-failed-or-cancelled-task-run/alternatives-considered:
+  en: 79716b1ce667c685
+  zh: 3c4f3ae14e2b74ea
+/agent-note-restart-a-failed-or-cancelled-task-run/consequences:
+  en: 01a36d5166964dc1
+  zh: db2ab81871ac5cd2

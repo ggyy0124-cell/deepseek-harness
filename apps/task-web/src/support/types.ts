@@ -73,6 +73,15 @@ export function isTerminal(run: Pick<Run, 'terminalAt'>): boolean {
   return run.terminalAt !== null
 }
 
+/** Whether the Task service accepts a restart of a Run: an ended ordinary Run that failed or was cancelled. The service also requires
+ * the Run to be the newest of its business key.
+ * @param run - execution snapshot.
+ * @returns true for a failed or cancelled ordinary Run.
+ */
+export function isRestartable(run: Pick<Run, 'kind' | 'terminalAt' | 'status'>): boolean {
+  return run.kind === 'ordinary' && run.terminalAt !== null && (run.status === 'failed' || run.status === 'cancelled')
+}
+
 /** Whether a Run still accepts supplemental input, replies and uploads.
  * @param run - execution snapshot.
  * @returns false for ended, cancelling and cleanup-only Runs.
