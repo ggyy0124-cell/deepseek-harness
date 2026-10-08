@@ -1,0 +1,109 @@
+apps/task-web/tests/task-web.e2e.ts
+  s_54627144e6491a::t_2ee382ec8f01c5 334-356
+packages/task/task/src/types.ts
+  s_54627144e6491a::t_400ea063ce1bfc 113-114
+  s_54627144e6491a::t_1f5896de50d7a8 176
+packages/task/task-local/tests/engine.spec.ts
+  s_54627144e6491a::t_adf8571226a20b 913-1014
+  s_54627144e6491a::t_fbadb1178d9997 1015,1623
+.agents/notes/implemented/feature/2026-10-08-restart-stopped-task-run.md
+  s_54627144e6491a::t_acb35cd723a063 1-31
+packages/task/task-local/src/schema.ts
+  s_54627144e6491a::t_7e0fa14383c0b2 42-43
+  s_54627144e6491a::t_ea32dc7ba00d6c 91,99
+apps/task-web/tests/restart.client.spec.tsx
+  s_54627144e6491a::t_bcb35dd9816410 45-49
+  s_54627144e6491a::t_f4f0ba32ed1ead 72,74
+  s_54627144e6491a::t_21717c6e963f66 1-44,50-71,73,75-112
+packages/task/task-api-gateway/src/projection.ts
+  s_54627144e6491a::t_64e7e91d4bd484 23
+packages/task/task-local/src/engine.ts
+  s_54627144e6491a::t_c6ca5fae1cad80 958,962-963,970-972
+  s_54627144e6491a::t_96c3f464016bd1 510-511
+  s_54627144e6491a::t_87971994a3d2f8 663
+  s_54627144e6491a::t_6f52dffe96ebd8 88-98
+  s_54627144e6491a::t_540eb5f210c927 1000
+  s_54627144e6491a::t_8fa40660b8de6e 399-425
+.agents/notes/implemented/feature/2026-10-08-restart-stopped-task-run.zh.md
+  s_54627144e6491a::t_d2532343de6f61 1-31
+.agents/notes/implemented/feature/2026-10-08-restart-stopped-task-run.i18n.yaml
+  s_54627144e6491a::t_6cc2ce29019736 1-19
+apps/task-web/README.i18n.yaml
+  s_54627144e6491a::t_ad1b5c2f5ac148 9-10,12-13
+apps/task-web/README.md
+  s_54627144e6491a::t_91a73da413563d 17,37
+apps/task-web/README.zh.md
+  s_54627144e6491a::t_acb505333a42c5 17,37
+apps/task-web/src/components/Restart.tsx
+  s_54627144e6491a::t_49abcd8015307b 1-56
+apps/task-web/src/i18n/en.ts
+  s_54627144e6491a::t_7bacb73b869f64 191-193,212
+apps/task-web/src/i18n/zh-CN.ts
+  s_54627144e6491a::t_358e4ca79c3d88 192-193,212
+apps/task-web/src/pages/Run.tsx
+  s_54627144e6491a::t_894e7439e5b151 30,292,339,353,509-510
+apps/task-web/src/support/types.ts
+  s_54627144e6491a::t_6724517792c9fe 76-84
+docs/subsystems/task.i18n.yaml
+  s_54627144e6491a::t_8e7d6d81d55281 18-19
+docs/subsystems/task.md
+  s_54627144e6491a::t_44a35f343cfb0d 27
+docs/subsystems/task.zh.md
+  s_54627144e6491a::t_2b3411fd7d260c 27
+packages/task/task-api-gateway/README.i18n.yaml
+  s_54627144e6491a::t_f6cf5863c1f73c 21-22
+packages/task/task-api-gateway/README.md
+  s_54627144e6491a::t_24df08ff202b2e 69
+packages/task/task-api-gateway/README.zh.md
+  s_54627144e6491a::t_3fa7c97f971895 69
+packages/task/task-api-gateway/src/operations.ts
+  s_54627144e6491a::t_34d93aa0def6c7 157-158
+packages/task/task-api-gateway/tests/gateway.spec.ts
+  s_54627144e6491a::t_8e5ef67e4f26fe 11,122-144
+packages/task/task-api-gateway/tests/operations.spec.ts
+  s_54627144e6491a::t_2fbc7f95e6e8a0 12,86-93
+packages/task/task-api-gateway/tests/projection.spec.ts
+  s_54627144e6491a::t_b66f2f5f2616ad 26,49-50
+packages/task/task-api-protocol/README.i18n.yaml
+  s_54627144e6491a::t_ca785b17cc5989 18-19
+packages/task/task-api-protocol/README.md
+  s_54627144e6491a::t_1940b2c146ed10 27
+packages/task/task-api-protocol/README.zh.md
+  s_54627144e6491a::t_a13a1656523bc3 27
+packages/task/task-api-protocol/openapi.json
+  s_54627144e6491a::t_3a2cd1fb047664 3736-3748,3936,4265-4277,4465,4724-4736,4924,5835-5847,6035,7217-7229,7417,7811-8270
+packages/task/task-api-protocol/src/routes.ts
+  s_54627144e6491a::t_36a53c1bc53af9 197-204
+packages/task/task-api-protocol/src/schemas.ts
+  s_54627144e6491a::t_2d27adbe6c8bc4 93-94
+packages/task/task-local/README.i18n.yaml
+  s_54627144e6491a::t_df877ad9fcb03a 21-22
+packages/task/task-local/README.md
+  s_54627144e6491a::t_c77189714ce800 75-76
+packages/task/task-local/README.zh.md
+  s_54627144e6491a::t_1b5cd580a9d8d1 75-76
+packages/task/task/README.i18n.yaml
+  s_54627144e6491a::t_2c9332259ec1a3 21-22
+packages/task/task/README.md
+  s_54627144e6491a::t_789f5dee538ad9 46
+packages/task/task/README.zh.md
+  s_54627144e6491a::t_12182d7d5b0ae3 46
+packages/task/task/tests/invariant.spec.ts
+  s_54627144e6491a::t_784b0426aed284 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "642dfa52420aab38b8318515ab315b839606e4ff",
+  "prompts": {},
+  "sessions": {
+    "s_54627144e6491a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "71056ccd-e6e3-4c49-bf0b-df7ac4dea8b4",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": null
+    }
+  }
+}
