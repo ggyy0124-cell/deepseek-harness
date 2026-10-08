@@ -1,0 +1,27 @@
+apps/task-web/tests/interaction.client.spec.tsx
+  s_54627144e6491a::t_dd67a4713d23e2 21-31,128-149
+  s_54627144e6491a::t_8eff0f937c99c2 150
+apps/task-web/src/components/Interaction.tsx
+  s_54627144e6491a::t_5e4030ea8e3155 147-148
+  s_54627144e6491a::t_6850b6a8225200 152
+  s_54627144e6491a::t_caa4c9e9f8c30e 16,149-150,189
+apps/task-web/src/components/SchemaForm.tsx
+  s_54627144e6491a::t_caa4c9e9f8c30e 6,27-41,335,338-339
+  s_54627144e6491a::t_6850b6a8225200 25-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "24d07a5ceb9de29b72588e3c38f43156e8b97807",
+  "prompts": {},
+  "sessions": {
+    "s_54627144e6491a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "71056ccd-e6e3-4c49-bf0b-df7ac4dea8b4",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
