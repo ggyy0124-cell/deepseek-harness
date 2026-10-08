@@ -164,6 +164,39 @@ describe('Task Web client', () => {
     await page.locator('.tw-user-message').filter({ hasText: '确认回复' }).filter({ hasText: '批准' }).waitFor({ timeout: 30000 })
   }, 60000)
 
+  it('keeps the manual trigger dialog inside a short window, scrolls its form and shows a rejected submit', async () => {
+    const height = 300
+    await page.setViewportSize({ width: 1440, height })
+    try {
+      await page.getByRole('button', { name: '手动触发' }).first().click()
+      const dialog = page.getByRole('dialog', { name: '手动触发' })
+      await dialog.getByRole('button', { name: '选择任务' }).click()
+      await page.getByRole('menuitem', { name: 'Performance review' }).click()
+      // The dialog keeps the 24px margin of its layer at the top and bottom, and the form scrolls instead of growing the dialog.
+      const [box, scroller] = [await dialog.boundingBox(), dialog.locator('.tw-dialog-scroll')]
+      if (box === null) throw new Error('The trigger dialog must be visible')
+      expect(box.y).toBeGreaterThanOrEqual(24)
+      expect(box.y + box.height).toBeLessThanOrEqual(height - 24)
+      expect(await scroller.evaluate(element => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0)
+      for (const name of ['取消', '触发']) {
+        const button = await dialog.getByRole('button', { name }).boundingBox()
+        if (button === null) throw new Error(`${name} must be visible`)
+        expect(button.y + button.height).toBeLessThanOrEqual(height)
+      }
+      // The empty period sits below the visible part of the form; the rejected submit scrolls its error into the visible part.
+      await dialog.getByRole('button', { name: '触发' }).click()
+      const required = dialog.getByText('必填')
+      await expect.poll(async () => {
+        const [scrollerBox, requiredBox] = [await scroller.boundingBox(), await required.boundingBox()]
+        if (scrollerBox === null || requiredBox === null) return false
+        return requiredBox.y >= scrollerBox.y && requiredBox.y + requiredBox.height <= scrollerBox.y + scrollerBox.height
+      }).toBe(true)
+    } finally {
+      await page.keyboard.press('Escape')
+      await page.setViewportSize({ width: 1440, height: 900 })
+    }
+  }, 60000)
+
   it('shows the Run facts in a resizable sidebar and the Session as a trajectory with a timeline, search and a record inspector', async () => {
     const sidebar = page.getByRole('complementary', { name: '右侧边栏' })
     await sidebar.getByRole('tab', { name: '状态' }).waitFor()

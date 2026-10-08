@@ -76,7 +76,7 @@ export function RetireDialog({ definition, activeRuns, onClose,
   }
   return (
     <Modal open title={t.retire.title(definition.title)} closeLabel={t.common.close} description={t.retire.description}
-      backdropBlur={false} onClose={onClose} className="tw-dialog-medium"
+      backdropBlur={false} onClose={onClose} className="tw-dialog-medium" contentClassName="tw-dialog-scroll"
       footer={<>
         <Button variant="outline" onClick={onClose}>{t.common.cancel}</Button>
         <Button variant="primary" className="tw-danger-fill" disabled={!ack || busy} onClick={start}>{t.retire.start}</Button>

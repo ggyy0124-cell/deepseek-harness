@@ -1,5 +1,5 @@
 /** Manual trigger dialog: choose an enabled manual definition and submit its input form. */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, IconChevronDownOutlineRegular, IconPlayOutlineRegular, Menu, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useT } from '../i18n/index.ts'
 import { useApp, useShared } from '../app/context.tsx'
@@ -32,6 +32,8 @@ export function TriggerDialog({ definitionId, onClose }: { definitionId?: string
   const [error, setError] = useState<string | undefined>()
   const [key, setKey] = useState(commandKey)
   const [attempted, setAttempted] = useState(false)
+  const [rejections, setRejections] = useState(0)
+  const form = useRef<HTMLDivElement>(null)
   const value: Json = definition === undefined ? null : values[definition.id] ?? schemaDefault(schema, schema)
   const errors = useMemo(() => (formAvailable
     ? validateSchema(schema, value, schema, '', { required: t.common.required, invalid: t.definition.invalid, credential: t.settings.referenceInvalid })
@@ -45,16 +47,25 @@ export function TriggerDialog({ definitionId, onClose }: { definitionId?: string
   const submit = () => {
     if (definition === undefined) return
     setAttempted(true)
-    if (errors.size > 0 || jsonInvalid) return
+    if (errors.size > 0 || jsonInvalid) { setRejections(count => count + 1); return }
     setBusy(true)
     setError(undefined)
     connection.call('triggerManual', { params: { definitionId: definition.id }, body: { input: formAvailable ? value : jsonInput ?? null }, idempotencyKey: key })
       .then((run) => { toast(`${t.trigger.submit} · ${definition.title}`); active.reload(); onClose(); navigate(paths.run(run.id)) },
-        (failure: unknown) => { setError(failureText(describeFailure(failure), t)); setKey(commandKey()) })
+        (failure: unknown) => {
+          setError(failureText(describeFailure(failure), t))
+          setKey(commandKey())
+          setRejections(count => count + 1)
+        })
       .finally(() => { setBusy(false) })
   }
+  // A long form scrolls under the pinned footer, so a rejected submit brings the first field error or the failure notice into view.
+  useEffect(() => {
+    if (rejections > 0) form.current?.querySelector('.tw-field-error, .tw-notice')?.scrollIntoView({ block: 'nearest' })
+  }, [rejections])
   return (
-    <Modal open title={t.trigger.title} closeLabel={t.common.close} backdropBlur={false} onClose={onClose} className="tw-dialog-wide"
+    <Modal open title={t.trigger.title} closeLabel={t.common.close} backdropBlur={false} onClose={onClose}
+      className="tw-dialog-wide" contentClassName="tw-dialog-scroll"
       footer={<>
         <Button variant="outline" onClick={onClose}>{t.common.cancel}</Button>
         <Button variant="primary" disabled={definition === undefined || busy} onClick={submit}>{t.trigger.submit}</Button>
@@ -62,7 +73,7 @@ export function TriggerDialog({ definitionId, onClose }: { definitionId?: string
       {manual.length === 0
         ? <EmptyState icon={<IconPlayOutlineRegular size={20} />} title={t.trigger.none}>{t.trigger.noneBody}</EmptyState>
         : (
-          <div className="tw-stack-16">
+          <div ref={form} className="tw-stack-16">
             <div className="tw-stack-field">
               <span className="tw-stack-label">{t.trigger.task}</span>
               <Menu open={picker} onClose={() => { setPicker(false) }} portal selectedId={selected}
