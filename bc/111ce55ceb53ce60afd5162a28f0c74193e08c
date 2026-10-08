@@ -1,0 +1,44 @@
+apps/task-web/README.zh.md
+  s_54627144e6491a::t_faca7b11d1f903 17
+apps/task-web/src/i18n/zh-CN.ts
+  s_54627144e6491a::t_235508a0c7ae9f 212
+  s_54627144e6491a::t_510ff8c7ef9d91 192-193
+.agents/notes/implemented/feature/2026-10-08-restart-stopped-task-run.i18n.yaml
+  s_54627144e6491a::t_077370917fc8a7 7,16,19
+.agents/notes/implemented/feature/2026-10-08-restart-stopped-task-run.zh.md
+  s_54627144e6491a::t_88ebc2eda436c5 1,27,31
+apps/task-web/README.i18n.yaml
+  s_54627144e6491a::t_2806b1bd296300 10,13
+apps/task-web/tests/restart.client.spec.tsx
+  s_54627144e6491a::t_57ab1c53c95c02 69,85,91,93,101,103,109
+apps/task-web/tests/task-web.e2e.ts
+  s_54627144e6491a::t_c65214d87ac8bc 345,349,351,354
+docs/subsystems/task.i18n.yaml
+  s_54627144e6491a::t_3b2d2768052afb 19
+docs/subsystems/task.zh.md
+  s_54627144e6491a::t_57c0260dd4bbfe 27
+packages/task/task-api-protocol/README.i18n.yaml
+  s_54627144e6491a::t_6f5b409f3b7e6e 19
+packages/task/task-api-protocol/README.zh.md
+  s_54627144e6491a::t_afd40f8426b7ec 27
+packages/task/task-local/README.i18n.yaml
+  s_54627144e6491a::t_228b07b96cee53 22
+packages/task/task-local/README.zh.md
+  s_54627144e6491a::t_13fa4e1bd05643 75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bc111ce55ceb53ce60afd5162a28f0c74193e08c",
+  "prompts": {},
+  "sessions": {
+    "s_54627144e6491a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "71056ccd-e6e3-4c49-bf0b-df7ac4dea8b4",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
