@@ -1,5 +1,5 @@
 /** Primary navigation with the list of unfinished Runs. */
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import clsx from 'clsx'
 import {
   IconChevronRightOutlineRegular, IconDataOutlineRegular, IconGaugeOutlineRegular, IconListPenOutlineRegular, IconPanelLeftOutlineRegular,
@@ -11,12 +11,15 @@ import { Link, paths, useRouter } from '../support/router.tsx'
 import { IconButton, Mark, StatusMark } from '../components/ui.tsx'
 import { useApp, useShared } from './context.tsx'
 
-/** Sidebar navigation.
- * @param props.onCollapse - hide the sidebar.
+/** Sidebar navigation. At or below the phone width the stylesheet turns it into a drawer that shows only while `drawer` is set.
+ * @param props.drawer - the phone layout opened the sidebar as a drawer; focus moves into it when it opens.
+ * @param props.onCollapse - hide the sidebar, or close the drawer.
  * @returns navigation element.
  */
-export function Sidebar({ onCollapse }: { onCollapse: () => void }) {
+export function Sidebar({ drawer, onCollapse }: { drawer: boolean; onCollapse: () => void }) {
   const t = useT()
+  const root = useRef<HTMLElement>(null)
+  useEffect(() => { if (drawer) root.current?.focus() }, [drawer])
   const { route } = useRouter()
   const { openTrigger, openSettings } = useApp()
   const { active, interactions, definitions } = useShared()
@@ -32,10 +35,11 @@ export function Sidebar({ onCollapse }: { onCollapse: () => void }) {
     { key: 'diagnostics', label: t.nav.diagnostics, icon: <IconDataOutlineRegular size={16} />, to: paths.diagnostics() },
   ]
   return (
-    <nav aria-label={t.nav.label} className="tw-sidebar">
+    <nav ref={root} aria-label={t.nav.label} className="tw-sidebar" data-drawer={drawer ? 'open' : undefined} tabIndex={-1}>
       <div className="tw-sidebar-brand">
         <Link to={paths.overview()} className="tw-brand"><Mark /><span>{t.brand}</span></Link>
-        <IconButton label={t.nav.collapse} icon={<IconPanelLeftOutlineRegular size={16} />} onClick={onCollapse} />
+        <IconButton label={drawer ? t.nav.closeMenu : t.nav.collapse} icon={<IconPanelLeftOutlineRegular size={16} />}
+          onClick={onCollapse} />
       </div>
       <button type="button" className="tw-sidebar-primary" onClick={() => { openTrigger() }}>
         <IconPlayOutlineRegular size={16} /><span>{t.nav.trigger}</span>

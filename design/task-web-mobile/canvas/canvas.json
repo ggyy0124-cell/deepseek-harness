@@ -1,0 +1,157 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-10T11:34:17Z"
+ },
+ "title": "DSH 任务 Web 移动端原型",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Login.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "登录",
+   "is_interactive": true
+  },
+  "Main.dc.html": {
+   "x": 470,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "概览",
+   "is_interactive": true
+  },
+  "Drawer.dc.html": {
+   "x": 940,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "导航抽屉",
+   "is_interactive": true
+  },
+  "Trigger.dc.html": {
+   "x": 1410,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "手动触发",
+   "is_interactive": true
+  },
+  "Definitions.dc.html": {
+   "x": 0,
+   "y": 1204,
+   "w": 390,
+   "h": 844,
+   "title": "任务",
+   "is_interactive": true
+  },
+  "Runs.dc.html": {
+   "x": 470,
+   "y": 1204,
+   "w": 390,
+   "h": 844,
+   "title": "执行记录",
+   "is_interactive": true
+  },
+  "RunDetail.dc.html": {
+   "x": 940,
+   "y": 1204,
+   "w": 390,
+   "h": 844,
+   "title": "执行详情",
+   "is_interactive": true
+  },
+  "RunInfo.dc.html": {
+   "x": 1410,
+   "y": 1204,
+   "w": 390,
+   "h": 844,
+   "title": "执行信息",
+   "is_interactive": true
+  },
+  "Inbox.dc.html": {
+   "x": 0,
+   "y": 2408,
+   "w": 390,
+   "h": 844,
+   "title": "待处理",
+   "is_interactive": true
+  },
+  "Settings.dc.html": {
+   "x": 470,
+   "y": 2408,
+   "w": 390,
+   "h": 844,
+   "title": "设置",
+   "is_interactive": true
+  }
+ },
+ "order": [
+  "Login.dc.html",
+  "Main.dc.html",
+  "Drawer.dc.html",
+  "Trigger.dc.html",
+  "Definitions.dc.html",
+  "Runs.dc.html",
+  "RunDetail.dc.html",
+  "RunInfo.dc.html",
+  "Inbox.dc.html",
+  "Settings.dc.html"
+ ],
+ "notes": {
+  "row1": {
+   "x": 0,
+   "y": -240,
+   "text": "01 接入、导航与总览",
+   "kind": "title1",
+   "maxW": 1800
+  },
+  "row1-note": {
+   "x": -620,
+   "y": 0,
+   "text": "宽度 ≤ 760 px 时，左侧导航改为顶栏菜单打开的抽屉，底部标签栏提供五个分区；待处理数量显示为角标。手动触发等对话框改为底部弹出的全高面板，标题与正文在内部滚动，按钮固定在底部。",
+   "w": 540,
+   "maxH": 520,
+   "color": "blue",
+   "size": "m"
+  },
+  "row2": {
+   "x": 0,
+   "y": 964,
+   "text": "02 任务与执行",
+   "kind": "title1",
+   "maxW": 1800
+  },
+  "row2-note": {
+   "x": -620,
+   "y": 1204,
+   "text": "执行记录的表格在手机上改为卡片列表，筛选器折叠为搜索框和状态标签。执行详情的顶栏带返回、执行信息与更多操作；标签页可横向滚动，输入框固定在底部。右侧边栏在手机上总是覆盖整页。",
+   "w": 540,
+   "maxH": 520,
+   "color": "purple",
+   "size": "m"
+  },
+  "row3": {
+   "x": 0,
+   "y": 2168,
+   "text": "03 待处理与设置",
+   "kind": "title1",
+   "maxW": 1200
+  },
+  "row3-note": {
+   "x": -620,
+   "y": 2408,
+   "text": "待处理卡片的选项与按钮占满宽度，触控目标不小于 44 px；输入框字号 16 px，避免 iOS 聚焦时缩放。设置以全屏页显示，分类改为顶部横向标签。",
+   "w": 540,
+   "maxH": 520,
+   "color": "orange",
+   "size": "m"
+  }
+ },
+ "designSystems": []
+}

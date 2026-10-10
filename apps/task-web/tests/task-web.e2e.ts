@@ -372,6 +372,59 @@ describe('Task Web client', () => {
     await settings.getByRole('button', { name: '关闭设置' }).click()
   }, 60000)
 
+  it('lays out a phone with a navigation drawer, a section bar, run cards and dialogs that span the screen', async () => {
+    const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'zh-CN', colorScheme: 'light' })
+    try {
+      const mobile = await phone.newPage()
+      await mobile.goto(await launchLink())
+      const sections = mobile.getByRole('navigation', { name: '分区导航' })
+      await sections.waitFor()
+      expect(await mobile.evaluate(() => matchMedia('(hover: none) and (pointer: coarse)').matches)).toBe(true)
+      const drawer = mobile.getByRole('navigation', { name: '主导航' })
+      expect(await drawer.isVisible()).toBe(false)
+
+      await mobile.getByRole('button', { name: '打开导航' }).click()
+      await drawer.waitFor()
+      await expect.poll(() => mobile.evaluate(() => document.activeElement?.getAttribute('aria-label'))).toBe('主导航')
+      await mobile.keyboard.press('Escape')
+      await drawer.waitFor({ state: 'hidden' })
+      expect(await mobile.evaluate(() => document.activeElement?.getAttribute('aria-label'))).toBe('打开导航')
+      await mobile.getByRole('button', { name: '打开导航' }).click()
+      await drawer.getByRole('link', { name: '任务', exact: true }).click()
+      await drawer.waitFor({ state: 'hidden' })
+      expect(new URL(mobile.url()).pathname).toBe('/definitions')
+
+      await sections.getByRole('link', { name: '执行记录' }).click()
+      const card = mobile.getByRole('row').filter({ hasText: 'BUG-' }).first()
+      await card.waitFor()
+      expect(await mobile.getByRole('columnheader').count()).toBe(0)
+      expect(await mobile.locator('.tw-main').evaluate(main => main.scrollWidth - main.clientWidth)).toBe(0)
+      await card.click()
+      await mobile.waitForURL(/\/runs\/.+/)
+      await mobile.getByRole('button', { name: '返回', exact: true }).click()
+      await mobile.waitForURL(/\/runs$/)
+
+      await mobile.getByRole('button', { name: '手动触发' }).click()
+      const trigger = mobile.getByRole('dialog', { name: '手动触发' })
+      await trigger.waitFor()
+      const sheet = await trigger.boundingBox()
+      expect(sheet === null ? null : { left: sheet.x, width: sheet.width, bottom: Math.round(sheet.y + sheet.height) })
+        .toEqual({ left: 0, width: 390, bottom: 844 })
+      await trigger.getByRole('button', { name: '关闭' }).click()
+      await trigger.waitFor({ state: 'hidden' })
+
+      await mobile.getByRole('button', { name: '打开导航' }).click()
+      await drawer.getByRole('button', { name: '设置' }).click()
+      await drawer.waitFor({ state: 'hidden' })
+      const settings = mobile.getByRole('dialog', { name: '设置' })
+      await settings.waitFor()
+      expect(await settings.boundingBox()).toEqual({ x: 0, y: 0, width: 390, height: 844 })
+      await settings.getByRole('button', { name: '关闭设置' }).click()
+    } finally {
+      await phone.close()
+    }
+  }, 60000)
+
   it('signs out', async () => {
     await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: '设置' }).click()
     const settings = page.getByRole('dialog', { name: '设置' })

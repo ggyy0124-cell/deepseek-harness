@@ -166,7 +166,7 @@ export function PageHeader({ title, subtitle, actions, crumbs }: {
   crumbs?: readonly { label: string; to?: string }[]
 }) {
   return (
-    <header className="tw-page-header">
+    <header className={clsx('tw-page-header', crumbs === undefined && 'tw-page-header-section')}>
       <div className="tw-page-header-text">
         {crumbs !== undefined && <Crumbs items={crumbs} />}
         <h1>{title}</h1>

@@ -42,7 +42,7 @@ export const zhCN = {
   nav: {
     label: '主导航', overview: '概览', definitions: '任务', runs: '执行记录', inbox: '待处理', diagnostics: '诊断', settings: '设置',
     trigger: '手动触发', collapse: '收起侧栏', expand: '展开侧栏', active: (n: number) => `进行中 · ${n}`, viewActive: '查看全部进行中的执行',
-    noActive: '没有进行中的执行',
+    noActive: '没有进行中的执行', menu: '打开导航', closeMenu: '关闭导航', sections: '分区导航',
   },
   markdown: { copy: '复制', copied: '已复制', footnotes: '脚注', code: '代码', wrap: '自动换行', unwrap: '取消换行' },
   stream: {

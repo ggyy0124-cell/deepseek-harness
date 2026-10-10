@@ -40,7 +40,7 @@ export const en: Messages = {
   nav: {
     label: 'Main navigation', overview: 'Overview', definitions: 'Tasks', runs: 'Runs', inbox: 'Inbox', diagnostics: 'Diagnostics', settings: 'Settings',
     trigger: 'Trigger', collapse: 'Collapse sidebar', expand: 'Expand sidebar', active: n => `In progress · ${n}`, viewActive: 'View all unfinished runs',
-    noActive: 'No unfinished runs',
+    noActive: 'No unfinished runs', menu: 'Open navigation', closeMenu: 'Close navigation', sections: 'Sections',
   },
   markdown: { copy: 'Copy', copied: 'Copied', footnotes: 'Footnotes', code: 'Code', wrap: 'Wrap lines', unwrap: 'Do not wrap' },
   stream: {
