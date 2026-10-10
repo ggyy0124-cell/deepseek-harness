@@ -14,20 +14,22 @@ import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { TaskApiClient } from '@deepseek-ai/dsh-task-api-client'
 import { z } from 'zod'
 import { taskHost } from '../../task-local/tests/host-fixture.ts'
-import TaskApiGateway, { type Config } from '../src/index.ts'
+import TaskApiGateway, { type Config, type PasswordLoginConfig } from '../src/index.ts'
+import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { stub } from '../../task-local/tests/stub.ts'
 
 const disposers: (() => Promise<void>)[] = []
 afterEach(async () => { for (const close of disposers.splice(0).reverse()) await close() })
 
-async function gateway(definitionOverrides: Partial<TaskDefinition> = {}, gatewayConfig: Partial<Config> = {}, deferReady = false) {
+async function gateway(definitionOverrides: Partial<TaskDefinition> = {}, gatewayConfig: Partial<Config> = {}, deferReady = false,
+  prepare: (ctx: Context) => void = () => {}) {
   const host = await taskHost()
   disposers.push(host.close)
   const { ctx, directory } = host
   const secrets = new Map<CredentialRef, string>()
   let record: CredentialRecord | undefined
   let tail: Promise<unknown> = Promise.resolve()
-  const credentials: Pick<CredentialProvider, 'readRecord' | 'modifyRecord' | 'set' | 'describe'> = {
+  const credentials: Pick<CredentialProvider, 'readRecord' | 'modifyRecord' | 'set' | 'describe' | 'resolve'> = {
     readRecord: async () => structuredClone(record),
     modifyRecord: async (_key, mutate) => {
       const change = tail.then(async () => {
@@ -40,8 +42,12 @@ async function gateway(definitionOverrides: Partial<TaskDefinition> = {}, gatewa
     },
     set: async (ref, value) => { secrets.set(ref, value) },
     describe: async ref => ({ configured: secrets.has(ref), writable: true }),
+    resolve: async (ref) => {
+      const value = secrets.get(ref)
+      return value === undefined ? undefined : { value, source: 'file' }
+    },
   }
-  // This consumer uses these four credential operations; embedded attachments are tested by their owning reader.
+  // This consumer uses these five credential operations; embedded attachments are tested by their owning reader.
   ctx.provide('credentials', credentials as CredentialProvider)
   ctx.provide('attachments', {} as Context['attachments'])
   await ctx.plugin(WebServer, { host: '127.0.0.1', port: 0 })
@@ -50,6 +56,7 @@ async function gateway(definitionOverrides: Partial<TaskDefinition> = {}, gatewa
     onReady(listener) { fireReady = listener; return () => { fireReady = () => {} } },
   } satisfies NonNullable<Context['appReady']>)
   const origin = `http://127.0.0.1:${ctx.webServer.port}`
+  prepare(ctx)
   // Schemastery's input type includes fields supplied by its runtime defaults.
   const config = TaskApiGateway.Config({ attachmentRoot: join(directory, 'attachments'), eventPollMs: 10, eventHeartbeatMs: 100,
     ...gatewayConfig, ...(gatewayConfig.publicOrigin === '__bound__' ? { publicOrigin: origin } : {}) } as Config)
@@ -576,5 +583,100 @@ describe('Task gateway composition', () => {
     expect((await client.request('getCatalog', {})).presets).toEqual([
       { id: 'named', title: 'Named', description: 'Described' }, { id: 'plain', title: 'plain', description: null },
     ])
+  })
+})
+
+const passwordLogin = (overrides: Partial<PasswordLoginConfig> = {}): PasswordLoginConfig => ({
+  enabled: true, username: 'operator', passwordRef: 'TASK_WEB_PASSWORD', maxFailures: 3, failureWindowMs: 60000, lockoutMs: 60000,
+  ...overrides,
+})
+
+/** Send one request with an explicit Host header, which fetch cannot set. */
+function send(origin: string, path: string, headers: Record<string, string>, body?: unknown, method = body === undefined ? 'GET' : 'POST') {
+  const text = body === undefined ? undefined : JSON.stringify(body)
+  return new Promise<{ status: number; headers: Record<string, string | string[] | undefined>; body: Record<string, unknown> }>(
+    (resolve, reject) => {
+      const request = httpRequest({ hostname: '127.0.0.1', port: new URL(origin).port, path: `/api/task/v1/${path}`,
+        method,
+        headers: { ...headers, ...(text === undefined ? {} : { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(text) }) } },
+      (response) => {
+        const chunks: Buffer[] = []
+        response.on('data', (chunk: Buffer) => { chunks.push(chunk) })
+        response.once('error', reject)
+        response.once('end', () => {
+          resolve({ status: response.statusCode!, headers: response.headers,
+            body: JSON.parse(Buffer.concat(chunks).toString() || '{}') as Record<string, unknown> })
+        })
+      })
+      request.once('error', reject)
+      request.end(text)
+    })
+}
+
+describe('Task gateway browser access', () => {
+  it('offers password login only when enabled and fails loud on misconfigured access', async () => {
+    const { origin } = await gateway()
+    expect(await (await fetch(`${origin}/api/task/v1/auth/methods`)).json()).toEqual({ password: false })
+    const disabled = await send(origin, 'auth/login', { Host: new URL(origin).host, Origin: origin }, { username: 'operator', password: 'x' })
+    expect(disabled).toMatchObject({ status: 404, body: { code: 'route_not_found' } })
+    expect(await send(origin, 'auth/methods', { Host: new URL(origin).host }, {}, 'GET'))
+      .toMatchObject({ status: 400, body: { code: 'unexpected_body' } })
+    await expect(gateway({}, { trustedHosts: ['tasks.lan/path'] })).rejects.toThrow('trustedHosts')
+    await expect(gateway({}, {}, false, (ctx) => { vi.spyOn(ctx.webServer, 'host', 'get').mockReturnValue('0.0.0.0') }))
+      .rejects.toThrow('--trusted-host')
+    await expect(gateway({}, { passwordLogin: passwordLogin({ username: ' ' }) })).rejects.toThrow('username')
+  })
+
+  it('signs in the fixed account, throttles failures and reserves the password credential', async () => {
+    const { ctx, origin, client } = await gateway({}, { passwordLogin: passwordLogin() })
+    const host = new URL(origin).host
+    const login = (username: string, password: string, headers: Record<string, string> = { Host: host, Origin: origin }) =>
+      send(origin, 'auth/login', headers, { username, password })
+    expect(await (await fetch(`${origin}/api/task/v1/auth/methods`)).json()).toEqual({ password: true })
+    expect(await login('operator', 'secret-pass')).toMatchObject({ status: 401, body: { code: 'authentication_required' } })
+    await ctx.credentials.set(credentialRef('TASK_WEB_PASSWORD'), 'secret-pass')
+    expect(await login('operator', 'secret-pass', { Host: host })).toMatchObject({ status: 403, body: { code: 'origin_rejected' } })
+    expect(await login('operator', '')).toMatchObject({ status: 400 })
+    const accepted = await login('operator', 'secret-pass')
+    expect(accepted.status).toBe(200)
+    const cookie = (accepted.headers['set-cookie'] as string[])[0]!
+    expect(cookie).toMatch(/^dsh_task_session=[^;]+; Path=\/api\/task\/v1; HttpOnly; SameSite=Strict; Max-Age=2592000$/)
+    const session = await send(origin, 'auth/session', { Host: host, Cookie: cookie.split(';')[0]! })
+    expect(session).toMatchObject({ status: 200, body: { csrf: accepted.body['csrf'], expiresAt: accepted.body['expiresAt'] } })
+    expect(await login('operator', 'wrong-pass')).toMatchObject({ status: 401 })
+    expect(await login('somebody', 'secret-pass')).toMatchObject({ status: 401 })
+    expect(await login('operator', 'wrong-again')).toMatchObject({ status: 401 })
+    const locked = await login('operator', 'secret-pass')
+    expect(locked).toMatchObject({ status: 429, body: { code: 'login_throttled' } })
+    expect(locked.headers['retry-after']).toBe('60')
+    await expect(client.credential('TASK_WEB_PASSWORD', 'replaced')).rejects.toMatchObject({ problem: { status: 403, code: 'credential_reserved' } })
+    expect(await client.credential('TASK_WEB_PASSWORD')).toEqual({ configured: true, writable: true })
+  })
+
+  it('accepts each trusted host with its own origin and rejects other hosts and cross-host origins', async () => {
+    const { ctx, origin } = await gateway({}, { trustedHosts: ['tasks.lan', '10.0.0.5:8080', '[fd00::1]'], passwordLogin: passwordLogin() })
+    const port = new URL(origin).port
+    expect(ctx.taskGateway.browserOrigins().map(entry => entry.origin))
+      .toEqual([origin, `http://tasks.lan:${port}`, 'http://10.0.0.5:8080', `http://[fd00::1]:${port}`])
+    await ctx.credentials.set(credentialRef('TASK_WEB_PASSWORD'), 'secret-pass')
+    const body = { username: 'operator', password: 'secret-pass' }
+    const lan = await send(origin, 'auth/login', { Host: `tasks.lan:${port}`, Origin: `http://tasks.lan:${port}` }, body)
+    expect(lan.status).toBe(200)
+    expect((lan.headers['set-cookie'] as string[])[0]).not.toContain('Secure')
+    expect((await send(origin, 'auth/login', { Host: '10.0.0.5:8080', Origin: 'http://10.0.0.5:8080' }, body)).status).toBe(200)
+    expect(await send(origin, 'auth/login', { Host: `tasks.lan:${port}`, Origin: origin }, body))
+      .toMatchObject({ status: 403, body: { code: 'origin_rejected' } })
+    expect(await send(origin, 'auth/methods', { Host: `other.lan:${port}` }))
+      .toMatchObject({ status: 403, body: { code: 'host_rejected' } })
+  })
+
+  it('gives trusted hosts the scheme of the public origin', async () => {
+    const { ctx, origin } = await gateway({}, { publicOrigin: 'https://tasks.example', trustedHosts: ['tasks2.example:443'],
+      passwordLogin: passwordLogin() })
+    expect(ctx.taskGateway.browserOrigins().map(entry => entry.origin)).toEqual(['https://tasks.example', 'https://tasks2.example'])
+    await ctx.credentials.set(credentialRef('TASK_WEB_PASSWORD'), 'secret-pass')
+    const accepted = await send(origin, 'auth/login', { Host: 'tasks2.example', Origin: 'https://tasks2.example' },
+      { username: 'operator', password: 'secret-pass' })
+    expect((accepted.headers['set-cookie'] as string[])[0]).toContain('; Secure')
   })
 })

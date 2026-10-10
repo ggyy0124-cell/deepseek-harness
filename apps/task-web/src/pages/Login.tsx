@@ -1,8 +1,9 @@
-/** Launch-link login and connection states shown before the application frame. */
-import type { ReactNode } from 'react'
+/** Launch-link and password login and connection states shown before the application frame. */
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Button, IconCheckOutlineRegular, IconLinkOutlineRegular, IconUserOutlineRegular, IconWarningOutlineRegular, IconWarningTriangleOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useT } from '../i18n/index.ts'
-import type { ConnectionState, TaskConnection } from '../support/connection.ts'
+import type { ConnectionState, LoginFailure, TaskConnection } from '../support/connection.ts'
+import { useStore } from '../support/store.ts'
 import { CommandLine, Dot, Mark, Mono, Spinner, Tile } from '../components/ui.tsx'
 
 type Step = 'done' | 'ongoing' | 'idle' | 'failed'
@@ -20,6 +21,36 @@ export function LoginPage({ connection, state }: { connection: TaskConnection; s
       : state.kind === 'recovering' ? 'done' : 'idle'
   const session: Step = state.kind === 'recovering' ? 'done' : state.kind === 'signed_out' && state.reason === 'session_ended' ? 'failed' : 'idle'
   const reconnect = () => { void connection.resume('no_session') }
+  const password = useStore(connection.passwordLogin)
+  const help = (
+    <div className="tw-login-help">
+      <span>{t.login.noLink}</span>
+      <CommandLine command="dsh --profile task --launch-link" />
+      <span>{t.login.commandHint} <Mono>dsh --profile task</Mono></span>
+    </div>
+  )
+  if (password) {
+    return (
+      <div className="tw-login">
+        <header className="tw-login-brand"><Mark /><span>{t.brand}</span></header>
+        <div className="tw-login-body">
+          <section aria-label={t.login.passwordTitle} className="tw-login-card">
+            <Tile><IconUserOutlineRegular size={22} /></Tile>
+            <div className="tw-login-heading">
+              <h1>{t.login.passwordTitle}</h1>
+              <p>{t.login.passwordDescription}</p>
+            </div>
+            <PasswordForm connection={connection} />
+            {!(state.kind === 'signed_out' && state.reason === 'no_session') && <StateCard state={state} onReconnect={reconnect} />}
+            <details className="tw-login-admin">
+              <summary>{t.login.adminEntry}</summary>
+              {help}
+            </details>
+          </section>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="tw-login">
       <header className="tw-login-brand"><Mark /><span>{t.brand}</span></header>
@@ -36,14 +67,48 @@ export function LoginPage({ connection, state }: { connection: TaskConnection; s
             <StepRow state={session} label={t.login.stepSession} hint={t.login.stepSessionHint} />
           </ol>
           <StateCard state={state} onReconnect={reconnect} />
-          <div className="tw-login-help">
-            <span>{t.login.noLink}</span>
-            <CommandLine command="dsh --profile task --launch-link" />
-            <span>{t.login.commandHint} <Mono>dsh --profile task</Mono></span>
-          </div>
+          {help}
         </section>
       </div>
     </div>
+  )
+}
+
+function PasswordForm({ connection }: { connection: TaskConnection }) {
+  const t = useT()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [failure, setFailure] = useState<LoginFailure | null>(null)
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    if (busy || username === '' || password === '') return
+    setBusy(true)
+    setFailure(null)
+    connection.login(username, password).then((result) => {
+      setFailure(result)
+      if (result !== null) setPassword('')
+    }, () => { setFailure('unreachable') }).finally(() => { setBusy(false) })
+  }
+  return (
+    <form className="tw-login-form" onSubmit={submit}>
+      <label className="tw-login-field">
+        <span>{t.login.username}</span>
+        <input type="text" className="tw-input tw-input-full" name="username" autoComplete="username" autoFocus
+          value={username} disabled={busy} onChange={(event) => { setUsername(event.target.value) }} />
+      </label>
+      <label className="tw-login-field">
+        <span>{t.login.password}</span>
+        <input type="password" className="tw-input tw-input-full" name="password" autoComplete="current-password"
+          value={password} disabled={busy} onChange={(event) => { setPassword(event.target.value) }} />
+      </label>
+      {failure === 'invalid' && <Strip kind="error" title={t.login.invalidTitle} body={t.login.invalidBody} />}
+      {failure === 'throttled' && <Strip kind="error" title={t.login.throttledTitle} body={t.login.throttledBody} />}
+      {failure === 'unreachable' && <Strip kind="error" title={t.login.unreachableTitle} body={t.login.unreachableBody} />}
+      <Button variant="primary" type="submit" disabled={busy || username === '' || password === ''}>
+        {busy ? t.login.signingIn : t.login.signIn}
+      </Button>
+    </form>
   )
 }
 

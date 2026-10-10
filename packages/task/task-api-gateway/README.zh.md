@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-通过经过认证的 HTTP 接口配置 Task 定义和操作执行记录，同时避免暴露内部检查点。浏览器使用一次性登录凭据及受 CSRF 保护的 Cookie，原生客户端使用可撤销的 Bearer 凭据。这些路由供后续 Task Web UI 和原生客户端使用；当前 Profile 仅提供后端。
+通过经过认证的 HTTP 接口配置 Task 定义和操作执行记录，同时避免暴露内部检查点。浏览器使用一次性登录凭据或可选的固定账号密码登录，以及受 CSRF 保护的 Cookie；原生客户端使用可撤销的 Bearer 凭据。这些路由供后续 Task Web UI 和原生客户端使用；当前 Profile 仅提供后端。
 
 ## 目录
 
@@ -29,9 +29,15 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 
 通过 `POST /auth/exchange`、准确的 Origin 请求头和 JSON `{ "token": "..." }` 交换登录凭据。响应设置 HttpOnly、SameSite Strict Cookie，并返回 CSRF 值和会话过期时间。经过认证的浏览器可通过 `GET /auth/session` 重新获取二者。Cookie 写请求必须携带相同 Origin 和 `X-CSRF-Token`；Bearer 请求使用 `Authorization`。所有 Task 状态变更都要求 `Idempotency-Key`。经过认证的 `GET /openapi.json` 描述已挂载的 JSON 操作及浏览器登录交换。
 
+开启 `passwordLogin.enabled` 后，携带准确 Origin 和 `{ "username", "password" }` 的 `POST /auth/login` 打开与登录凭据交换相同的 Cookie 会话。密码是 `passwordLogin.passwordRef` 凭据的值，每次尝试时读取，并以常数时间比较摘要；`PUT /credentials/{reference}` 以 `403 credential_reserved` 拒绝该引用，因此只能在宿主上通过 `dsh --profile task --password-set` 设置。失败次数按客户端地址和用户名分别计数；在 `failureWindowMs` 内达到 `maxFailures` 的那次尝试会把该地址或用户名锁定 `lockoutMs`，锁定期间的尝试返回 `429 login_throttled` 和 `Retry-After`。计数保存在内存中。密码凭据未配置时所有登录返回 401，并记录 `password_unconfigured`；登录诊断记录结果和客户端地址，不记录提交的值。无需认证的 `GET /auth/methods` 返回 `{ "password": boolean }`，供客户端选择登录表单。
+
 | 字段 | 默认值 | 含义 |
 |---|---|---|
 | `publicOrigin` | 空 | 浏览器准确来源；空值解析为 HTTP 回环地址和实际服务端口 |
+| `trustedHosts` | `[]` | 在 `publicOrigin` 之外接受的 `host` 或 `host:port`，协议与其相同；只写主机时取服务端口。监听所有网卡时必填 |
+| `passwordLogin.enabled` / `username` | `false` / 空 | 提供固定账号密码登录；开启时用户名必填 |
+| `passwordLogin.passwordRef` | `TASK_WEB_PASSWORD` | 保存密码的凭据引用 |
+| `passwordLogin.maxFailures` / `failureWindowMs` / `lockoutMs` | 5 / 900000 / 900000 | 每个地址或用户名的失败次数上限、计数窗口及随后的锁定时长 |
 | `bodyLimitBytes` / `responseLimitBytes` | 1048576 / 4194304 | 完整 JSON 的字节上限 |
 | `bodyTimeoutMs` | 30000 | 读取请求体的期限 |
 | `pageSize` | 50 | 默认 Run 分页大小，上限为 200 |
@@ -42,7 +48,7 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 | `eventBatchSize` / `eventBufferBytes` | 512 / 2097152 | 重放批量条数和完整套接字缓冲上限 |
 | `eventDrainTimeoutMs` / `eventConnectionLimit` | 15000 / 32 | 发送阻塞期限和同时连接数上限 |
 
-使用反向代理或非回环浏览器地址时，显式设置 `publicOrigin`。转发请求头不会改变信任判断。HTTPS 来源设置 Secure Cookie；TLS 终止由部署环境负责。
+使用反向代理或非回环浏览器地址时，显式设置 `publicOrigin` 或 `trustedHosts`。每个请求按 Host 匹配 authority 相同的来源，其 Origin 必须等于该来源；转发请求头不会改变信任判断。HTTPS 来源设置 Secure Cookie；TLS 终止由部署环境负责。
 
 -----
 
@@ -99,6 +105,7 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 - Session SSE 传输已持久化消息，不包含临时 token 增量。Session 附件下载传输完整对象；任务上传附件的下载还支持单个字节范围。
 - 任务历史使用带索引的 SQL 筛选和有界分页。附件列表扫描保留的上传回执；内容文件的保留策略由运维负责。
 - 插件检查必须响应取消，任意业务 JSON 不能作为秘密检测机制。
+- 密码登录只有一个共享账号和一个主体，补充输入和回复无法对应到具体的人。使用明文 HTTP 时，密码和会话 Cookie 在网络上不加密传输；宿主重启后登录计数清零。
 
 <a id="dev-note"></a>
 ### 开发备注

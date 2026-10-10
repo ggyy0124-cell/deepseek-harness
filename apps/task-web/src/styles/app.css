@@ -271,6 +271,11 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
 .tw-step-done { color: var(--dsw-alias-state-success-primary); display: inline-flex; }
 .tw-step-failed { color: var(--dsw-alias-state-error-primary); display: inline-flex; }
 .tw-step-idle { display: inline-flex; }
+.tw-login-form { display: flex; flex-direction: column; gap: 12px; }
+.tw-login-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-secondary); }
+.tw-login-field .tw-input { height: 36px; }
+.tw-login-admin > summary { cursor: pointer; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-tertiary); }
+.tw-login-admin[open] > summary { margin-bottom: 8px; }
 .tw-login-help { display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-tertiary); }
 .tw-login-wait { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-tertiary); }
 .tw-state-card { border-radius: var(--dsw-radius-xl); background: var(--dsw-alias-bg-layer-2); box-shadow: 0 0 0 0.5px var(--dsw-alias-border-l2); overflow: hidden; }

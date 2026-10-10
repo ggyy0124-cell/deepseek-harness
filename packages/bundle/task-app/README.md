@@ -25,7 +25,7 @@ Launch the Task engine, the authenticated REST/SSE gateway and the [Task Web cli
 <a id="use-this-package"></a>
 ## Use this package
 
-Launch the backend with `pnpm dsh --profile task`. Its database, including recorded preset revisions, and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port. Startup prints the Web client address `/` and the API base address `/api/task/v1/` without issuing a credential or opening a browser; sign in with `--launch-link`. Browser navigations to paths without a built file receive the client's `index.html`, existing files are served directly, and other missing paths return 404. An installation without business plugins has no business definitions.
+Launch the backend with `pnpm dsh --profile task`. Its database, including recorded preset revisions, and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port, and `--host 0.0.0.0` listens on all interfaces for [intranet access](#intranet-access). Startup prints the Web client address `/` and the API base address `/api/task/v1/` without issuing a credential or opening a browser; sign in with `--launch-link`. Browser navigations to paths without a built file receive the client's `index.html`, existing files are served directly, and other missing paths return 404. An installation without business plugins has no business definitions.
 
 The bundle declares the Web presets under `presets/` with delegation kept in the foreground and asynchronous workflow starts disabled. The shipped coding presets let a special or ordinary Task Agent choose whether to call foreground in-process subagents during an admitted model turn. No child is required. `task-local` limits them to four live children per Run by default through `childConcurrency`; each child retains its own Session and must finish before the parent turn settles.
 
@@ -35,11 +35,31 @@ Administration also uses this profile:
 pnpm dsh --profile task --token-create
 pnpm dsh --profile task --token-revoke DEVICE_ID
 pnpm dsh --profile task --launch-link
+pnpm dsh --profile task --password-set
 pnpm dsh --profile task --backup /absolute/new-backup
 pnpm dsh --profile task --restore /absolute/backup
 ```
 
-`--token-create` prints a revocable API bearer credential once; callers supply it in `Authorization: Bearer <token>`. `--launch-link` prints `{ "url", "expiresAt" }` for the host on `--port`: a single-use browser launch secret in the URL fragment (`#launch=`), valid for 60 seconds, that the Task Web client posts to `/auth/exchange`. A running host accepts it because the gateway rereads the shared credential document. Set the administration row's `publicOrigin` to the gateway's `publicOrigin` when browsers use another origin. Stop the Task host before backup; an exclusive owner lock rejects a running host. Restore validates hashes and SQLite integrity before publishing into an empty Task data directory, rewrites retained preset locations, marks resource handles for reconciliation and replaces the event-stream identity. Credentials and external-system state are not restored. A copied worktree requires repository registration repair before reuse. These commands do not start the web server or task scheduler.
+`--token-create` prints a revocable API bearer credential once; callers supply it in `Authorization: Bearer <token>`. `--launch-link` prints `{ "url", "expiresAt" }` for the host on `--port`: a single-use browser launch secret in the URL fragment (`#launch=`), valid for 60 seconds, that the Task Web client posts to `/auth/exchange`. A running host accepts it because the gateway rereads the shared credential document. Set the administration row's `publicOrigin` to the gateway's `publicOrigin` when browsers use another origin. Stop the Task host before backup; an exclusive owner lock rejects a running host. Restore validates hashes and SQLite integrity before publishing into an empty Task data directory, rewrites retained preset locations, marks resource handles for reconciliation and replaces the event-stream identity. Credentials and external-system state are not restored. A copied worktree requires repository registration repair before reuse. `--password-set` stores the browser sign-in password described below. These commands do not start the web server or task scheduler.
+
+<a id="intranet-access"></a>
+#### Intranet access
+
+Start the host with `--host 0.0.0.0 --trusted-host <authority>` so browsers on other machines can open it; repeat `--trusted-host` for each address they use, such as `10.0.0.5` or `task.lan:3081`. A bare host means the `--port` value. Listening on all interfaces without a trusted host is refused at startup, and startup prints one Web address per trusted host. Requests with any other Host header return 403.
+
+To sign in without a launch link, enable the gateway's password login in the profile patch. A patch replaces the row's whole configuration, so it restates `attachmentRoot` and the `trustedHosts` wiring:
+
+```yaml
+- id: task-api-gateway
+  config:
+    attachmentRoot: !!js ctx.dshHomePath('tasks/attachments')
+    trustedHosts: !!js ctx.taskStartup.trustedHosts
+    passwordLogin:
+      enabled: true
+      username: operator
+```
+
+Then run `pnpm dsh --profile task --password-set` on the host. From a terminal it reads the password twice without echo; with piped input it reads standard input up to one final newline. It stores the value in the `TASK_WEB_PASSWORD` credential (the administration row's `passwordRef`, which must match the gateway's `passwordLogin.passwordRef`) and prints `{ "reference", "configured" }`; the next login uses the new value without a restart. The launch link remains the administrator entry for a forgotten password or a locked login. Plain HTTP carries the password and session cookie unencrypted, so limit the port to intranet ranges with the host firewall and run the host under a dedicated system account.
 
 #### Background service examples
 

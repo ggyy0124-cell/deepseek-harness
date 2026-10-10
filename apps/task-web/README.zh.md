@@ -6,7 +6,7 @@ Task Web 客户端是 Task Profile 的浏览器控制台。它实现 [Task Web �
 
 ## 使用客户端
 
-用 `dsh --profile task` 启动主机，再在另一个终端用 `dsh --profile task --launch-link` 输出登录链接。打开输出的 `http://127.0.0.1:3081/#launch=…` 链接后，客户端在 `/auth/exchange` 兑换其中的一次性密钥，从地址栏移除密钥，并保留 HttpOnly Cookie 会话；每次写操作都携带会话的 CSRF 密钥。已经打开客户端的标签页也接受新粘贴的链接。没有会话时页面显示登录命令；已使用或已过期的链接、已结束的会话、无法访问的主机和正在恢复的调度器各有对应状态。
+用 `dsh --profile task` 启动主机，再在另一个终端用 `dsh --profile task --launch-link` 输出登录链接。打开输出的 `http://127.0.0.1:3081/#launch=…` 链接后，客户端在 `/auth/exchange` 兑换其中的一次性密钥，从地址栏移除密钥，并保留 HttpOnly Cookie 会话；每次写操作都携带会话的 CSRF 密钥。已经打开客户端的标签页也接受新粘贴的链接。没有会话时页面显示登录命令；已使用或已过期的链接、已结束的会话、无法访问的主机和正在恢复的调度器各有对应状态。当网关提供[密码登录](../../packages/bundle/task-app/README.zh.md#intranet-access)时，页面改为显示用户名和密码表单，把登录链接命令收进折叠的管理员入口，并在表单下方提示密码错误或暂时锁定。
 
 | 页面 | 路径 | 操作 |
 |---|---|---|
@@ -34,6 +34,6 @@ pnpm exec vitest run apps/task-web/tests
 pnpm exec vitest run --config vitest.web.config.ts apps/task-web/tests/task-web.e2e.ts
 ```
 
-`build:task-web` 写出 Task 应用提供的 `dist/`；`pnpm run build` 包含这一步。客户端使用 `dsh-task-api-client`、`dsh-task-api-protocol` 和 `dsh-client-ui-primitives` 的构建产物 `lib/`，以及 `dsh-client-ui-theme` 的 `--dsw-*` 令牌样式。单元测试覆盖 Cron 预览、格式化、配置合并、Schema 表单、会话时间线、滚动跟随、确认卡片的回复按键、已失败或已取消执行的重新执行卡片、轨迹投影、轨迹概览与表格、记录详情、侧边栏布局和会话状态机。浏览器测试需要构建好的客户端；它用 [示例业务插件](tests/fixtures/demo-business.mjs) 启动 Task Profile，通过启动链接登录，并执行待处理回复、补充输入、执行详情的栏宽、实时轨迹对新输入的跟随、轨迹的工具栏、时间线与记录详情、侧边栏、手动触发（含窗口较矮时的触发对话框）、重试清理、重新执行已失败的执行、配置编辑、凭据和退出登录。缺少 Playwright 固定版本的浏览器时，`DSH_PLAYWRIGHT_EXECUTABLE_PATH` 选择本机 Chromium。
+`build:task-web` 写出 Task 应用提供的 `dist/`；`pnpm run build` 包含这一步。客户端使用 `dsh-task-api-client`、`dsh-task-api-protocol` 和 `dsh-client-ui-primitives` 的构建产物 `lib/`，以及 `dsh-client-ui-theme` 的 `--dsw-*` 令牌样式。单元测试覆盖 Cron 预览、格式化、配置合并、Schema 表单、会话时间线、滚动跟随、确认卡片的回复按键、已失败或已取消执行的重新执行卡片、轨迹投影、轨迹概览与表格、记录详情、侧边栏布局和会话状态机（含密码登录）。浏览器测试需要构建好的客户端；它用 [示例业务插件](tests/fixtures/demo-business.mjs) 启动 Task Profile，通过启动链接登录，并执行待处理回复、补充输入、执行详情的栏宽、实时轨迹对新输入的跟随、轨迹的工具栏、时间线与记录详情、侧边栏、手动触发（含窗口较矮时的触发对话框）、重试清理、重新执行已失败的执行、配置编辑、凭据和退出登录；另一个浏览器测试通过可信主机以固定账号登录。缺少 Playwright 固定版本的浏览器时，`DSH_PLAYWRIGHT_EXECUTABLE_PATH` 选择本机 Chromium。
 
 需要带示例数据的本地预览时，在 `--patch` 文件中加入示例插件的行；其 `definition` 设置选择 `defects`、`weekly`、`review`、`cleanup` 或 `agent`。`pnpm --filter @deepseek-ai/dsh-task-web-frontend exec vite` 在 5180 端口提供热更新的客户端，并把 `/api/task/v1` 代理到 `DSH_TASK_WEB_GATEWAY`（默认 `http://127.0.0.1:3081`）；代理以网关自身的源发出请求，因此把输出的启动链接端口改为 5180 后打开即可。

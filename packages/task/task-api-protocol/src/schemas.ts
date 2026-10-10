@@ -27,6 +27,10 @@ export const credentialListSchema = z.object({
 })
 /** Browser session returned by launch exchange and session recovery. */
 export const browserSessionSchema = z.strictObject({ csrf: z.string(), expiresAt: timestampSchema })
+/** Browser sign-in methods the gateway offers besides the launch link; readable without a session. */
+export const authMethodsSchema = z.strictObject({ password: z.boolean() })
+/** Fixed-account password sign-in body; the gateway never echoes or logs either value. */
+export const passwordLoginSchema = z.strictObject({ username: z.string().min(1).max(256), password: z.string().min(1).max(1024) })
 /** Stable resource status values published by API version 1. */
 export const statusSchema = z.enum([
   'provisioning',

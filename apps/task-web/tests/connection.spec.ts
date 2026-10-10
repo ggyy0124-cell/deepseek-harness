@@ -57,6 +57,52 @@ describe('TaskConnection', () => {
     expect(offline.state.get()).toEqual({ kind: 'unreachable' })
   })
 
+  it('reads the offered sign-in methods while signed out and signs in with the fixed account', async () => {
+    let password = 'wrong'
+    const calls = gateway((method, path, init) => {
+      if (path === 'auth/session') return problem(401, 'authentication_required')
+      if (path === 'auth/methods') return json(200, { password: true })
+      if (path === 'auth/login') {
+        const body = JSON.parse(init?.body as string) as { username: string; password: string }
+        if (body.password === 'locked') return problem(429, 'login_throttled')
+        return body.password === password ? json(200, session) : problem(401, 'authentication_required')
+      }
+      if (path === 'ready') return json(200, { ready: true, stopping: false })
+      throw new Error(`unexpected ${method} ${path}`)
+    })
+    const connection = new TaskConnection('http://127.0.0.1:3081')
+    await connection.start('')
+    expect(connection.state.get()).toEqual({ kind: 'signed_out', reason: 'no_session' })
+    expect(connection.passwordLogin.get()).toBe(true)
+    expect(await connection.login('operator', 'secret')).toBe('invalid')
+    expect(await connection.login('operator', 'locked')).toBe('throttled')
+    password = 'secret'
+    expect(await connection.login('operator', 'secret')).toBeNull()
+    await settle(connection, 'ready')
+    expect(calls.filter(call => call.path === 'auth/login').every(call => call.headers.get('Content-Type') === 'application/json')).toBe(true)
+  })
+
+  it('reports an unreachable service at sign-in and keeps the launch link when methods are unavailable', async () => {
+    gateway((_method, path) => {
+      if (path === 'auth/methods') return Promise.reject(new TypeError('Failed to fetch'))
+      if (path === 'auth/login') return Promise.reject(new TypeError('Failed to fetch'))
+      return problem(401, 'authentication_required')
+    })
+    const connection = new TaskConnection('http://127.0.0.1:3081')
+    await connection.start(`#launch=${TOKEN}`)
+    expect(connection.state.get()).toEqual({ kind: 'signed_out', reason: 'link_invalid' })
+    expect(connection.passwordLogin.get()).toBe(false)
+    expect(await connection.login('operator', 'secret')).toBe('unreachable')
+    gateway((_method, path) => path === 'auth/login' ? problem(500, 'internal_error')
+      : path === 'auth/session' ? problem(401, 'authentication_required') : problem(404, 'route_not_found'))
+    const older = new TaskConnection('http://127.0.0.1:3081')
+    await older.start('')
+    expect(older.passwordLogin.get()).toBe(false)
+    await expect(older.login('operator', 'secret')).rejects.toMatchObject({ problem: { code: 'internal_error' } })
+    gateway((_method, path) => path === 'auth/methods' ? json(200, { password: 'yes' }) : problem(401, 'authentication_required'))
+    await expect(new TaskConnection('http://127.0.0.1:3081').start('')).rejects.toThrow()
+  })
+
   it('waits while the service recovers', async () => {
     vi.useFakeTimers()
     let ready = false

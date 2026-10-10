@@ -60,6 +60,11 @@ export const zhCN = {
     noSessionTitle: '尚未登录', noSessionBody: '在本机终端运行下方命令，打开输出的链接即可登录。',
     recoveringTitle: '任务服务正在恢复', recoveringBody: '服务已启动，但恢复与调度尚未就绪。就绪后会自动继续连接，无需刷新页面。', waitingReady: '等待就绪',
     unreachableTitle: '无法连接任务服务', unreachableBody: '确认任务服务正在运行，并且页面地址与 --port 一致。', reconnect: '重新连接',
+    passwordTitle: '登录 DSH 任务', passwordDescription: '使用任务服务的账号和密码登录。浏览器保留会话 30 天，关闭页面不会影响正在运行的任务。',
+    username: '用户名', password: '密码', signIn: '登录', signingIn: '正在登录…',
+    invalidTitle: '用户名或密码不正确', invalidBody: '请重新输入。连续失败过多时会暂时锁定登录。',
+    throttledTitle: '登录已暂时锁定', throttledBody: '失败次数过多，请稍后再试。管理员可以在任务服务所在机器上用启动链接登录。',
+    adminEntry: '管理员本机登录（启动链接）',
   },
   overview: {
     title: '概览', subtitle: (scheduler: string, host: string) => `${scheduler} · 本机任务服务 ${host}`,

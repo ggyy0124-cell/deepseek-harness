@@ -4,8 +4,10 @@ import { credentialReferencePattern } from '@deepseek-ai/dsh-task/schema'
 import {
   idSchema,
   attachmentSchema,
+  authMethodsSchema,
   browserSessionSchema,
   credentialListSchema,
+  passwordLoginSchema,
   sessionStreamEventSchema,
   taskCursorSchema,
   taskStreamEventSchema,
@@ -30,6 +32,37 @@ export function addTransportOperations(document: Record<string, unknown>): Recor
           description: 'Signed HttpOnly cookie, CSRF token and session expiry',
           content: { 'application/json': { schema: z.toJSONSchema(browserSessionSchema) } },
         },
+      },
+    },
+  }
+  paths['/auth/methods'] = {
+    get: {
+      operationId: 'getAuthMethods',
+      security: [],
+      responses: {
+        '200': {
+          description: 'Sign-in methods offered besides the launch link',
+          content: { 'application/json': { schema: z.toJSONSchema(authMethodsSchema) } },
+        },
+      },
+    },
+  }
+  paths['/auth/login'] = {
+    post: {
+      operationId: 'loginBrowserSession',
+      security: [],
+      requestBody: {
+        required: true,
+        content: { 'application/json': { schema: z.toJSONSchema(passwordLoginSchema) } },
+      },
+      responses: {
+        '200': {
+          description: 'Signed HttpOnly cookie, CSRF token and session expiry',
+          content: { 'application/json': { schema: z.toJSONSchema(browserSessionSchema) } },
+        },
+        '401': { description: 'Wrong username or password, or the password credential is not configured' },
+        '404': { description: 'Password login is disabled' },
+        '429': { description: 'Too many failures from this address or for this username; see Retry-After' },
       },
     },
   }
