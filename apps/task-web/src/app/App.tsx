@@ -1,5 +1,5 @@
 /** Application root: login gate, frame, routing, dialogs and toasts. */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { IconPanelLeftOutlineRegular, IconQueueOutlineRegular, IconWarningOutlineRegular, Toast,
   Button } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useT } from '../i18n/index.ts'
@@ -9,6 +9,7 @@ import { useResource } from '../support/resource.ts'
 import { paths, RouterProvider, useRouter } from '../support/router.tsx'
 import { useStore } from '../support/store.ts'
 import { ACTIVE_STATUS_QUERY, AppContext, SharedContext, useApp, type AppValue, type SettingsTab } from './context.tsx'
+import { MobileBar, PHONE_QUERY, TabBar } from './MobileBar.tsx'
 import { Sidebar } from './Sidebar.tsx'
 import { StreamIndicator } from './StreamIndicator.tsx'
 import { EmptyState, IconButton } from '../components/ui.tsx'
@@ -48,25 +49,53 @@ function Frame({ connection, events }: { connection: TaskConnection; events: Tas
   const [settings, setSettings] = useState<{ tab: SettingsTab; credential?: string | undefined } | null>(null)
   const [trigger, setTrigger] = useState<{ definitionId?: string | undefined } | null>(null)
   const [collapsed, setCollapsed] = useState(false)
+  const [drawer, setDrawer] = useState(false)
+  const { route } = useRouter()
+  const [drawerPath, setDrawerPath] = useState(route.path)
+  const menu = useRef<HTMLButtonElement>(null)
+  // Following a link from the drawer closes it.
+  if (drawerPath !== route.path) {
+    setDrawerPath(route.path)
+    setDrawer(false)
+  }
+  const dismissDrawer = useCallback(() => {
+    setDrawer(false)
+    menu.current?.focus()
+  }, [])
+  useEffect(() => {
+    if (!drawer) return
+    const media = window.matchMedia(PHONE_QUERY)
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') dismissDrawer() }
+    const onViewport = () => { if (!media.matches) setDrawer(false) }
+    window.addEventListener('keydown', onKey)
+    media.addEventListener('change', onViewport)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      media.removeEventListener('change', onViewport)
+    }
+  }, [drawer, dismissDrawer])
 
   const toast = useCallback((text: string, tone: 'success' | 'error' = 'success') => {
     setToasts(items => [...items.slice(-2), { id: Date.now() + Math.random(), text, tone }])
   }, [])
   const app = useMemo<AppValue>(() => ({
     connection, events, toast,
-    openSettings: (tab = 'general', credential) => { setSettings({ tab, credential }) },
-    openTrigger: (definitionId) => { setTrigger({ definitionId }) },
+    openSettings: (tab = 'general', credential) => { setDrawer(false); setSettings({ tab, credential }) },
+    openTrigger: (definitionId) => { setDrawer(false); setTrigger({ definitionId }) },
   }), [connection, events, toast])
 
   return (
     <AppContext.Provider value={app}>
       <SharedProvider>
         <div className="tw-frame">
-          {collapsed
+          <MobileBar menuRef={menu} onMenu={() => { setDrawer(true) }} />
+          {collapsed && !drawer
             ? <div className="tw-rail"><IconButton label={t.nav.expand} icon={<IconPanelLeftOutlineRegular size={16} />}
               onClick={() => { setCollapsed(false) }} /></div>
-            : <Sidebar onCollapse={() => { setCollapsed(true) }} />}
+            : <Sidebar drawer={drawer} onCollapse={() => { if (drawer) dismissDrawer(); else setCollapsed(true) }} />}
+          {drawer && <div className="tw-drawer-scrim" aria-hidden="true" onClick={dismissDrawer} />}
           <Routes />
+          <TabBar />
           <StreamIndicator />
         </div>
         {settings !== null && <SettingsDialog initialTab={settings.tab} credential={settings.credential}

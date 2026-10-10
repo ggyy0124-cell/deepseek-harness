@@ -191,7 +191,7 @@ function BusinessCard({ interaction, runName, onDone }: { interaction: Interacti
       {error !== undefined && <p className="tw-interaction-error" role="alert">{error}</p>}
       {stale
         ? <StaleFooter onRefresh={onDone} />
-        : <Footer left={typed ? `${t.interaction.revision(interaction.revision)} · ${t.interaction.sendKeys}` : t.interaction.revision(interaction.revision)}
+        : <Footer left={<>{t.interaction.revision(interaction.revision)}{typed && <span className="tw-send-keys"> · {t.interaction.sendKeys}</span>}</>}
           actions={mode.kind === 'boolean'
             ? <>
               <Button variant="outline" disabled={busy} onClick={() => { submit(false) }}>{t.interaction.reject}</Button>

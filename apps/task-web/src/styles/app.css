@@ -395,6 +395,26 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
 .tw-col-cleanup { width: 64px; flex: none; font-size: 12px; line-height: 18px; white-space: nowrap; }
 .tw-run-name { font-size: 14px; line-height: 22px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tw-table-foot { display: flex; align-items: center; justify-content: space-between; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-tertiary); }
+/* The table drops columns as its own width shrinks, so the run name keeps room beside the sidebar on tablets, and turns each row into a
+   card on phones. */
+.tw-run-table { container-type: inline-size; }
+@container (max-width: 860px) {
+  .tw-col-source, .tw-col-cleanup { display: none; }
+}
+@container (max-width: 650px) {
+  .tw-col-task { display: none; }
+}
+@container (max-width: 500px) {
+  .tw-run-table-head { display: none; }
+  .tw-run-table-body { gap: 8px; padding-top: 0; }
+  .tw-run-table-row {
+    height: auto; min-height: 64px; margin: 0; padding: 10px 12px; flex-wrap: wrap; gap: 2px 12px;
+    border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-xl); background: var(--dsw-alias-bg-layer-2);
+  }
+  .tw-col-run { order: -1; flex: 1 0 100%; }
+  .tw-col-status, .tw-col-time { width: auto; }
+  .tw-col-time { font-size: 12px; line-height: 20px; }
+}
 
 /* ---------- run detail */
 .tw-run-page { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; }
@@ -843,8 +863,105 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
   .tw-attention, .tw-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tw-overview-columns, .tw-columns { flex-direction: column; align-items: stretch; }
 }
+/* ---------- phone layout (design/task-web-mobile): top bar, bottom section bar, sidebar as a drawer, dialogs as bottom sheets.
+   The breakpoint is PHONE_VIEWPORT_PX in app/MobileBar.tsx. */
+.tw-mobilebar, .tw-tabbar, .tw-drawer-scrim { display: none; }
+.tw-mobilebar {
+  height: 56px; flex: none; box-sizing: border-box; padding: 0 6px; align-items: center; gap: 2px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l3); background: var(--dsw-alias-bg-base);
+}
+.tw-mobilebar-button {
+  box-sizing: border-box; width: 44px; height: 44px; flex: none; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  border: 0; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); cursor: pointer;
+}
+.tw-mobilebar-button:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.tw-mobilebar-title { flex: 1; min-width: 0; padding-left: 2px; font-size: 16px; line-height: 22px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tw-tabbar {
+  flex: none; box-sizing: border-box; padding: 0 4px env(safe-area-inset-bottom); align-items: stretch;
+  border-top: 0.5px solid var(--dsw-alias-border-l3); background: var(--dsw-specific-sidebar-fill);
+}
+.tw-tabbar-item {
+  position: relative; flex: 1; min-width: 0; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; white-space: nowrap;
+}
+.tw-tabbar-item.tw-active { color: var(--dsw-alias-label-primary); font-weight: 500; }
+.tw-tabbar-badge {
+  position: absolute; top: 4px; left: calc(50% + 6px); min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 4px; border-radius: 999px;
+  background: var(--dsw-alias-state-warn-primary); color: var(--dsw-alias-label-primary-foreground); font-size: 11px; line-height: 16px; font-weight: 500; text-align: center;
+}
+.tw-drawer-scrim { position: fixed; inset: 0; z-index: 30; background: var(--dsw-alias-bg-mask-1); }
+.tw-sidebar:focus { outline: none; }
+
+/* Same query as TOUCH_INPUT_QUERY in support/keys.ts: an on-screen keyboard breaks the line on Enter, so the Enter hints do not apply. */
+@media (hover: none) and (pointer: coarse) {
+  .tw-send-keys { display: none; }
+}
+
 @media (max-width: 760px) {
-  .tw-sidebar { display: none; }
-  .tw-save-bar { left: 16px; right: 16px; }
-  .tw-col-task, .tw-col-source, .tw-col-cleanup { display: none; }
+  .tw-frame { flex-direction: column; }
+  .tw-mobilebar, .tw-tabbar { display: flex; }
+  .tw-drawer-scrim { display: block; }
+  .tw-rail { display: none; }
+  .tw-frame > .tw-main, .tw-frame > .tw-run-page { flex: 1; height: auto; min-height: 0; }
+  .tw-sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 31; width: min(304px, 86vw); padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    transform: translateX(-100%); visibility: hidden; box-shadow: var(--tw-shadow-prominent);
+    transition: transform var(--ds-transition-duration-slow) var(--ds-ease-in-out), visibility 0s linear var(--ds-transition-duration-slow);
+  }
+  .tw-sidebar[data-drawer='open'] { transform: none; visibility: visible; transition-delay: 0s; }
+  .tw-sidebar-primary, .tw-sidebar .tw-nav-row, .tw-sidebar .tw-run-row { height: 44px; }
+  .tw-stream-indicator { right: 12px; bottom: 76px; }
+
+  .tw-main { padding: 16px 16px 24px; gap: 16px; }
+  .tw-main-with-bar { padding-bottom: 104px; }
+  .tw-page-header { align-items: center; }
+  .tw-page-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+  /* A section page's heading repeats the top bar title, so only assistive technology reads it. */
+  .tw-page-header-section h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tw-recent-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .tw-recent-def { display: none; }
+  .tw-card { padding: 14px 16px; }
+  .tw-attention-card { padding: 12px 14px; }
+  .tw-settings-row { flex-wrap: wrap; gap: 8px 16px; }
+  .tw-settings-row-label { padding-right: 0; }
+  .tw-settings-row-control { max-width: 100%; justify-content: flex-start; }
+  .tw-input-medium, .tw-input-ref, .tw-input-wide, .tw-select { max-width: 100%; }
+  /* Segmented filters and tab strips scroll inside their own box instead of widening the page. */
+  .tw-segmented, .tw-tabs { min-width: 0; max-width: 100%; box-sizing: border-box; overflow-x: auto; scrollbar-width: none; }
+  .tw-textarea { min-width: 0; }
+  .tw-save-bar { left: 12px; right: 12px; bottom: 76px; height: auto; min-height: 60px; padding: 8px 8px 8px 16px; flex-wrap: wrap; }
+  /* 16 px text fields keep iOS Safari from zooming the page when they take focus. */
+  .tw-input, .tw-textarea, .tw-composer-input, .tw-traj-search .tw-input { font-size: 16px; }
+
+  .tw-login-brand { height: 64px; padding: 20px; }
+  .tw-login-body { align-items: flex-start; padding: 8px 12px 24px; }
+  .tw-login-card { padding: 24px 20px; box-shadow: none; }
+  .tw-login-field .tw-input { height: 44px; }
+
+  .tw-run-header { height: auto; min-height: 52px; padding: 6px 8px 6px 16px; flex-wrap: wrap; gap: 4px 8px; }
+  .tw-run-header-left { flex-wrap: wrap; row-gap: 4px; white-space: normal; }
+  .tw-run-header-left > .tw-link-quiet, .tw-run-header-left > .tw-crumb-sep { display: none; }
+  .tw-run-tabs { padding: 8px 12px 0; }
+  .tw-run-tabs .tw-row-between { flex-wrap: wrap; }
+  .tw-run-scroll { padding: 0 12px; }
+  .tw-composer-wrap { padding: 0 8px 8px; }
+  .tw-composer-title > .tw-muted-small { display: none; }
+  .tw-rightbar[data-covering] { width: 100%; }
+  .tw-rightbar-handle { display: none; }
+
+  /* The Modal layer pads every edge; a phone shows the wide and medium dialogs as bottom sheets and settings as a full page. */
+  :has(> [role='dialog'].tw-dialog-wide), :has(> [role='dialog'].tw-dialog-medium) { align-items: flex-end; padding: 24px 0 0; }
+  :has(> [role='dialog'].tw-settings-dialog) { padding: 0; }
+  [role='dialog'].tw-dialog-wide, [role='dialog'].tw-dialog-medium {
+    width: 100%; border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [role='dialog'].tw-settings-dialog { width: 100%; height: 100%; border-radius: 0; }
+  .tw-settings { flex-direction: column; }
+  .tw-settings-title { display: none; }
+  .tw-settings-nav {
+    width: auto; padding: 8px 12px; flex-direction: row; overflow-x: auto; scrollbar-width: none; border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  }
+  .tw-settings-nav-item { width: auto; flex: none; height: 36px; padding: 0 12px; }
+  .tw-settings-content { flex: 1; min-height: 0; padding: 8px 16px 16px; }
+  .tw-appearance-option { height: 72px; }
 }

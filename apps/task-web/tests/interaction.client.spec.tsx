@@ -7,6 +7,7 @@ import { AppContext, type AppValue } from '../src/app/context.tsx'
 import { InteractionCard } from '../src/components/Interaction.tsx'
 import { TaskConnection } from '../src/support/connection.ts'
 import { TaskEventHub } from '../src/support/events.ts'
+import { TOUCH_INPUT_QUERY } from '../src/support/keys.ts'
 import { updatePreferences } from '../src/support/preferences.ts'
 import type { Interaction } from '../src/support/types.ts'
 
@@ -55,7 +56,12 @@ function mount(schema: Interaction['schema'], answered = true) {
 
 const note = () => screen.getByRole('textbox', { name: '补充说明（可选）' })
 
-beforeEach(() => { updatePreferences({ locale: 'zh-CN' }) })
+/** Stub `matchMedia` for a device whose primary input is a keyboard and pointer, or touch. */
+function input(touch: boolean) {
+  vi.stubGlobal('matchMedia', (query: string) => ({ media: query, matches: touch && query === TOUCH_INPUT_QUERY }))
+}
+
+beforeEach(() => { updatePreferences({ locale: 'zh-CN' }); input(false) })
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 describe('reply text boxes', () => {
@@ -104,6 +110,18 @@ describe('reply text boxes', () => {
     fireEvent.keyDown(note(), { key: 'Enter' })
     expect(sent).toHaveLength(0)
     expect(screen.getByRole('button', { name: '提交回复' }).hasAttribute('disabled')).toBe(true)
+  })
+
+  it('breaks the line on Enter on a touch device and sends from the reply button', async () => {
+    input(true)
+    const sent = mount(answer)
+    const box = screen.getByRole('textbox', { name: '输入回复内容' })
+    fireEvent.change(box, { target: { value: 'looks good' } })
+    expect(fireEvent.keyDown(box, { key: 'Enter' })).toBe(true)
+    expect(sent).toHaveLength(0)
+    fireEvent.click(screen.getByRole('button', { name: '提交回复' }))
+    await waitFor(() => { expect(sent).toHaveLength(1) })
+    expect(sent[0]?.body).toEqual({ revision: 3, response: 'looks good' })
   })
 
   it('treats the Enter that confirms an IME candidate as part of the composition', () => {

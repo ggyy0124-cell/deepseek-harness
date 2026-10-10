@@ -470,7 +470,9 @@ function Composer({ run, onSent, onUploaded }: { run: Run; onSent: () => void; o
               <input type="file" multiple hidden aria-label={t.run.upload}
                 onChange={(event) => { upload([...(event.target.files ?? [])]); event.target.value = '' }} />
             </label>
-            <span className="tw-muted-small">{uploading > 0 ? t.run.files.uploading(uploading) : structured ? '' : t.run.sendKeys}</span>
+            {uploading > 0
+              ? <span className="tw-muted-small">{t.run.files.uploading(uploading)}</span>
+              : !structured && <span className="tw-muted-small tw-send-keys">{t.run.sendKeys}</span>}
           </div>
           <Button variant="primary" size="sm" icon={<IconSendOutlineRegular size={14} />} disabled={busy || empty}
             onClick={send}>{sendLabel}</Button>

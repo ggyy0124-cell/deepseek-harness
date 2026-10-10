@@ -3,11 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/task-web/README.md
 /deepseek-ai-dsh-task-web-frontend:
-  en: f1b9668230a8850b
-  zh: 7bdeb95b2ecd3f98
+  en: 84e4d414a1e0754e
+  zh: b202c78c59f77972
 /deepseek-ai-dsh-task-web-frontend/use-the-client:
-  en: 136ca33fac5bbc5f
-  zh: 63564383ad9a8845
+  en: 5925471b75823723
+  zh: b7e028cdba16224e
+/deepseek-ai-dsh-task-web-frontend/phone-layout:
+  en: ac4dc281df5743f3
+  zh: 371c4098a1ecad99
 /deepseek-ai-dsh-task-web-frontend/build-and-test:
-  en: 7e3c0407a74018ae
-  zh: ac1a0f6ed0a86897
+  en: ea6ebc40bb14e680
+  zh: 4654c72ecc06b594

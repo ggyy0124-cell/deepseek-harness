@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write design/task-web/README.md
 /task-web-prototype:
-  en: d02f9774b9dfde2a
-  zh: dd8ec525680bda2a
+  en: 1522b8abd2f29ebb
+  zh: ac47a1e2c7a79c06
 /task-web-prototype/contents:
   en: 8c0c06231730118f
   zh: 482249379741abd6

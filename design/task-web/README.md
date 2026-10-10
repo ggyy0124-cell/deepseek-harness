@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-This directory holds the clickable design prototype of a Task Web client for the [Task REST gateway](../../packages/task/task-api-gateway/README.md). The [Task Web client](../../apps/task-web/README.md) implements it and the Task profile serves it on the gateway origin; the [capability decision](../../.agents/notes/implemented/architecture/2026-10-03-task-web-client-capabilities.md) records the backend operations the prototype depends on.
+This directory holds the clickable design prototype of a Task Web client for the [Task REST gateway](../../packages/task/task-api-gateway/README.md). The [Task Web client](../../apps/task-web/README.md) implements it and the Task profile serves it on the gateway origin; the [capability decision](../../.agents/notes/implemented/architecture/2026-10-03-task-web-client-capabilities.md) records the backend operations the prototype depends on. The [phone prototype](../task-web-mobile/README.md) extends it to screens at most 760 px wide.
 
 ## Contents
 

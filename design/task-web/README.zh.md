@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-本目录保存面向 [Task REST 网关](../../packages/task/task-api-gateway/README.zh.md) 的 Task Web 客户端可点击设计原型。[Task Web 客户端](../../apps/task-web/README.zh.md) 实现了该原型，Task profile 在网关源上提供该客户端；[能力决策](../../.agents/notes/implemented/architecture/2026-10-03-task-web-client-capabilities.zh.md)记录了原型依赖的后端操作。
+本目录保存面向 [Task REST 网关](../../packages/task/task-api-gateway/README.zh.md) 的 Task Web 客户端可点击设计原型。[Task Web 客户端](../../apps/task-web/README.zh.md) 实现了该原型，Task profile 在网关源上提供该客户端；[能力决策](../../.agents/notes/implemented/architecture/2026-10-03-task-web-client-capabilities.zh.md)记录了原型依赖的后端操作。[手机原型](../task-web-mobile/README.zh.md)把它扩展到宽度不超过 760 px 的屏幕。
 
 ## 内容
 
