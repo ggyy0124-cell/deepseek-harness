@@ -25,7 +25,7 @@ kind: "package-bundle"
 <a id="use-this-package"></a>
 ## 使用本包
 
-使用 `pnpm dsh --profile task` 启动后端。数据库（含已记录的 preset 版本）与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改。启动输出 Web 客户端地址 `/` 和 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器；使用 `--launch-link` 登录。浏览器导航到没有构建文件的路径时得到客户端的 `index.html`，已有文件直接返回，其他缺失路径返回 404。未安装业务插件时没有业务定义。
+使用 `pnpm dsh --profile task` 启动后端。数据库（含已记录的 preset 版本）与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改；`--host 0.0.0.0` 监听所有网卡，用于[内网访问](#intranet-access)。启动输出 Web 客户端地址 `/` 和 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器；使用 `--launch-link` 登录。浏览器导航到没有构建文件的路径时得到客户端的 `index.html`，已有文件直接返回，其他缺失路径返回 404。未安装业务插件时没有业务定义。
 
 本组合包在 `presets/` 下声明 Web preset，并保持派发在前台进行、禁用异步 workflow 启动。随附的编码 preset 允许特殊或普通任务的父 Agent 在已准入的模型轮次中自行决定是否调用前台进程内子 Agent；不要求创建子 Agent。`task-local` 默认通过 `childConcurrency` 将每个 Run 的并发子 Agent 限为四个；每个子 Agent 保留独立 Session，并须在父轮次结束前完成。
 
@@ -35,11 +35,31 @@ kind: "package-bundle"
 pnpm dsh --profile task --token-create
 pnpm dsh --profile task --token-revoke DEVICE_ID
 pnpm dsh --profile task --launch-link
+pnpm dsh --profile task --password-set
 pnpm dsh --profile task --backup /absolute/new-backup
 pnpm dsh --profile task --restore /absolute/backup
 ```
 
-`--token-create` 只输出一次可撤销的 API Bearer 凭据，调用者通过 `Authorization: Bearer <token>` 提交。`--launch-link` 为 `--port` 上的宿主输出 `{ "url", "expiresAt" }`：URL 片段（`#launch=`）中携带一次性浏览器登录凭据，有效期 60 秒，由 Task Web 客户端提交到 `/auth/exchange`。网关会重新读取共享凭据文档，因此正在运行的宿主也能接受该凭据。浏览器使用其他源时，将管理行的 `publicOrigin` 设为与网关 `publicOrigin` 相同的值。备份前须停止 Task 宿主；排他所有者锁会拒绝仍在运行的宿主。恢复先校验摘要和 SQLite 完整性，再发布到空 Task 数据目录，重写保留预设的位置、标记资源句柄需要重新核实，并替换事件流身份。凭据和外部系统状态不随之恢复。复制的工作树再次使用前需要修复仓库登记。这些命令不会启动 Web 服务器或任务调度器。
+`--token-create` 只输出一次可撤销的 API Bearer 凭据，调用者通过 `Authorization: Bearer <token>` 提交。`--launch-link` 为 `--port` 上的宿主输出 `{ "url", "expiresAt" }`：URL 片段（`#launch=`）中携带一次性浏览器登录凭据，有效期 60 秒，由 Task Web 客户端提交到 `/auth/exchange`。网关会重新读取共享凭据文档，因此正在运行的宿主也能接受该凭据。浏览器使用其他源时，将管理行的 `publicOrigin` 设为与网关 `publicOrigin` 相同的值。备份前须停止 Task 宿主；排他所有者锁会拒绝仍在运行的宿主。恢复先校验摘要和 SQLite 完整性，再发布到空 Task 数据目录，重写保留预设的位置、标记资源句柄需要重新核实，并替换事件流身份。凭据和外部系统状态不随之恢复。复制的工作树再次使用前需要修复仓库登记。`--password-set` 保存下文所述的浏览器登录密码。这些命令不会启动 Web 服务器或任务调度器。
+
+<a id="intranet-access"></a>
+#### 内网访问
+
+使用 `--host 0.0.0.0 --trusted-host <authority>` 启动宿主，其他机器上的浏览器即可打开它；浏览器使用的每个地址各写一次 `--trusted-host`，例如 `10.0.0.5` 或 `task.lan:3081`。只写主机时取 `--port` 的值。监听所有网卡而没有可信主机时启动被拒绝；启动时为每个可信主机输出一个 Web 地址。Host 请求头为其他值的请求返回 403。
+
+要不使用登录链接登录，在 Profile 补丁中开启网关的密码登录。补丁会替换该行的全部配置，因此需要重写 `attachmentRoot` 和 `trustedHosts` 的接线：
+
+```yaml
+- id: task-api-gateway
+  config:
+    attachmentRoot: !!js ctx.dshHomePath('tasks/attachments')
+    trustedHosts: !!js ctx.taskStartup.trustedHosts
+    passwordLogin:
+      enabled: true
+      username: operator
+```
+
+然后在宿主上运行 `pnpm dsh --profile task --password-set`。在终端中运行时，它不回显地读取两次密码；通过管道输入时，读取标准输入直到最后一个换行符。它把值保存到 `TASK_WEB_PASSWORD` 凭据（管理行的 `passwordRef`，须与网关的 `passwordLogin.passwordRef` 一致），并输出 `{ "reference", "configured" }`；下一次登录即使用新值，无需重启。登录链接保留为管理员入口，用于忘记密码或登录被锁定的情况。明文 HTTP 不加密传输密码和会话 Cookie，因此请用主机防火墙把端口限制在内网网段，并以专用系统账号运行宿主。
 
 #### 后台服务示例
 

@@ -16,14 +16,14 @@
     - id: task-administration
       name: '@deepseek-ai/dsh-task-app/administration'
       inject: [taskStartup]
-      disabled: !!js "!(ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '='))))"
+      disabled: !!js "!(ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '='))))"
       config:
         root: !!js ctx.dshHomePath('tasks')
     - id: task-startup
       name: '@deepseek-ai/dsh-task-app/startup'
     - id: webserver
       name: '@deepseek-ai/dsh-host-webserver'
-      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
       inject: [taskStartup]
       config:
         host: !!js ctx.taskStartup.host
@@ -34,7 +34,7 @@
     - id: task-runtime
       inject: [taskStartup]
       name: '@deepseek-ai/dsh-task-app'
-      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
     - id: subagent-model-selection-settings
       name: '@deepseek-ai/dsh-tool-subagent/model-selection-settings'
     - id: workspace
@@ -53,7 +53,7 @@
     - id: task-session-persistence-jsonl
       name: '@deepseek-ai/dsh-task-session-persistence-jsonl'
       config:
-        root: !!js "ctx.dshHomePath(ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '='))) ? 'task-administration/sessions' : 'tasks/sessions')"
+        root: !!js "ctx.dshHomePath(ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '='))) ? 'task-administration/sessions' : 'tasks/sessions')"
     - id: task-agent-loop
       name: '@deepseek-ai/dsh-task-agent-loop'
       config:
@@ -68,7 +68,7 @@
     - id: task-local
       inject: [taskStartup]
       name: '@deepseek-ai/dsh-task-local'
-      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
       config:
         path: !!js ctx.dshHomePath('tasks/tasks.sqlite')
         resourceRoot: !!js ctx.dshHomePath('tasks/resources')
@@ -79,11 +79,12 @@
     - id: task-api-gateway
       inject: [taskStartup]
       name: '@deepseek-ai/dsh-task-api-gateway'
-      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
       config:
         attachmentRoot: !!js ctx.dshHomePath('tasks/attachments')
+        trustedHosts: !!js ctx.taskStartup.trustedHosts
     - id: tool-task-dispatch
-      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
+      disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
       name: '@deepseek-ai/dsh-tool-task-dispatch'
 
 # Per-Agent tools are contributed by each declared Task preset.

@@ -13,17 +13,19 @@ import {
   type TaskRunId,
 } from '@deepseek-ai/dsh-task'
 import type {} from '@deepseek-ai/dsh-host-webserver'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import { credentialRef, type CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { credentialReferences } from '@deepseek-ai/dsh-task/schema'
 // Type-only: the shared `agentPresets` roster this gateway lists.
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
 import type {} from '@deepseek-ai/dsh-permission-presets'
 import {
   idSchema,
+  authMethodsSchema,
   browserSessionSchema,
   configSchema,
   createTaskOpenApi,
   credentialListSchema,
+  passwordLoginSchema,
   problemSchema,
   taskCursorSchema,
   taskJsonRoutes,
@@ -31,7 +33,8 @@ import {
 } from '@deepseek-ai/dsh-task-api-protocol'
 import { z } from 'zod'
 import { TaskAttachments } from './attachments.ts'
-import { AuthenticationError, TaskAuthenticationStore } from './auth.ts'
+import { AuthenticationError, matchesSecret, TaskAuthenticationStore } from './auth.ts'
+import { LoginThrottle } from './login-throttle.ts'
 import { HttpProblem, readJson, taskCookie, validate } from './http.ts'
 import type { TaskDeviceId } from './types.ts'
 export type { TaskDeviceId } from './types.ts'
@@ -45,6 +48,23 @@ import { projectDiagnostics } from './projection.ts'
 
 const prefix = '/api/task/v1'
 const exchangeSchema = z.strictObject({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/) })
+/** `host` or `host:port`, where the host is a name, an IPv4 address or a bracketed IPv6 address. */
+const authorityPattern = /^(?:\[[0-9A-Fa-f:.]+\]|[A-Za-z0-9.-]+)(?::\d{1,5})?$/
+/** Fixed-account browser password login. */
+export interface PasswordLoginConfig {
+  /** Offer `POST /auth/login`; disabled deployments accept only the launch link and device credentials. */
+  readonly enabled: boolean
+  /** The single accepted username; required when enabled. */
+  readonly username: string
+  /** Credential reference holding the password; `PUT /credentials/{reference}` refuses it. */
+  readonly passwordRef: string
+  /** Failures per client address or username inside one window before a lock. */
+  readonly maxFailures: number
+  /** Window in milliseconds over which failures count. */
+  readonly failureWindowMs: number
+  /** Lock length in milliseconds after the budget is exhausted. */
+  readonly lockoutMs: number
+}
 /** Gateway deployment limits and browser origin. */
 export interface Config {
   /** Private immutable blob and upload receipt directory. */
@@ -59,6 +79,13 @@ export interface Config {
   readonly attachmentFileLimit: number
   /** Exact browser origin; empty selects HTTP loopback and the bound server port. */
   readonly publicOrigin: string
+  /**
+   * Further authorities (`host` or `host:port`; a bare host means the bound port) whose origins pass the Host and Origin
+   * checks, with the scheme of `publicOrigin` or `http`. Listening on all interfaces requires at least one.
+   */
+  readonly trustedHosts: string[]
+  /** Browser password login for the fixed account. */
+  readonly passwordLogin: PasswordLoginConfig
   /** Maximum bytes in one complete JSON request body. */
   readonly bodyLimitBytes: number
   /** Maximum bytes in one complete JSON response. */
@@ -115,6 +142,15 @@ export class TaskApiGateway extends Service {
     attachmentFileLimit: Schema.number().min(1).step(1).default(20),
     configCheckTimeoutMs: Schema.number().min(1).step(1).default(60000),
     publicOrigin: Schema.string().default(''),
+    trustedHosts: Schema.array(String).default([]),
+    passwordLogin: Schema.object({
+      enabled: Schema.boolean().default(false),
+      username: Schema.string().default(''),
+      passwordRef: Schema.string().default('TASK_WEB_PASSWORD'),
+      maxFailures: Schema.number().min(1).step(1).default(5),
+      failureWindowMs: Schema.number().min(1).step(1).default(900000),
+      lockoutMs: Schema.number().min(1).step(1).default(900000),
+    }),
     bodyLimitBytes: Schema.number().min(1).step(1).default(1048576),
     responseLimitBytes: Schema.number().min(1024).step(1).default(4194304),
     bodyTimeoutMs: Schema.number().min(1).step(1).default(30000),
@@ -132,6 +168,8 @@ export class TaskApiGateway extends Service {
   })
   private readonly attachments: TaskAttachments
   private readonly authentication: TaskAuthenticationStore
+  private readonly throttle: LoginThrottle
+  private readonly passwordRef: CredentialRef
   private ready = false
   private stopping = false
   private streams = 0
@@ -153,6 +191,14 @@ export class TaskApiGateway extends Service {
       if (!['http:', 'https:'].includes(origin.protocol) || origin.origin !== config.publicOrigin)
         throw new Error('Task publicOrigin must be an HTTP origin')
     }
+    for (const entry of config.trustedHosts)
+      if (!authorityPattern.test(entry)) throw new Error(`Task trustedHosts entry ${JSON.stringify(entry)} must be host or host:port`)
+    if (ctx.webServer.host !== '127.0.0.1' && config.trustedHosts.length === 0)
+      throw new Error('Task listening on all interfaces requires trustedHosts (--trusted-host <authority>)')
+    if (config.passwordLogin.enabled && config.passwordLogin.username.trim() === '')
+      throw new Error('Task passwordLogin.username is required when password login is enabled')
+    this.passwordRef = credentialRef(config.passwordLogin.passwordRef)
+    this.throttle = new LoginThrottle({ ...config.passwordLogin, clock: Date.now })
     this.authentication = new TaskAuthenticationStore(ctx.credentials, { ...config, clock: Date.now })
   }
   protected async [Service.init](): Promise<void> {
@@ -220,12 +266,21 @@ export class TaskApiGateway extends Service {
   private assertRunning(): void {
     if (this.stopping) throw new HttpProblem(503, 'stopping', 'Task gateway is stopping')
   }
-  private origin(): URL {
-    return new URL(this.config.publicOrigin || `http://127.0.0.1:${this.ctx.webServer.port}`)
+  /** Browser origins that pass the Host and Origin checks: the public or loopback origin first, then each trusted host.
+   * @returns origins in configuration order.
+   */
+  browserOrigins(): URL[] {
+    const port = this.ctx.webServer.port
+    const primary = new URL(this.config.publicOrigin || `http://127.0.0.1:${port}`)
+    return [primary, ...this.config.trustedHosts.map(entry =>
+      new URL(`${primary.protocol}//${/\]:\d+$|^[^[]*:\d+$/.test(entry) ? entry : `${entry}:${port}`}`))]
   }
-  private checkOrigin(request: IncomingMessage, requireOrigin: boolean): void {
-    const origin = this.origin()
-    if (request.headers.host !== origin.host)
+  /** Resolve the request's Host to one browser origin and check its Origin against that origin.
+   * @returns the matched origin, which also decides request URL resolution and the cookie Secure attribute.
+   */
+  private checkOrigin(request: IncomingMessage, requireOrigin: boolean): URL {
+    const origin = this.browserOrigins().find(candidate => candidate.host === request.headers.host)
+    if (origin === undefined)
       throw new HttpProblem(403, 'host_rejected', 'Request Host is not the Task origin')
     if (
       (requireOrigin && request.headers.origin === undefined) ||
@@ -234,6 +289,46 @@ export class TaskApiGateway extends Service {
     ) {
       throw new HttpProblem(403, 'origin_rejected', 'Request Origin is not the Task origin')
     }
+    return origin
+  }
+  /** Verify the fixed account under the failure throttle.
+   * @returns a new browser session; wrong values reject with an authentication error and count as failures.
+   */
+  private async passwordSession(request: IncomingMessage, response: ServerResponse,
+    input: { username: string; password: string }): Promise<{ cookie: string; csrf: string; expiresAt: number }> {
+    /* v8 ignore next -- A socket that is still delivering its request has a remote address; only a destroyed socket loses it. */
+    const address = request.socket.remoteAddress ?? 'unknown'
+    const keys = [`address:${address}`, `username:${input.username}`]
+    const waitMs = this.throttle.retryAfterMs(keys)
+    if (waitMs > 0) {
+      response.setHeader('Retry-After', String(Math.ceil(waitMs / 1000)))
+      throw new HttpProblem(429, 'login_throttled', 'Too many failed sign-in attempts')
+    }
+    const stored = await this.ctx.credentials.resolve(this.passwordRef)
+    if (stored === undefined)
+      this.ctx.logger.warn(`task.api.login ${JSON.stringify({ outcome: 'password_unconfigured', reference: this.config.passwordLogin.passwordRef })}`)
+    // Both comparisons always run so the response time does not reveal which value was wrong.
+    const username = matchesSecret(input.username, this.config.passwordLogin.username)
+    const password = matchesSecret(input.password, stored?.value ?? '')
+    if (!username || !password || stored === undefined) {
+      this.throttle.fail(keys)
+      this.ctx.logger.info(`task.api.login ${JSON.stringify({ outcome: 'rejected', address })}`)
+      throw new AuthenticationError()
+    }
+    this.throttle.clear(keys)
+    this.ctx.logger.info(`task.api.login ${JSON.stringify({ outcome: 'accepted', address })}`)
+    return this.authentication.openVerifiedSession()
+  }
+  /** Send a new browser session as its HttpOnly cookie and the CSRF body. */
+  private sendBrowserSession(response: ServerResponse, origin: URL,
+    session: { cookie: string; csrf: string; expiresAt: number }): void {
+    response.setHeader(
+      'Set-Cookie',
+      `dsh_task_session=${session.cookie}; Path=/api/task/v1; HttpOnly; SameSite=Strict; Max-Age=${Math.floor(this.config.sessionTtlMs / 1000)}${origin.protocol === 'https:' ? '; Secure' : ''}`,
+    )
+    this.send(response, 200, browserSessionSchema.parse({
+      csrf: session.csrf, expiresAt: new Date(session.expiresAt).toISOString(),
+    }))
   }
   private async transcript(
     response: ServerResponse,
@@ -353,11 +448,11 @@ export class TaskApiGateway extends Service {
           if (request.rawHeaders[index]?.toLowerCase() === name) count++
         if (count > 1) throw new HttpProblem(400, 'duplicate_header', 'Request has an ambiguous header')
       }
-      this.checkOrigin(request, false)
+      const requestOrigin = this.checkOrigin(request, false)
       /* v8 ignore next -- WebServer prefix routing only forwards origin-form targets below this path. */
       if (request.url === undefined || !request.url.startsWith('/') || request.url.startsWith('//'))
         throw new HttpProblem(400, 'invalid_target', 'Invalid request target')
-      const url = new URL(request.url, this.origin())
+      const url = new URL(request.url, requestOrigin)
       const path = url.pathname.slice(prefix.length)
       const method = request.method?.toLowerCase()
       const query: Record<string, string> = Object.create(null) as Record<string, string>
@@ -374,19 +469,32 @@ export class TaskApiGateway extends Service {
       this.assertRunning()
       if (path === '/auth/exchange' && method === 'post') {
         operation = 'exchangeBrowserSession'
-        this.checkOrigin(request, true)
+        const origin = this.checkOrigin(request, true)
         validate(z.strictObject({}), query)
         const input = validate(exchangeSchema, body)
         const session = await this.authentication.exchange(input.token)
         this.assertRunning()
-        response.setHeader(
-          'Set-Cookie',
-          `dsh_task_session=${session.cookie}; Path=/api/task/v1; HttpOnly; SameSite=Strict; Max-Age=${Math.floor(this.config.sessionTtlMs / 1000)}${this.origin().protocol === 'https:' ? '; Secure' : ''}`,
-        )
         status = 200
-        this.send(response, status, browserSessionSchema.parse({
-          csrf: session.csrf, expiresAt: new Date(session.expiresAt).toISOString(),
-        }))
+        this.sendBrowserSession(response, origin, session)
+        return
+      }
+      if (path === '/auth/methods' && method === 'get') {
+        operation = 'getAuthMethods'
+        validate(z.strictObject({}), query)
+        if (body !== undefined) throw new HttpProblem(400, 'unexpected_body', 'This operation has no body')
+        status = 200
+        this.send(response, status, authMethodsSchema.parse({ password: this.config.passwordLogin.enabled }))
+        return
+      }
+      if (path === '/auth/login' && method === 'post') {
+        operation = 'loginBrowserSession'
+        const origin = this.checkOrigin(request, true)
+        validate(z.strictObject({}), query)
+        if (!this.config.passwordLogin.enabled) throw new HttpProblem(404, 'route_not_found', 'Password login is disabled')
+        const session = await this.passwordSession(request, response, validate(passwordLoginSchema, body))
+        this.assertRunning()
+        status = 200
+        this.sendBrowserSession(response, origin, session)
         return
       }
       const auth = await this.authentication.authenticate(
@@ -424,6 +532,8 @@ export class TaskApiGateway extends Service {
             if (request.headers['x-csrf-token'] !== auth.csrf)
               throw new HttpProblem(403, 'csrf_rejected', 'Task CSRF token does not match')
           }
+          if (ref === this.passwordRef)
+            throw new HttpProblem(403, 'credential_reserved', 'The sign-in password is set on the Task host with --password-set')
           const input = validate(z.strictObject({ value: z.string().min(1).max(65536) }), body)
           await this.ctx.credentials.set(ref, input.value)
         } else if (method !== 'get' || body !== undefined)

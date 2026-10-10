@@ -58,6 +58,11 @@ export const en: Messages = {
     noSessionTitle: 'Not signed in', noSessionBody: 'Run the command below in a local terminal and open the printed link to sign in.',
     recoveringTitle: 'Task service is recovering', recoveringBody: 'The service started, but recovery and scheduling are not ready yet. The page continues automatically when ready.', waitingReady: 'Waiting until ready',
     unreachableTitle: 'Cannot reach the Task service', unreachableBody: 'Check that the Task service is running and that this address uses its --port.', reconnect: 'Reconnect',
+    passwordTitle: 'Sign in to DSH Task', passwordDescription: 'Sign in with the Task service account and password. The browser keeps the session for 30 days; closing the page does not affect running tasks.',
+    username: 'Username', password: 'Password', signIn: 'Sign in', signingIn: 'Signing in…',
+    invalidTitle: 'Wrong username or password', invalidBody: 'Enter them again. Too many failures lock sign-in for a while.',
+    throttledTitle: 'Sign-in is locked for now', throttledBody: 'There were too many failed attempts. Try again later. An administrator can sign in with a launch link on the Task host.',
+    adminEntry: 'Administrator sign-in on the Task host (launch link)',
   },
   overview: {
     title: 'Overview', subtitle: (scheduler, host) => `${scheduler} · local Task service ${host}`,

@@ -2,7 +2,7 @@
 import {
   TaskApiClient, TaskApiError, type TaskApiRequest, type TaskOperationId, type TaskOperationResult,
 } from '@deepseek-ai/dsh-task-api-client'
-import { browserSessionSchema, credentialListSchema, problemSchema } from '@deepseek-ai/dsh-task-api-protocol'
+import { authMethodsSchema, browserSessionSchema, credentialListSchema, problemSchema } from '@deepseek-ai/dsh-task-api-protocol'
 import type { CredentialStatus } from './types.ts'
 import { Store } from './store.ts'
 
@@ -17,6 +17,9 @@ export type ConnectionState =
   | { readonly kind: 'signed_out'; readonly reason: SignedOutReason }
   | { readonly kind: 'recovering'; readonly expiresAt: string }
   | { readonly kind: 'ready'; readonly expiresAt: string }
+
+/** Why a password sign-in did not open a session. */
+export type LoginFailure = 'invalid' | 'throttled' | 'unreachable'
 
 /** Problem returned by a rejected request, or a transport failure without one. */
 export type RequestFailure =
@@ -64,6 +67,8 @@ export class TaskConnection {
   readonly base: URL
   readonly client: TaskApiClient
   readonly state = new Store<ConnectionState>({ kind: 'checking' })
+  /** Whether the gateway offers fixed-account password sign-in; read whenever the page has no session. */
+  readonly passwordLogin = new Store<boolean>(false)
   private csrf = ''
   private readyTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -92,6 +97,7 @@ export class TaskConnection {
         return
       } catch (error) {
         if (error instanceof TypeError) { this.state.set({ kind: 'unreachable' }); return }
+        await this.readMethods()
         this.state.set({ kind: 'signed_out', reason: 'link_invalid' })
         return
       }
@@ -106,12 +112,36 @@ export class TaskConnection {
   async resume(reason: SignedOutReason = 'session_ended'): Promise<void> {
     try {
       const response = await globalThis.fetch(new URL('auth/session', this.base), { credentials: 'include', redirect: 'error' })
-      if (response.status === 401) { this.state.set({ kind: 'signed_out', reason }); return }
+      if (response.status === 401) {
+        await this.readMethods()
+        this.state.set({ kind: 'signed_out', reason })
+        return
+      }
       if (!response.ok) throw new Error(`session read failed (${response.status})`)
       this.accept(browserSessionSchema.parse(await response.json()))
     } catch (error) {
       if (error instanceof TypeError) this.state.set({ kind: 'unreachable' })
       else throw error
+    }
+  }
+
+  /** Sign in with the fixed account.
+   * @param username - account name.
+   * @param password - password, never kept by the page.
+   * @returns null once the session is accepted, otherwise why sign-in failed.
+   */
+  async login(username: string, password: string): Promise<LoginFailure | null> {
+    try {
+      const session = await this.post('auth/login', { username, password })
+      // Leave the signed-out state so the readiness wait that follows can publish the session.
+      this.state.set({ kind: 'exchanging' })
+      this.accept(session)
+      return null
+    } catch (error) {
+      if (error instanceof TypeError) return 'unreachable'
+      if (isProblem(error, 'login_throttled')) return 'throttled'
+      if (isProblem(error, 'authentication_required')) return 'invalid'
+      throw error
     }
   }
 
@@ -180,6 +210,16 @@ export class TaskConnection {
         return action()
       }
       throw error
+    }
+  }
+
+  /** Refresh {@link passwordLogin}; a gateway without the methods route offers the launch link only. */
+  private async readMethods(): Promise<void> {
+    try {
+      const response = await globalThis.fetch(new URL('auth/methods', this.base), { credentials: 'include', redirect: 'error' })
+      this.passwordLogin.set(response.ok && authMethodsSchema.parse(await response.json()).password)
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error
     }
   }
 

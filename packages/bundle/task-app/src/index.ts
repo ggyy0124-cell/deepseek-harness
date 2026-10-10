@@ -17,6 +17,7 @@ export function apply(ctx: Context): void {
   const ready = ctx.get('appReady')
   if (ready !== undefined) ctx.effect(() => ready.onReady(() => {
     const origin = `http://127.0.0.1:${ctx.webServer.port}`
-    process.stdout.write(`dsh task Web: ${origin}/ (sign in with dsh --profile task --launch-link)\ndsh task API: ${origin}/api/task/v1/\n`)
+    const trusted = ctx.taskGateway.browserOrigins().slice(1).map(entry => `dsh task Web: ${entry.origin}/\n`).join('')
+    process.stdout.write(`dsh task Web: ${origin}/ (sign in with dsh --profile task --launch-link)\n${trusted}dsh task API: ${origin}/api/task/v1/\n`)
   }), 'task.ready')
 }

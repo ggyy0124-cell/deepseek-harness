@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Control Task definitions and executions over authenticated HTTP without exposing internal checkpoints. Browser clients use a one-time launch exchange and CSRF-protected cookies; native clients use revocable bearer credentials. These routes support future Task Web UI and native clients; the profile currently serves the backend only.
+Control Task definitions and executions over authenticated HTTP without exposing internal checkpoints. Browser clients use a one-time launch exchange or an optional fixed-account password login and CSRF-protected cookies; native clients use revocable bearer credentials. These routes support future Task Web UI and native clients; the profile currently serves the backend only.
 
 ## Table of Contents
 
@@ -29,9 +29,15 @@ The Task application mounts this package at `/api/task/v1` using the unmodified 
 
 Exchange a launch secret with `POST /auth/exchange`, an exact Origin header and JSON `{ "token": "..." }`. The response sets an HttpOnly, SameSite Strict cookie and returns the CSRF value and session expiry. `GET /auth/session` recovers both from an authenticated browser. Cookie writes require the same Origin and `X-CSRF-Token`; bearer requests use `Authorization`. All Task mutations require `Idempotency-Key`. Authenticated `GET /openapi.json` describes the mounted JSON operations and browser exchange.
 
+With `passwordLogin.enabled`, `POST /auth/login` with an exact Origin and `{ "username", "password" }` opens the same cookie session as the exchange. The password is the value of the `passwordLogin.passwordRef` credential, read on every attempt and compared by digest in constant time; `PUT /credentials/{reference}` refuses that reference with `403 credential_reserved`, so only `dsh --profile task --password-set` on the host sets it. Failures count per client address and per username; the attempt that reaches `maxFailures` inside `failureWindowMs` locks that address or username for `lockoutMs`, and locked attempts return `429 login_throttled` with `Retry-After`. Counters live in memory. An unconfigured password credential makes every login return 401 and logs `password_unconfigured`; login diagnostics record the outcome and client address, never the submitted values. Unauthenticated `GET /auth/methods` returns `{ "password": boolean }` so a client can choose its sign-in form.
+
 | Field | Default | Meaning |
 |---|---|---|
 | `publicOrigin` | Empty | Exact browser origin; empty resolves to HTTP loopback and the actual server port |
+| `trustedHosts` | `[]` | Further `host` or `host:port` authorities accepted besides `publicOrigin`, with its scheme; a bare host means the server port. Required when the server listens on all interfaces |
+| `passwordLogin.enabled` / `username` | `false` / empty | Offer the fixed-account password login; the username is required when enabled |
+| `passwordLogin.passwordRef` | `TASK_WEB_PASSWORD` | Credential reference holding the password |
+| `passwordLogin.maxFailures` / `failureWindowMs` / `lockoutMs` | 5 / 900000 / 900000 | Failure budget per address or username, its window, and the lock that follows |
 | `bodyLimitBytes` / `responseLimitBytes` | 1048576 / 4194304 | Complete JSON byte limits |
 | `bodyTimeoutMs` | 30000 | Deadline for reading a request body |
 | `pageSize` | 50 | Default Run page size, bounded by 200 |
@@ -42,7 +48,7 @@ Exchange a launch secret with `POST /auth/exchange`, an exact Origin header and 
 | `eventBatchSize` / `eventBufferBytes` | 512 / 2097152 | Replay page count and complete socket buffer limit |
 | `eventDrainTimeoutMs` / `eventConnectionLimit` | 15000 / 32 | Slow-socket deadline and simultaneous stream limit |
 
-Set `publicOrigin` explicitly when using a reverse proxy or non-loopback browser address. Forwarded headers do not change trust decisions. HTTPS origins set Secure cookies; TLS termination remains the deployment's responsibility.
+Set `publicOrigin` or `trustedHosts` explicitly when using a reverse proxy or non-loopback browser address. Each request is matched to the origin whose authority equals its Host, and its Origin must equal that origin; forwarded headers do not change trust decisions. HTTPS origins set Secure cookies; TLS termination remains the deployment's responsibility.
 
 -----
 
@@ -99,6 +105,7 @@ No direct changes; the owning Task Session retains its conversation prefix.
 - Session SSE contains persisted messages rather than transient token deltas. Session attachment downloads stream whole objects; Run upload downloads also support a single byte range.
 - Run pagination uses indexed SQL filters and bounded pages. Attachment listings scan retained upload receipts; blob retention remains an operator responsibility.
 - Plugin checks must honor cancellation. Arbitrary business JSON is not a secret-detection mechanism.
+- Password login has one shared account and one principal, so inputs and replies are not attributed to a person. Over plain HTTP the password and session cookie cross the network unencrypted; login counters reset when the host restarts.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -49,6 +49,14 @@ function equal(left: string, right: string): boolean {
   const b = Buffer.from(right)
   return a.length === b.length && timingSafeEqual(a, b)
 }
+/** Compare a submitted secret with a stored one in time independent of where they differ.
+ * @param submitted - value from the request.
+ * @param stored - configured value.
+ * @returns whether both values are equal.
+ */
+export function matchesSecret(submitted: string, stored: string): boolean {
+  return equal(digest(submitted), digest(stored))
+}
 function parse(record: CredentialRecord | undefined): Grant {
   if (record?.kind !== 'grant') throw new Error('Task authentication grant is missing or incompatible')
   return grantSchema.parse(record.payload)
@@ -100,20 +108,18 @@ export class TaskAuthenticationStore {
    * @param value - launch secret from the browser body, never a URL query.
    * @returns cookie value, browser CSRF token and session expiry.
    */
-  async exchange(value: string): Promise<{ cookie: string; csrf: string; expiresAt: number }> {
-    let cookie = ''
-    const csrf = token()
-    const id = randomUUID()
-    const expiresAt = this.options.clock() + this.options.sessionTtlMs
-    await this.modify((grant) => {
+  exchange(value: string): Promise<{ cookie: string; csrf: string; expiresAt: number }> {
+    return this.openSession((grant) => {
       const index = grant.launches.findIndex(entry => equal(entry.digest, digest(value)))
       if (index < 0) throw new AuthenticationError()
-      this.capacity(grant.sessions.length)
       grant.launches.splice(index, 1)
-      grant.sessions.push({ id, csrf, expiresAt })
-      cookie = `${id}.${signature(grant, id)}`
     })
-    return { cookie, csrf, expiresAt }
+  }
+  /** Open a signed browser session for a caller the gateway already verified, such as a password login.
+   * @returns cookie value, browser CSRF token and session expiry.
+   */
+  openVerifiedSession(): Promise<{ cookie: string; csrf: string; expiresAt: number }> {
+    return this.openSession(() => {})
   }
   /** Provision a native client credential through an authorized local caller.
    * @returns revocation identity and the secret once; no HTTP route exposes this method.
@@ -171,6 +177,19 @@ export class TaskAuthenticationStore {
     await this.modify((grant) => {
       grant.sessions = grant.sessions.filter(value => value.id !== id)
     })
+  }
+  private async openSession(admit: (grant: Grant) => void): Promise<{ cookie: string; csrf: string; expiresAt: number }> {
+    let cookie = ''
+    const csrf = token()
+    const id = randomUUID()
+    const expiresAt = this.options.clock() + this.options.sessionTtlMs
+    await this.modify((grant) => {
+      admit(grant)
+      this.capacity(grant.sessions.length)
+      grant.sessions.push({ id, csrf, expiresAt })
+      cookie = `${id}.${signature(grant, id)}`
+    })
+    return { cookie, csrf, expiresAt }
   }
   private capacity(length: number): void {
     if (length >= this.options.credentialLimit) throw new Error('Task credential capacity reached')
