@@ -297,9 +297,10 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
               {tab === 'lineage' && <Lineage run={run} />}
             </div>
           </div>
-          {open
+          {/* Supplemental input belongs to the Session; the Interactions tab answers waits through its own cards. */}
+          {tab === 'session' && (open
             ? <Composer run={run} onSent={refreshAll} onUploaded={attachments.reload} />
-            : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} />}
+            : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} />)}
         </div>
         <Sidebar open={sidebar.open} covering={sidebar.covering} width={sidebar.width} tabs={sideTabs} active={activeSide}
           activeRef={activeSideTab} scrollKey={activeSide === 'record' ? `${selectedId ?? ''}:${selection?.tab ?? ''}` : activeSide} onSelect={setSideTab}
