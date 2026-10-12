@@ -58,6 +58,12 @@ it.skipIf(process.env['DSH_SNAPSHOT'] === 'record')('replays two model stages wi
     await client.request('respond', { params: { ...runParams, waitId: wait.id }, body: { revision: wait.revision, response: true }, idempotencyKey: 'confirm' })
     await expect.poll(async () => client.request('getRun', { params: runParams }), { timeout: 15000 })
       .toMatchObject({ status: 'succeeded', sessionId: run.sessionId })
+    // The shipped profile folds the stored log with session-stats and token-meter; the replayed route advertises no context window.
+    const stats = await client.request('getRunStats', { params: runParams })
+    expect(stats).toMatchObject({ runId: run.id, sessionId: run.sessionId, session: { turns: 2, steps: 2 },
+      usage: { uncachedInputTokens: 20, outputTokens: 8, cacheReadTokens: 0, cacheWriteTokens: 0 },
+      context: { pressureTokens: 10, contextWindow: null } })
+    expect(stats.composition?.systemTokens).toBeGreaterThan(0)
     child.kill('SIGTERM')
     const result = await child
     expect(result.timedOut).toBe(false)

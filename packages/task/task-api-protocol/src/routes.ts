@@ -18,6 +18,7 @@ import {
   responseSchema,
   runInputSchema,
   runSchema,
+  runStatsSchema,
   runsPageSchema,
   runsQuerySchema,
 } from './schemas.ts'
@@ -144,6 +145,14 @@ export const taskJsonRoutes = [
     params: runParams,
     body: inputSchema,
     response: runSchema,
+    status: 200,
+  },
+  {
+    operationId: 'getRunStats',
+    method: 'get',
+    path: '/runs/{runId}/stats',
+    params: runParams,
+    response: runStatsSchema,
     status: 200,
   },
   {

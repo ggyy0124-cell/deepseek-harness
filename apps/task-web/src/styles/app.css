@@ -589,7 +589,7 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
 .tw-file-kind { width: 28px; height: 28px; flex: none; border-radius: var(--dsw-radius-sm); background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; line-height: 10px; font-weight: 500; }
 .tw-file-text { min-width: 0; display: flex; flex-direction: column; }
 .tw-file-name { font-size: 13px; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tw-composer-wrap { flex: none; padding: 0 24px 20px; display: flex; justify-content: center; }
+.tw-composer-wrap { flex: none; padding: 0 24px 14px; display: flex; flex-direction: column; align-items: center; }
 .tw-composer {
   box-sizing: border-box; width: 100%; max-width: var(--tw-run-column-max); display: flex; flex-direction: column; border: 0.5px solid var(--dsw-alias-border-l4);
   border-radius: var(--dsw-radius-xl); background: var(--dsw-alias-bg-layer-1); box-shadow: var(--tw-shadow-soft);
@@ -608,6 +608,62 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
   border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; cursor: pointer;
 }
 .tw-attach:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+/* Session statistics under the composer: each reading opens its details above it (DSH Web composer statistics). */
+.tw-stats {
+  box-sizing: border-box; width: 100%; max-width: var(--tw-run-column-max); min-height: 22px; padding-top: 6px;
+  display: flex; justify-content: center; gap: 12px; font-size: 12px; line-height: 20px;
+}
+.tw-stat-anchor { display: inline-flex; min-width: 0; }
+.tw-stat {
+  box-sizing: border-box; max-width: 100%; padding: 1px 8px; display: inline-flex; align-items: center; gap: 6px; border: none;
+  border-radius: 999px; corner-shape: round; background: transparent; color: var(--dsw-alias-label-tertiary); font: inherit;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.tw-stat svg { width: 14px; height: 14px; flex: none; }
+button.tw-stat { cursor: pointer; }
+button.tw-stat:hover, button.tw-stat[aria-expanded='true'] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
+button.tw-stat:focus-visible { outline: 2px solid var(--dsw-alias-state-business-primary); outline-offset: 1px; }
+.tw-stat-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tw-stat-sep { margin: 0 6px; color: var(--dsw-alias-separator-primary); }
+.tw-stat-ring-track { fill: none; stroke: var(--dsw-alias-border-l3); stroke-width: 2; }
+.tw-stat-ring-fill { fill: none; stroke: var(--dsw-alias-label-tertiary); stroke-width: 2; stroke-linecap: round; }
+.tw-stat-panel {
+  position: fixed; z-index: 1100; box-sizing: border-box; width: max-content; min-width: min(280px, calc(100vw - 24px));
+  max-width: min(400px, calc(100vw - 24px)); padding: 16px; border-radius: var(--dsw-radius-lg); background: var(--dsw-specific-menu);
+  backdrop-filter: var(--dsw-menu-backdrop-filter); --dsw-elevation-stroke-color: var(--dsw-alias-border-l1); box-shadow: var(--dsw-elevation-prominent);
+  font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-secondary); cursor: default;
+}
+.tw-stat-panel-title {
+  margin-bottom: 10px; padding-bottom: 8px; display: flex; justify-content: space-between; gap: 16px; border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-label-primary); font-weight: 500;
+}
+.tw-stat-panel-name { min-width: 0; display: inline-flex; align-items: center; gap: 6px; }
+.tw-stat-panel-name svg { width: 14px; height: 14px; flex: none; }
+.tw-stat-panel-value, .tw-stat-sheet-value { font-variant-numeric: tabular-nums; }
+.tw-stat-rows {
+  margin: 0; display: grid; grid-template-columns: minmax(76px, auto) minmax(0, 1fr); gap: 6px 16px; color: var(--dsw-alias-label-tertiary);
+}
+.tw-stat-rows dt, .tw-stat-rows dd { min-width: 0; margin: 0; }
+.tw-stat-rows dd { color: var(--dsw-alias-label-secondary); font-variant-numeric: tabular-nums; text-align: right; }
+.tw-stat-context-head { display: flex; align-items: center; gap: 6px; }
+.tw-stat-muted { color: var(--dsw-alias-label-tertiary); }
+.tw-stat-strong { color: var(--dsw-alias-label-primary); font-weight: 500; }
+.tw-stat-context-figures { margin-left: auto; color: var(--dsw-alias-label-primary); font-weight: 500; font-variant-numeric: tabular-nums; }
+.tw-stat-bar {
+  margin: 10px 0 12px; height: 4px; display: flex; gap: 1px; overflow: hidden; border-radius: 999px; corner-shape: round;
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.tw-stat-segment { flex: none; min-width: 2px; height: 100%; border-radius: 1px; background: var(--tw-stat-tint, var(--dsw-alias-label-tertiary)); }
+:is(.tw-stat-segment, .tw-stat-swatch)[data-part='systemTokens'] { --tw-stat-tint: var(--dsw-static-neutral-bluish-400); }
+:is(.tw-stat-segment, .tw-stat-swatch)[data-part='toolsTokens'] { --tw-stat-tint: var(--dsw-static-green-400); }
+:is(.tw-stat-segment, .tw-stat-swatch)[data-part='messageTokens'] { --tw-stat-tint: var(--dsw-static-blue-450); }
+.tw-stat-parts { margin: 0; }
+.tw-stat-part { padding: 2px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tw-stat-part dt { color: var(--dsw-alias-label-secondary); }
+.tw-stat-part dd { margin: 0; color: var(--dsw-alias-label-primary); font-variant-numeric: tabular-nums; }
+.tw-stat-swatch { margin-right: 6px; width: 8px; height: 8px; display: inline-block; border-radius: 2px; background: var(--tw-stat-tint); }
+.tw-stat-note { margin-top: 8px; color: var(--dsw-alias-label-tertiary); }
+.tw-stat-sheet-value { margin-bottom: 8px; color: var(--dsw-alias-label-primary); font-size: 20px; line-height: 28px; font-weight: 500; }
 .tw-readonly-bar { box-sizing: border-box; width: 100%; max-width: var(--tw-run-column-max); padding: 12px 16px; border-radius: var(--dsw-radius-xl); background: var(--dsw-alias-bg-module-platform); font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-secondary); }
 .tw-dropzone { box-sizing: border-box; min-height: 72px; padding: 12px; border: 1px dashed var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-lg); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-tertiary); text-align: center; }
 .tw-dropzone.tw-over { border-color: var(--dsw-alias-state-business-primary); background: var(--dsw-alias-state-business-tertiary); }
@@ -895,6 +951,9 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
 /* Same query as TOUCH_INPUT_QUERY in support/keys.ts: an on-screen keyboard breaks the line on Enter, so the Enter hints do not apply. */
 @media (hover: none) and (pointer: coarse) {
   .tw-send-keys { display: none; }
+  /* A finger needs a taller target than a pointer; the readings keep their text size. */
+  .tw-stat { min-height: 36px; padding: 0 12px; }
+  .tw-stats { gap: 4px; padding-top: 2px; }
 }
 
 @media (max-width: 760px) {
@@ -945,6 +1004,13 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
   .tw-run-tabs .tw-row-between { flex-wrap: wrap; }
   .tw-run-scroll { padding: 0 12px; }
   .tw-composer-wrap { padding: 0 8px 8px; }
+  /* The readings scroll sideways instead of wrapping under the composer; the details open as bottom sheets. */
+  .tw-stats { justify-content: safe center; overflow-x: auto; scrollbar-width: none; }
+  .tw-stat-anchor { flex: none; }
+  .tw-stat-label { overflow: visible; }
+  .tw-stat-sheet .tw-stat-rows, .tw-stat-sheet .tw-stat-context-head, .tw-stat-sheet .tw-stat-parts { font-size: 14px; line-height: 22px; }
+  .tw-stat-sheet .tw-stat-rows { gap: 10px 16px; }
+  .tw-stat-sheet .tw-stat-note { font-size: 13px; line-height: 20px; }
   .tw-composer-title > .tw-muted-small { display: none; }
   .tw-rightbar[data-covering] { width: 100%; }
   .tw-rightbar-handle { display: none; }

@@ -121,7 +121,7 @@ macOS LaunchAgent:
 <details>
 <summary>实现细节</summary>
 
-[补丁](cordis.patch.yml)禁用共享 Session、Agent、JSONL 持久化、Agent Loop 与 Agent Preset 条目，再为这些服务键插入 Task 专用提供方。补丁还组合本地任务提供方、REST 网关、派发消费者。共享 Agent Preset Typert 产物仍是唯一 RPC 协议描述，并通过替代 `agentPresets` 服务解析调用。
+[补丁](cordis.patch.yml)禁用共享 Session、Agent、JSONL 持久化、Agent Loop 与 Agent Preset 条目，再为这些服务键插入 Task 专用提供方。补丁还组合本地任务提供方、REST 网关、派发消费者，以及 `dsh-session-stats` 投影单元，网关的 Run 统计与 Base 的 token meter 一起提供其整份日志的步数和用时。共享 Agent Preset Typert 产物仍是唯一 RPC 协议描述，并通过替代 `agentPresets` 服务解析调用。
 
 [Task REST 网关](../../task/task-api-gateway/README.zh.md) 通过未修改的 Host WebServer 在 `/api/task/v1` 提供服务。应用入口为构建好的 `@deepseek-ai/dsh-task-web-frontend` `dist/` 占用 WebServer 的兜底路由（[`src/web.ts`](src/web.ts)）；首页带有同源内容安全策略，带指纹的资源按不可变缓存。业务插件提供执行阶段与配置 Schema，不携带前端模块。REST 协议、Fetch SDK 以及设备认证继续供原生客户端使用。
 

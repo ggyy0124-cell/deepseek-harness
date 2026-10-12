@@ -256,6 +256,58 @@ export const transcriptRequestSchema = z.object({
   config: transcriptJsonSchema,
   tools: z.array(transcriptToolSchema),
 })
+const count = z.number().int().nonnegative()
+const milliseconds = z.number().nonnegative()
+/** Whole-log figures of a Run's Session, folded from every stored event by the Session projection units the Task host composes.
+ * A field is null when the host composes no unit for it.
+ */
+export const runStatsSchema = z.object({
+  runId: idSchema,
+  sessionId: idSchema,
+  /** Sequence of the last Session event every figure reflects; -1 for an empty log. */
+  asOfSeq: z.number().int().min(-1),
+  /** Loop counts and wall times. */
+  session: z.object({
+    /** Turns with at least one closed step. */
+    turns: count,
+    /** Closed steps. */
+    steps: count,
+    /** Model wall time over steps that assembled a message, in milliseconds. */
+    llmMs: milliseconds,
+    /** Wall time from each tool call to its result, in milliseconds. */
+    toolMs: milliseconds,
+    /** First-token latency summed over `ttftSteps`, in milliseconds. */
+    ttftMs: milliseconds,
+    /** Steps that recorded a first token. */
+    ttftSteps: count,
+    /** Wall time from the first token to the assembled message over steps that reported output tokens, in milliseconds. */
+    decodeMs: milliseconds,
+    /** Output tokens of the steps counted in `decodeMs`. */
+    decodeTokens: z.number().nonnegative(),
+  }).nullable(),
+  /** Provider-reported tokens of every request, including retried attempts, in four disjoint buckets. */
+  usage: z.object({
+    uncachedInputTokens: count,
+    outputTokens: count,
+    cacheReadTokens: count,
+    cacheWriteTokens: count,
+  }).nullable(),
+  /** Context occupancy of the next request. */
+  context: z.object({
+    /** Prompt tokens the provider reported for the latest request; null until a request reports usage. */
+    pressureTokens: count.nullable(),
+    /** `pressureTokens` plus the estimated change of the context since that request; null until a request reports usage. */
+    projectedTokens: count.nullable(),
+    /** Context capacity of the latest model route; null when the provider advertises none. */
+    contextWindow: z.number().int().positive().nullable(),
+  }).nullable(),
+  /** Estimated composition of the next request's context; the parts do not sum to the provider-reported size. */
+  composition: z.object({
+    systemTokens: count,
+    toolsTokens: count,
+    messageTokens: count,
+  }).nullable(),
+})
 /** Forward event window; an empty page can advance over internal records. */
 export const transcriptPageSchema = z.object({
   runId: idSchema,

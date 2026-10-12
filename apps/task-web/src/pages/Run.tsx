@@ -17,6 +17,7 @@ import type { DetailTab } from '../support/presentation.ts'
 import { useRunSidebar } from '../support/sidebar.ts'
 import { useTranscript } from '../support/transcript.ts'
 import { buildTrajectory } from '../support/trajectory.ts'
+import { useRunStats } from '../support/stats.ts'
 import { acceptsInput, type Attachment, type Json, type Run, type RunInput } from '../support/types.ts'
 import {
   Card, CopyButton, Dot, EmptyState, KeyValue, Mono, Notice, StatusMark, StatusTag, Tabs, Time,
@@ -25,6 +26,7 @@ import { MetaLine, Transcript } from '../components/Transcript.tsx'
 import { RecordDetail } from '../components/RecordDetail.tsx'
 import { Sidebar, SidebarToggle, type SidebarTab } from '../components/Sidebar.tsx'
 import { TrajectoryView } from '../components/Trajectory.tsx'
+import { RunStatsBar } from '../components/RunStats.tsx'
 import { InteractionCard } from '../components/Interaction.tsx'
 import { ResultView } from '../components/Result.tsx'
 import { RestartCard } from '../components/Restart.tsx'
@@ -134,6 +136,8 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
   const trajectory = useMemo(
     () => (needsTrajectory ? buildTrajectory(transcript.entries, inputs.value ?? NO_INPUTS, transcript.requests) : undefined),
     [needsTrajectory, transcript.entries, transcript.requests, inputs.value])
+  // Statistics fold the whole stored log, so a new message or status change schedules one read while the Session shows.
+  const stats = useRunStats(run.id, `${lastMessage?.sequence ?? -1}:${transcript.requests.length}:${run.revision}`, tab === 'session')
   const activeSide: SideTab = selectedId !== null && sideTab === 'record' ? 'record' : 'status'
   const sideTabs: readonly SidebarTab<SideTab>[] = [
     { id: 'status', label: t.run.sidebar.status },
@@ -299,8 +303,8 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
           </div>
           {/* Supplemental input belongs to the Session; the Interactions tab answers waits through its own cards. */}
           {tab === 'session' && (open
-            ? <Composer run={run} onSent={refreshAll} onUploaded={attachments.reload} />
-            : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} />)}
+            ? <Composer run={run} onSent={refreshAll} onUploaded={attachments.reload} footer={<RunStatsBar stats={stats} />} />
+            : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} footer={<RunStatsBar stats={stats} />} />)}
         </div>
         <Sidebar open={sidebar.open} covering={sidebar.covering} width={sidebar.width} tabs={sideTabs} active={activeSide}
           activeRef={activeSideTab} scrollKey={activeSide === 'record' ? `${selectedId ?? ''}:${selection?.tab ?? ''}` : activeSide} onSelect={setSideTab}
@@ -421,7 +425,7 @@ function LineageRow({ run, title }: { run: Run; title: string }) {
   )
 }
 
-function Composer({ run, onSent, onUploaded }: { run: Run; onSent: () => void; onUploaded: () => void }) {
+function Composer({ run, onSent, onUploaded, footer }: { run: Run; onSent: () => void; onUploaded: () => void; footer: ReactNode }) {
   const t = useT()
   const { connection, toast } = useApp()
   const schema = run.supplementalInputSchema
@@ -479,16 +483,17 @@ function Composer({ run, onSent, onUploaded }: { run: Run; onSent: () => void; o
             onClick={send}>{sendLabel}</Button>
         </div>
       </div>
+      {footer}
     </div>
   )
 }
 
-function ReadonlyBar({ run, definitionNext }: { run: Run; definitionNext: string | null }) {
+function ReadonlyBar({ run, definitionNext, footer }: { run: Run; definitionNext: string | null; footer: ReactNode }) {
   const t = useT()
   const text = run.terminalAt === null
     ? (run.cleanup === 'blocked' || run.outcome !== null ? t.run.readonlyCleanup : t.run.readonlyCancelling)
     : run.kind === 'polling' && definitionNext !== null ? t.run.readonlyPoll(formatTime(definitionNext)) : t.run.readonlyEnded
-  return <div className="tw-composer-wrap"><div className="tw-readonly-bar" role="status">{text}</div></div>
+  return <div className="tw-composer-wrap"><div className="tw-readonly-bar" role="status">{text}</div>{footer}</div>
 }
 
 function RunStatus({ run, definitionTitle: title,

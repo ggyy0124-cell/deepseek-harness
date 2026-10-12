@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-12-task-web-session-statistics.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-12-task-web-session-statistics.md
+/agent-note-task-web-session-statistics-from-the-stored-session-log:
+  en: e619b0980e32873a
+  zh: d8dff9115cfd28c5
+/agent-note-task-web-session-statistics-from-the-stored-session-log/problem:
+  en: 3df6dbf28e1f427a
+  zh: ac9afdc81b920806
+/agent-note-task-web-session-statistics-from-the-stored-session-log/decision:
+  en: e796c0a8331fb38a
+  zh: 97d4621af161e731
+/agent-note-task-web-session-statistics-from-the-stored-session-log/alternatives-considered:
+  en: 76a1a6ffc1de6aa1
+  zh: 7b017ca28df482dd
+/agent-note-task-web-session-statistics-from-the-stored-session-log/consequences:
+  en: acb504f7379ac2b4
+  zh: ab940d0873eab639

@@ -17,6 +17,8 @@ import { credentialRef, type CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { credentialReferences } from '@deepseek-ai/dsh-task/schema'
 // Type-only: the shared `agentPresets` roster this gateway lists.
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
+// Type-only: the `sessionProjections` registry whose units fold Run statistics.
+import type {} from '@deepseek-ai/dsh-session-projection'
 import type {} from '@deepseek-ai/dsh-permission-presets'
 import {
   idSchema,
@@ -41,6 +43,7 @@ export type { TaskDeviceId } from './types.ts'
 import { streamSessionEvents } from './session-events.ts'
 import { streamTaskEvents } from './events.ts'
 import { readTaskTranscript } from './transcript.ts'
+import { readRunStats, RunStatsCache } from './stats.ts'
 import { downloadSessionAttachment } from './session-attachments.ts'
 import type {} from '@deepseek-ai/dsh-attachment'
 import { executeOperation } from './operations.ts'
@@ -96,6 +99,8 @@ export interface Config {
   readonly pageSize: number
   /** JSON bytes of transcript messages after which one transcript window ends; a single larger message is delivered alone. */
   readonly transcriptPageBytes: number
+  /** Runs whose Session statistics fold is kept in memory, so a repeated read folds only newly stored events. */
+  readonly statsCacheRuns: number
   /** Deadline for plugin configuration checks and option discovery. */
   readonly configCheckTimeoutMs: number
   /** Single-use browser launch lifetime in milliseconds. */
@@ -133,6 +138,7 @@ export class TaskApiGateway extends Service {
     'agentPresets',
     'permissionPresets',
     'llm',
+    'sessionProjections',
   ]
   static Config: Schema<Config> = Schema.object({
     attachmentRoot: Schema.string().required(),
@@ -156,6 +162,7 @@ export class TaskApiGateway extends Service {
     bodyTimeoutMs: Schema.number().min(1).step(1).default(30000),
     pageSize: Schema.number().min(1).max(200).step(1).default(50),
     transcriptPageBytes: Schema.number().min(1024).step(1).default(131072),
+    statsCacheRuns: Schema.number().min(1).step(1).default(32),
     launchTtlMs: Schema.number().min(1).step(1).default(60000),
     eventPollMs: Schema.number().min(1).step(1).default(1000),
     eventHeartbeatMs: Schema.number().min(1).step(1).default(15000),
@@ -169,6 +176,7 @@ export class TaskApiGateway extends Service {
   private readonly attachments: TaskAttachments
   private readonly authentication: TaskAuthenticationStore
   private readonly throttle: LoginThrottle
+  private readonly stats: RunStatsCache
   private readonly passwordRef: CredentialRef
   private ready = false
   private stopping = false
@@ -199,6 +207,7 @@ export class TaskApiGateway extends Service {
       throw new Error('Task passwordLogin.username is required when password login is enabled')
     this.passwordRef = credentialRef(config.passwordLogin.passwordRef)
     this.throttle = new LoginThrottle({ ...config.passwordLogin, clock: Date.now })
+    this.stats = new RunStatsCache(config.statsCacheRuns)
     this.authentication = new TaskAuthenticationStore(ctx.credentials, { ...config, clock: Date.now })
   }
   protected async [Service.init](): Promise<void> {
@@ -330,11 +339,12 @@ export class TaskApiGateway extends Service {
       csrf: session.csrf, expiresAt: new Date(session.expiresAt).toISOString(),
     }))
   }
-  private async transcript(
-    response: ServerResponse,
-    params: Record<string, string>,
-    query: Record<string, string>,
-  ): Promise<unknown> {
+  /** Run a Session read that the caller's disconnect cancels.
+   * @param response - caller connection; closing it aborts the read.
+   * @param read - read that observes the abort signal.
+   * @returns the read result.
+   */
+  private async whileConnected<Value>(response: ServerResponse, read: (signal: AbortSignal) => Promise<Value>): Promise<Value> {
     const controller = new AbortController()
     const close = () => {
       controller.abort()
@@ -342,15 +352,7 @@ export class TaskApiGateway extends Service {
     response.once('close', close)
     try {
       if (response.destroyed) controller.abort()
-      return await readTaskTranscript(
-        this.ctx.tasks,
-        this.ctx.sessionPersistence,
-        params['runId'] as string,
-        query,
-        this.config.pageSize,
-        this.config.transcriptPageBytes,
-        controller.signal,
-      )
+      return await read(controller.signal)
     } finally {
       response.off('close', close)
     }
@@ -725,21 +727,25 @@ export class TaskApiGateway extends Service {
         match.candidate.operationId === 'getDiagnostics'
           ? projectDiagnostics(await this.ctx.tasks.diagnostics())
           : match.candidate.operationId === 'getTranscript'
-            ? await this.transcript(response, params, validatedQuery)
-            : match.candidate.operationId === 'getCatalog' ||
-              match.candidate.operationId === 'checkConfig' ||
-              match.candidate.operationId === 'getOptions'
-              ? await this.formOperation(match.candidate.operationId, params, validatedBody, response)
-              : executeOperation(
-                this.ctx.tasks,
-                match.candidate.operationId,
-                params,
-                validatedQuery,
-                validatedBody,
-                auth.principal,
-                brandString<TaskRequestId>(retryKey),
-                this.config.pageSize,
-              )
+            ? await this.whileConnected(response, signal => readTaskTranscript(this.ctx.tasks, this.ctx.sessionPersistence,
+              params['runId'] as string, validatedQuery, this.config.pageSize, this.config.transcriptPageBytes, signal))
+            : match.candidate.operationId === 'getRunStats'
+              ? await this.whileConnected(response, signal => readRunStats(this.ctx.tasks, this.ctx.sessionPersistence,
+                this.ctx.sessionProjections, this.stats, params['runId'] as string, signal))
+              : match.candidate.operationId === 'getCatalog' ||
+                match.candidate.operationId === 'checkConfig' ||
+                match.candidate.operationId === 'getOptions'
+                ? await this.formOperation(match.candidate.operationId, params, validatedBody, response)
+                : executeOperation(
+                  this.ctx.tasks,
+                  match.candidate.operationId,
+                  params,
+                  validatedQuery,
+                  validatedBody,
+                  auth.principal,
+                  brandString<TaskRequestId>(retryKey),
+                  this.config.pageSize,
+                )
       this.assertRunning()
       const output = route.response.parse(value)
       status = route.status

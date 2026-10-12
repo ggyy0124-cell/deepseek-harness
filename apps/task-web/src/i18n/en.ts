@@ -218,6 +218,17 @@ export const en: Messages = {
     sidebar: { label: 'Right sidebar', open: 'Open right sidebar', close: 'Collapse right sidebar', resize: 'Resize the sidebar', status: 'Status',
       event: 'Event details', closeEvent: 'Close event details' },
     views: { label: 'Session views', chat: 'Chat', trajectory: 'Trajectory' },
+    stats: {
+      label: 'Session statistics', counts: (turns: number, steps: number) => `${turns} turns ${steps} steps`,
+      cacheHit: (percent: string) => `Cache hit ${percent}%`, cacheHitShort: (percent: string) => `${percent}% hit`,
+      sessionTitle: 'Session statistics', llmTime: 'LLM time', toolTime: 'Tool time', ttft: 'Avg time to first token (TTFT)',
+      speed: 'Tokens per second (TPS)',
+      usageTitle: 'Token usage', cacheHitRow: 'Cache hit', uncachedInput: 'Uncached input', cacheRead: 'Cached input', cacheWrite: 'Cache write',
+      output: 'Output',
+      contextTitle: 'Context usage', contextUsed: (percent: string) => `${percent} of context used`, contextBefore: '', contextAfter: 'of context used',
+      system: 'System prompt', tools: 'Tool definitions', messages: 'Messages',
+      compositionNote: 'The parts are character estimates and do not add up to the usage the provider reports.',
+    },
     trajectory: {
       toolbar: {
         label: 'Trajectory toolbar', duration: 'Duration', recordedDuration: 'Use actual duration', equalWidth: 'Use equal-width operations',

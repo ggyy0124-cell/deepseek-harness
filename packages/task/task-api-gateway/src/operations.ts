@@ -29,7 +29,7 @@ import { projectInput, projectRetirement, projectDefinition, projectInteractions
 
 type Operation = Exclude<
   (typeof taskJsonRoutes)[number]['operationId'],
-  'getDiagnostics' | 'getTranscript' | 'checkConfig' | 'getOptions' | 'getCatalog'
+  'getDiagnostics' | 'getTranscript' | 'getRunStats' | 'checkConfig' | 'getOptions' | 'getCatalog'
 >
 const cursorSchema = z.strictObject({
   version: z.literal(1),
