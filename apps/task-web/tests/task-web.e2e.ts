@@ -158,6 +158,8 @@ describe('Task Web client', () => {
     expect(await composer.inputValue()).toBe('')
     expect(await card.count()).toBe(0)
     await interactions.click()
+    await card.waitFor({ timeout: 30000 })
+    expect(await composer.count()).toBe(0)
     await card.getByRole('button', { name: '批准' }).click({ timeout: 30000 })
     await page.locator('.tw-run-header').getByText('已成功').waitFor({ timeout: 30000 })
     await page.getByRole('tab', { name: '会话' }).click()
