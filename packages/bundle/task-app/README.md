@@ -121,7 +121,7 @@ After reviewing the Linux unit, `systemctl --user enable --now dsh-task` enables
 <details>
 <summary>Implementation details</summary>
 
-The [patch](cordis.patch.yml) disables the shared Session, Agent, JSONL persistence, Agent Loop, and Agent Preset rows, then inserts Task-specific providers for those service keys. It also composes the local task provider, REST gateway, dispatch consumer. The shared Agent Preset Typert artifact remains the single RPC protocol description and resolves calls through the replacement `agentPresets` service.
+The [patch](cordis.patch.yml) disables the shared Session, Agent, JSONL persistence, Agent Loop, and Agent Preset rows, then inserts Task-specific providers for those service keys. It also composes the local task provider, REST gateway, dispatch consumer, and the `dsh-session-stats` projection unit whose whole-log step counts and times the gateway's Run statistics serve beside Base's token meter. The shared Agent Preset Typert artifact remains the single RPC protocol description and resolves calls through the replacement `agentPresets` service.
 
 The [Task REST gateway](../../task/task-api-gateway/README.md) serves `/api/task/v1` through the unchanged Host WebServer. The application entry claims the WebServer fallback for the built `@deepseek-ai/dsh-task-web-frontend` `dist/` ([`src/web.ts`](src/web.ts)); the index carries a same-origin content security policy and fingerprinted assets are cached as immutable. Business plugins provide executable stages and configuration schemas without frontend modules. The REST protocol, Fetch SDK and device authentication remain available for native clients.
 

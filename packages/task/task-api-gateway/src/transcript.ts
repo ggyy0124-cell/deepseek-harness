@@ -172,7 +172,11 @@ function project(event: SessionEvent, state: Lifecycle): Entry | undefined {
       return undefined
   }
 }
-function fingerprint(event: SessionEvent): string {
+/** Content hash of one stored event; a different hash at the same position means the log was rewritten.
+ * @param event - stored Session event.
+ * @returns base64url SHA-256 of the event JSON.
+ */
+export function fingerprint(event: SessionEvent): string {
   return createHash('sha256').update(JSON.stringify(event)).digest('base64url')
 }
 interface Window {

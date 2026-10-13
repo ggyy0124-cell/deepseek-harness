@@ -9,8 +9,8 @@ import WebServer from '@deepseek-ai/dsh-host-webserver'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { CredentialProvider, CredentialRecord, CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { TaskCommandError, type TaskDefinition, type TaskDefinitionId, type TaskRequestId } from '@deepseek-ai/dsh-task'
-import type { SessionHandle } from '@deepseek-ai/dsh-session-persistence'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { SessionPersistenceNotFoundError, type SessionHandle } from '@deepseek-ai/dsh-session-persistence'
+import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import { TaskApiClient } from '@deepseek-ai/dsh-task-api-client'
 import { z } from 'zod'
 import { taskHost } from '../../task-local/tests/host-fixture.ts'
@@ -149,15 +149,14 @@ describe('Task gateway composition', () => {
     await expect.poll(async () => (await client.request('getRun', { params: { runId: restarted.id } })).status).toBe('waiting_input')
   })
 
-  it('refuses a transcript read if its response was already destroyed', async () => {
-    const { ctx, client, definition } = await gateway()
-    const run = await client.request('triggerManual', { params: { definitionId: definition.id },
-      body: { input: null }, idempotencyKey: 'closed-transcript' })
+  it('refuses a Session read if its response was already destroyed', async () => {
+    const { ctx } = await gateway()
     const response = stub<ServerResponse>(Object.assign(new EventEmitter(), { destroyed: true }))
     const internals: unknown = ctx.taskGateway
-    const service = internals as { transcript(response: ServerResponse,
-      params: Record<string, string>, query: Record<string, string>): Promise<unknown> }
-    await expect(service.transcript(response, { runId: run.id }, {})).rejects.toMatchObject({ name: 'AbortError' })
+    const service = internals as { whileConnected(response: ServerResponse,
+      read: (signal: AbortSignal) => Promise<unknown>): Promise<unknown> }
+    await expect(service.whileConnected(response, async (signal) => { signal.throwIfAborted() }))
+      .rejects.toMatchObject({ name: 'AbortError' })
   })
 
   it('publishes permission choices and reports business availability errors without hiding their category', async () => {
@@ -203,6 +202,22 @@ describe('Task gateway composition', () => {
       await cancelled.promise
       expect(signal.aborted).toBe(true)
     } finally { controller.abort(); await pending.catch(() => {}); open.mockRestore() }
+  })
+
+  it('serves Run statistics of the stored Session and rejects unknown Runs and Sessions not stored yet', async () => {
+    const { ctx, client, definition } = await gateway()
+    const run = await client.request('triggerManual', { params: { definitionId: definition.id },
+      body: { input: null }, idempotencyKey: 'stats-run' })
+    await expect.poll(async () => (await client.request('getRun', { params: { runId: run.id } })).status).toBe('waiting_input')
+    // The fixture host composes the projection registry without token-meter or session-stats units.
+    const stats = await client.request('getRunStats', { params: { runId: run.id } })
+    expect(stats).toMatchObject({ runId: run.id, sessionId: run.sessionId, session: null, usage: null, context: null, composition: null })
+    await expect(client.request('getRunStats', { params: { runId: 'missing' } })).rejects.toMatchObject({ problem: { status: 404 } })
+    const open = vi.spyOn(ctx.sessionPersistence, 'open').mockRejectedValueOnce(new SessionPersistenceNotFoundError(brandString<SessionId>(run.sessionId)))
+    try {
+      await expect(client.request('getRunStats', { params: { runId: run.id } }))
+        .rejects.toMatchObject({ problem: { status: 409, code: 'session_unavailable' } })
+    } finally { open.mockRestore() }
   })
 
   it('downloads a visible Session attachment through the authenticated run route', async () => {

@@ -27,6 +27,8 @@ export type Diagnostics = TaskOperationResult<'getDiagnostics'>
 export type Catalog = TaskOperationResult<'getCatalog'>
 /** Plugin retirement record. */
 export type Retirement = TaskOperationResult<'getRetirement'>
+/** Whole-log statistics of a Run's Session: loop counts and times, token usage and context occupancy. */
+export type RunStats = TaskOperationResult<'getRunStats'>
 /** One input a person gave a Run: supplemental information or a business-wait reply. */
 export type RunInput = TaskOperationResult<'listInputs'>['items'][number]
 /** One stored transcript message. */

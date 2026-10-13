@@ -50,6 +50,9 @@
       name: '@deepseek-ai/dsh-task-session'
     - id: task-agent
       name: '@deepseek-ai/dsh-task-agent'
+    # Whole-log step counts and wall times that the gateway's Run statistics read.
+    - id: session-stats
+      name: '@deepseek-ai/dsh-session-stats'
     - id: task-session-persistence-jsonl
       name: '@deepseek-ai/dsh-task-session-persistence-jsonl'
       config:

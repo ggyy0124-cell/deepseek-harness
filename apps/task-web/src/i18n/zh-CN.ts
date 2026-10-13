@@ -218,6 +218,14 @@ export const zhCN = {
     sidebar: { label: '右侧边栏', open: '打开右侧边栏', close: '收起右侧边栏', resize: '调整侧边栏宽度', status: '状态', event: '事件详情',
       closeEvent: '关闭事件详情' },
     views: { label: '会话视图', chat: '对话', trajectory: '轨迹' },
+    stats: {
+      label: '会话统计', counts: (turns: number, steps: number) => `${turns} 轮 ${steps} 步`, cacheHit: (percent: string) => `缓存命中 ${percent}%`,
+      cacheHitShort: (percent: string) => `命中 ${percent}%`,
+      sessionTitle: '会话统计', llmTime: '模型用时', toolTime: '工具调用用时', ttft: '首 token 平均（TTFT）', speed: '输出速度（TPS）',
+      usageTitle: 'Token 用量', cacheHitRow: '缓存命中', uncachedInput: '未缓存输入', cacheRead: '缓存读取', cacheWrite: '缓存写入', output: '输出',
+      contextTitle: '上下文用量', contextUsed: (percent: string) => `上下文已用 ${percent}`, contextBefore: '上下文已用', contextAfter: '',
+      system: '系统提示词', tools: '工具定义', messages: '对话消息', compositionNote: '组成按字符估算，各项之和与提供方报告的用量不同。',
+    },
     trajectory: {
       toolbar: {
         label: '轨迹工具栏', duration: '时长', recordedDuration: '使用实际时长', equalWidth: '使用等宽操作', turns: '轮次',

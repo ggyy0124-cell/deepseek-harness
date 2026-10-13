@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-task-api-gateway",
   "description": "Authenticated Task REST gateway over the shared Host WebServer",
-  "version": "0.2.0-rc.1-task.0.0.6",
+  "version": "0.2.0-rc.1-task.0.0.7",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -41,11 +41,15 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*"
+    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*",
+    "@deepseek-ai/dsh-session-projection": "workspace:*"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*"
+    "@deepseek-ai/dsh-agent-preset-registry": "workspace:*",
+    "@deepseek-ai/dsh-session-projection": "workspace:*",
+    "@deepseek-ai/dsh-session-stats": "workspace:*",
+    "@deepseek-ai/dsh-token-meter": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
