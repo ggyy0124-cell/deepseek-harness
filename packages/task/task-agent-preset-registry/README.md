@@ -38,8 +38,6 @@ A revision whose digest equals the current declaration joins that declaration's 
 
 Mounting rejects a revision whose rows fail or keep waiting for a service after the Host tree settles; a failed private mount is released before the error propagates. Declaring rows cannot use the reserved id prefix.
 
-No runtime invariant companion is published; the shared registry's companion owns the mount relationships, and recorded revisions only select which definition an Agent binds.
-
 -----
 
 <a id="further-exploration"></a>

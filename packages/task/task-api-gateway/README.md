@@ -34,7 +34,7 @@ With `passwordLogin.enabled`, `POST /auth/login` with an exact Origin and `{ "us
 | Field | Default | Meaning |
 |---|---|---|
 | `publicOrigin` | Empty | Exact browser origin; empty resolves to HTTP loopback and the actual server port |
-| `trustedHosts` | `[]` | Further `host` or `host:port` authorities accepted besides `publicOrigin`, with its scheme; a bare host means the server port. Required when the server listens on all interfaces |
+| `trustedHosts` | `[]` | Further `host` or `host:port` authorities accepted besides `publicOrigin`, with its scheme; a bare host means the server port. The listen address passes without an entry |
 | `passwordLogin.enabled` / `username` | `false` / empty | Offer the fixed-account password login; the username is required when enabled |
 | `passwordLogin.passwordRef` | `TASK_WEB_PASSWORD` | Credential reference holding the password |
 | `passwordLogin.maxFailures` / `failureWindowMs` / `lockoutMs` | 5 / 900000 / 900000 | Failure budget per address or username, its window, and the lock that follows |
@@ -66,7 +66,7 @@ The [authentication store](src/auth.ts) serializes grant changes through Credent
 
 The [HTTP consumer](src/index.ts) applies Host/Origin checks, bounded JSON parsing, runtime protocol validation and value-free request diagnostics. [Operation dispatch](src/operations.ts) uses the engine's atomic command receipts; replay returns the original admission projection. Run pages retain an insertion high-water mark, excluding later inserts. Status filtering reflects current state, and a changed continuation membership returns `cursor_stale` so the client restarts pagination.
 
-The [projection](src/projection.ts) excludes private execution fields. Definitions without forms expose schema version zero and a JSON editor; declared forms use validated Draft 2020-12 schemas, optimistic configuration revisions and explicit migrations. Business waits project their durable identity and revision. Gateway disposal removes routes, closes active requests and awaits handler completion. No invariant companion is published: the Task package owns record/Session comparisons; this consumer validates HTTP ingress and DTOs directly.
+The [projection](src/projection.ts) excludes private execution fields. Definitions without forms expose schema version zero and a JSON editor; declared forms use validated Draft 2020-12 schemas, optimistic configuration revisions and explicit migrations. Business waits project their durable identity and revision. Gateway disposal removes routes, closes active requests and awaits handler completion.
 
 `GET /events` publishes a `ready` cursor followed by committed Task journal notifications. Fresh clients subscribe before acquiring their REST baseline; reconnecting clients pass the last delivered cursor in `Last-Event-ID` or the `cursor` query parameter. The cursor contains the database identity, and incompatible or future positions return 409 before streaming. Payloads contain event names, run identities and UTC times, never journal details. Notifications prompt clients to refetch affected resources. Bounded SQLite pages and socket buffers prevent an offline client from accumulating an in-memory replay queue. Slow drains, expired authorization and plugin unload close the connection; clients reconnect and repair from the journal. The gateway checks authorization before each replay batch.
 

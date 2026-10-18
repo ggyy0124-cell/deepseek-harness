@@ -34,8 +34,6 @@ Task Profile mounts this provider in place of `dsh-session`. Task Local installs
 
 `TaskSessionStore` subclasses the shared `SessionStore`, preserving Session identity and behavior. Creation and mutation methods evaluate active guards before delegating to the shared implementation. Guards are Cordis effects and disappear with their owning plugin scope.
 
-
-No runtime invariant companion is published; guard registration and disposal update one private set through the same service.
 -----
 
 <a id="further-exploration"></a>

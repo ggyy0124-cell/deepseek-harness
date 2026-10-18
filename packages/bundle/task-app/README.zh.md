@@ -25,9 +25,9 @@ kind: "package-bundle"
 <a id="use-this-package"></a>
 ## 使用本包
 
-使用 `pnpm dsh --profile task` 启动后端。数据库（含已记录的 preset 版本）与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改；`--host 0.0.0.0` 监听所有网卡，用于[内网访问](#intranet-access)。启动输出 Web 客户端地址 `/` 和 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器；使用 `--launch-link` 登录。浏览器导航到没有构建文件的路径时得到客户端的 `index.html`，已有文件直接返回，其他缺失路径返回 404。未安装业务插件时没有业务定义。
+使用 `pnpm dsh --profile task` 启动后端。数据库（含已记录的 preset 版本）与 Session JSONL 保存到 DSH 主目录的 `tasks` 目录中，与 Web Profile 隔离。网关默认绑定本机 3081 端口，可通过 `--port` 修改；`--host <地址>` 监听本机网卡的一个地址，用于[内网访问](#intranet-access)。启动输出 Web 客户端地址 `/` 和 API 基础地址 `/api/task/v1/`，不签发凭据或打开浏览器；使用 `--launch-link` 登录。浏览器导航到没有构建文件的路径时得到客户端的 `index.html`，已有文件直接返回，其他缺失路径返回 404。未安装业务插件时没有业务定义。
 
-本组合包在 `presets/` 下声明 Web preset，并保持派发在前台进行、禁用异步 workflow 启动。随附的编码 preset 允许特殊或普通任务的父 Agent 在已准入的模型轮次中自行决定是否调用前台进程内子 Agent；不要求创建子 Agent。`task-local` 默认通过 `childConcurrency` 将每个 Run 的并发子 Agent 限为四个；每个子 Agent 保留独立 Session，并须在父轮次结束前完成。
+本组合包在 `presets/` 下声明 Web preset，把委派深度限制为 1，并禁用异步 workflow 启动与定时跟进。随附的编码 preset 允许特殊或普通任务的父 Agent 在已准入的模型操作中自行决定是否启动进程内子 Agent；不要求创建子 Agent。`task-local` 默认通过 `childConcurrency` 将每个 Run 的并发子 Agent 限为四个；每个子 Agent 保留独立 Session，并在父 Agent 的模型操作完成前结算。
 
 管理操作也使用此 Profile：
 
@@ -45,7 +45,7 @@ pnpm dsh --profile task --restore /absolute/backup
 <a id="intranet-access"></a>
 #### 内网访问
 
-使用 `--host 0.0.0.0 --trusted-host <authority>` 启动宿主，其他机器上的浏览器即可打开它；浏览器使用的每个地址各写一次 `--trusted-host`，例如 `10.0.0.5` 或 `task.lan:3081`。只写主机时取 `--port` 的值。监听所有网卡而没有可信主机时启动被拒绝；启动时为每个可信主机输出一个 Web 地址。Host 请求头为其他值的请求返回 403。
+使用 `--host <地址>` 启动宿主，地址是本机网卡的一个具体 IPv4 或 IPv6 地址，例如 `10.0.0.5`，其他机器上的浏览器即可打开 `http://<地址>:<端口>/`；`0.0.0.0` 等通配地址在启动时被拒绝。浏览器还会使用的其他地址（例如 `task.lan:3081`）各写一次 `--trusted-host <authority>`；只写主机时取 `--port` 的值。启动时输出监听地址和每个可信主机的 Web 地址，`--launch-link --host <地址>` 为同一地址签发链接。Host 请求头为其他值的请求返回 403。
 
 要不使用登录链接登录，在 Profile 补丁中开启网关的密码登录。补丁会替换该行的全部配置，因此需要重写 `attachmentRoot` 和 `trustedHosts` 的接线：
 
@@ -127,8 +127,6 @@ macOS LaunchAgent:
 
 </details>
 
-
-不发布运行时不变量插件；Task 提供方负责记录检查，HTTP 注册在对应操作中校验。
 -----
 
 <a id="further-exploration"></a>

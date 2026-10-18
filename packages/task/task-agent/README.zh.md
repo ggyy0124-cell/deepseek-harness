@@ -25,7 +25,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-Task Profile 使用此提供方替换 `dsh-agent`。Task Local 通过 `guardCreation()` 安装创建检查。每个检查在共享注册表创建、恢复或进入 Agent 前授权拟议的 Session 与 Agent 关系。前台子 Agent 只能在所属 Task 模型操作内创建；普通任务仍是独立的运行时根节点。`taskAgentRegistry(ctx)` 用于断言 Profile 已挂载此替代实现。
+Task Profile 使用此提供方替换 `dsh-agent`。Task Local 通过 `guardCreation()` 安装创建检查。每个检查在共享注册表创建、恢复或进入 Agent 前授权拟议的 Session 与 Agent 关系。子 Agent 只能在所属 Task 模型操作内创建，或在结算后于该操作内恢复；普通任务仍是独立的运行时根节点。`taskAgentRegistry(ctx)` 用于断言 Profile 已挂载此替代实现。
 
 -----
 
@@ -34,8 +34,6 @@ Task Profile 使用此提供方替换 `dsh-agent`。Task Local 通过 `guardCrea
 
 `TaskAgentRegistry` 继承共享 `AgentRegistry`，并原样委托获准操作。检查注册属于 effect，移除 Task Local 时会同时移除策略，不留下进程级全局状态。
 
-
-不发布运行时不变量 companion；检查注册与卸载通过同一服务更新一个私有集合。
 -----
 
 <a id="further-exploration"></a>

@@ -34,8 +34,6 @@ Task Profile 使用此驱动替换 `dsh-agent-loop`。它的公开配置与共�
 
 此包复制共享 Agent Loop 实现，并在驱动模型的命令之前增加 Task Session 授权。显式唤醒路径调度一次执行，但不再次插入消息。源码一致性测试只允许 Task 授权与唤醒扩展。
 
-
-不发布运行时不变量 companion；共享 Agent Loop companion 负责复制的生命周期关系，源码一致性检查会拒绝 Task 副本漂移。
 -----
 
 <a id="further-exploration"></a>

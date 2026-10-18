@@ -1,15 +1,17 @@
 /** Task application flags, independent of the Web application's command provider. */
+import { isIP } from 'node:net'
 import { Command } from 'commander'
 import type { Context } from '@deepseek-ai/cordis'
 import { parseCmdline } from '@deepseek-ai/dsh-cmdline'
+import { isWildcardHost } from '@deepseek-ai/dsh-host-webserver'
 /** Task command provider identity. */
 export const name = 'task-startup'
 /** Application argument service. */
 export const inject = ['cmdlineArgs']
 /** Values consumed by Task application rows. */
 export interface TaskStartup {
-  /** Listen host: loopback, or all interfaces for intranet browsers. */
-  readonly host: '127.0.0.1' | '0.0.0.0'
+  /** Listen address: `127.0.0.1`, or one concrete IPv4 or IPv6 address of a local interface for intranet browsers. */
+  readonly host: string
   readonly port: number
   /** `--trusted-host` authorities in argument order, passed to the gateway's `trustedHosts`. */
   readonly trustedHosts: string[]
@@ -28,7 +30,7 @@ export function apply(ctx: Context): void {
   const program = new Command()
     .name('dsh --profile task')
     .description('Serve the DSH Task engine and API gateway.')
-    .option('--host <host>', 'listen host: 127.0.0.1, or 0.0.0.0 with --trusted-host', '127.0.0.1')
+    .option('--host <host>', 'listen address: 127.0.0.1, or one concrete IPv4 or IPv6 address of a local interface; wildcard addresses are rejected', '127.0.0.1')
     .option('--port <port>', 'listen port; 0 selects a free port', '3081')
     .option('--trusted-host <authority...>', 'browser address host or host:port accepted besides loopback (repeatable)')
     .option('--token-create', 'issue a native client credential without starting the server')
@@ -49,11 +51,11 @@ export function apply(ctx: Context): void {
       backup?: string
       restore?: string
     }>()
-    const host = flags.host === '0.0.0.0' ? '0.0.0.0' : '127.0.0.1'
-    if (flags.host !== host || !/^\d+$/.test(flags.port) || Number(flags.port) > 65535)
-      program.error('Task requires host 127.0.0.1 or 0.0.0.0 and port 0–65535')
-    if (host === '0.0.0.0' && (flags.trustedHost ?? []).length === 0)
-      program.error('Task on 0.0.0.0 requires --trusted-host <authority> for the address browsers open')
+    const { host } = flags
+    if (isIP(host) === 0 || !/^\d+$/.test(flags.port) || Number(flags.port) > 65535)
+      program.error('Task requires an IPv4 or IPv6 host address and port 0–65535')
+    if (isWildcardHost(host))
+      program.error(`Task host ${host} is an unspecified (wildcard) address; bind one concrete IPv4 or IPv6 address of a local interface instead`)
     if (
       [flags.tokenCreate, flags.tokenRevoke, flags.launchLink, flags.passwordSet, flags.backup, flags.restore].filter(
         value => value !== undefined,

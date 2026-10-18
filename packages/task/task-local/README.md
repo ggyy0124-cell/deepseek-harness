@@ -36,7 +36,7 @@ Cancellation records an overdue drain after `cancellationGraceMs` (30 seconds); 
 | Setting | Default | Effect |
 |---|---|---|
 | `concurrency` | `4` | Active stages across all plugins |
-| `childConcurrency` | `4` | Live foreground child Agents per Task Run |
+| `childConcurrency` | `4` | Live child Agents per Task Run |
 | `tickMs` | `1000` | Scheduler wake interval |
 | `catchupLimit` | `10000` | Occurrences scanned per definition per tick |
 | `catchupHorizonMs` | `2592000000` | Calendar catch-up window; older ranges are logged as skipped |
@@ -46,7 +46,7 @@ Polling waits its configured interval after the preceding poll ends. Calendar sc
 
 A business wait releases stage permits and transient resources. Retained resources are released only after model/tool work drains and plugin cleanup succeeds. Failed cleanup blocks the task and preserves exclusions; repair the resource and retry cleanup. Missing business code prevents execution, while historical Sessions remain readable.
 
-In either a special or an ordinary Run, an admitted parent model operation may choose to create foreground in-process child Agents through the captured Task preset. No child is created unless the parent Agent calls a delegation tool. Child Sessions belong to the same Run; they do not count as ordinary task dispatches. The parent model turn joins every child before the stage completes. Background or continuable child work is outside this ownership rule. A process restart records unfinished children as interrupted and blocks automatic replay of the parent model operation; the next stage exposes their Session IDs through `stage.children` for plugin reconciliation.
+In either a special or an ordinary Run, an admitted parent model operation may choose to create in-process child Agents through the captured Task preset. No child is created unless the parent Agent calls a delegation tool. Child Sessions belong to the same Run; they do not count as ordinary task dispatches. Delegation returns a child id immediately. The model operation waits until the parent Agent is idle, no child is progressing, and every settled-child notice has woken its parent turn; its answer is the final text of the last parent turn. A settled child may continue only inside the model operation that created it. Cancelling the Run stops and releases the parent's children before cleanup. A process restart records unfinished children as interrupted and blocks automatic replay of the parent model operation; the next stage exposes their Session IDs through `stage.children` for plugin reconciliation.
 
 -----
 
@@ -68,7 +68,7 @@ Restored plugin fibers remain loaded while cleanup is blocked. After a retry com
 
 The [database](src/database.ts) commits task changes, audit records, child Session ownership and Session durability barriers atomically. The [Session adapter](src/sessions.ts) flushes each barrier before admission and verifies the database run-to-Session association. Model delivery uses a stable message identity and a recorded completed turn; an idle Agent alone is not evidence of success. Model cancellation enters the owning Session's authorization context, including when an external caller aborts its signal; interrupted operations retain their unconfirmed receipts.
 
-The [engine](src/engine.ts) logs admission, transitions, dispatch association, operation reconciliation, scheduling pressure, and cleanup. Logs contain identities and state metadata; business input and model answers live in their durable records. No provider invariant companion is published: the Task companion owns Session/record comparisons, while transactional uniqueness and lock acquisition are enforced before admission.
+The [engine](src/engine.ts) logs admission, transitions, dispatch association, operation reconciliation, scheduling pressure, and cleanup. Logs contain identities and state metadata; business input and model answers live in their durable records.
 
 Rediscovery of a business key still associates its source with an unfinished ordinary Run during cancellation or blocked cleanup. It does not deliver a new input or advance the observed business data until cleanup completes; a later discovery creates a successor after the Run ends.
 
@@ -80,8 +80,6 @@ Forms are validated at registration and command ingress; schema changes require 
 
 </details>
 
-
-No runtime invariant companion is published; the Task service companion compares SQLite execution records with Session persistence, while the provider enforces transaction and lock rules before admission.
 -----
 
 <a id="further-exploration"></a>
@@ -98,11 +96,11 @@ No runtime invariant companion is published; the Task service companion compares
 
 #### What the model sees
 
-The exact prompt supplied to `stage.model` becomes a durable user message in the task Session. The chosen preset supplies system instructions and tools. Replaying a completed operation returns its recorded answer without generating another request.
+The exact prompt supplied to `stage.model` becomes a durable user message in the task Session. The chosen preset supplies system instructions and tools. A delegation tool result names the child id, and each child's closing message arrives as a settled-child notice that starts another parent turn in the same operation. Replaying a completed operation returns its recorded answer without generating another request.
 
 #### Token effect
 
-Each new model operation adds its prompt and generated response. Task lifecycle remains in SQLite, and business plugins decide which updates enter later prompts.
+Each new model operation adds its prompt and generated response; every settled-child notice adds one parent turn. Task lifecycle remains in SQLite, and business plugins decide which updates enter later prompts.
 
 #### KV Cache effect
 

@@ -38,8 +38,6 @@ Task Profile 在相同的 `agentPresets` 服务键下挂载此注册表，替代
 
 挂载时，若版本中的行失败，或在 Host 插件树完成结算后仍在等待服务，则拒绝该版本；失败的私有挂载会在错误抛出前释放。声明行不能使用保留的 id 前缀。
 
-不发布运行时不变量 companion；共享注册表的 companion 负责挂载关系，已记录的版本只决定 Agent 绑定到哪个定义。
-
 -----
 
 <a id="further-exploration"></a>

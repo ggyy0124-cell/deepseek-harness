@@ -16,9 +16,9 @@ The three additions are opt-in. Without them the host listens on loopback, the g
 
 ### Listen address and trusted hosts
 
-`task-startup` accepts `--host 127.0.0.1` (default) or `--host 0.0.0.0`, the two values `dsh-host-webserver` supports, and a repeatable `--trusted-host <authority>`. `--host 0.0.0.0` without a trusted host exits at flag parsing, because no browser on another machine could pass the Host check. The shipped patch passes the flags into the gateway's `trustedHosts`; the gateway refuses the same misconfiguration at load for compositions that bypass the flags.
+`task-startup` accepts `--host 127.0.0.1` (default) or one concrete IPv4 or IPv6 address of a local interface, and a repeatable `--trusted-host <authority>`. A wildcard address such as `0.0.0.0` exits at flag parsing, and `dsh-host-webserver` refuses it at load ([upstream 0.2.1 adaptation](../architecture/2026-10-17-task-profile-upstream-0-2-1-merge.md)). The shipped patch passes the flags into the gateway's `trustedHosts`.
 
-`trustedHosts` lists authorities (`host` or `host:port`; a bare host means the server port) accepted besides `publicOrigin` or the loopback origin, with the scheme of `publicOrigin` or `http`. `browserOrigins()` returns these origins; each request is matched to the origin whose authority equals its Host, and that origin decides the Origin check, request URL resolution and the cookie `Secure` attribute. Matching is exact and forwarded headers change nothing. Startup prints one Web address per trusted host. `--launch-link` keeps printing a loopback URL (or `publicOrigin`), never `0.0.0.0`.
+`trustedHosts` lists authorities (`host` or `host:port`; a bare host means the server port) accepted besides `publicOrigin` or the loopback origin and the listen address, with the scheme of `publicOrigin` or `http`. `browserOrigins()` returns these origins; each request is matched to the origin whose authority equals its Host, and that origin decides the Origin check, request URL resolution and the cookie `Secure` attribute. Matching is exact and forwarded headers change nothing. Startup prints the listen address and one Web address per trusted host. `--launch-link` prints a URL for its `--host` value (or `publicOrigin`).
 
 ### Password login
 
@@ -63,6 +63,6 @@ Intranet browsers open the host at a fixed address and sign in with one account;
 
 A signed-in browser can run code on the host under the `danger-full-access` preset. The password, the host firewall limiting the port to intranet ranges and a dedicated system account are the barriers. Over plain HTTP anyone capturing intranet traffic can read the password and a 30-day session cookie, which carries no `Secure` attribute. All users share one principal, so inputs, replies and configuration changes are not attributable to a person. Restarting the host clears failure counters and locks, and a username lock also blocks the legitimate user until it expires.
 
-Upstream DSH refuses `0.0.0.0` for the Web Profile on safety grounds; `task-startup` and the gateway diverge from that stance, so upstream syncs touching these files need manual merging.
+Task Profile follows the upstream listen-address rule: an intranet deployment binds the host's intranet address rather than every interface.
 
 Gateway unit tests cover trusted-host matching, scheme inheritance, password login, throttling, the reserved credential and load-time misconfiguration; `task-intranet-login.e2e.ts` covers `--password-set`, flag validation and login through a trusted host on the shipped profile; `password-login.e2e.ts` drives the Task Web form in a browser.

@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-task-web-frontend",
   "description": "Task Web client: vite build of the browser console served by the Task Profile at its gateway origin",
-  "version": "0.2.0-rc.1-task.0.0.7",
+  "version": "0.2.1-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -29,8 +29,6 @@
     "@deepseek-ai/dsh-client-ui-theme": "workspace:*",
     "@deepseek-ai/dsh-task-api-client": "workspace:*",
     "@deepseek-ai/dsh-task-api-protocol": "workspace:*",
-    "@types/react": "~18.3.1",
-    "@types/react-dom": "~18.3.0",
     "@vitejs/plugin-react": "^4.0.0",
     "clsx": "^2.0.0",
     "playwright": "^1.49.0",

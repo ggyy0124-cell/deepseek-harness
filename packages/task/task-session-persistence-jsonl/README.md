@@ -25,17 +25,15 @@ Persist Task Profile Sessions in the ordinary JSONL format while requiring Task 
 <a id="use-this-package"></a>
 ## Use this package
 
-Task Profile mounts this provider with the same configuration used by `dsh-session-persistence-jsonl`. It requires `dsh-task-session`; opening a writable Session record calls the Task Session authorization policy before delegating to the shared backend.
+Task Profile mounts this plugin with the same configuration used by `dsh-session-persistence-jsonl`. It requires `dsh-task-session`; creating a Session record or opening one for writing calls the Task Session authorization policy before delegating to the shared backend.
 
 -----
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-`TaskJsonlSessionPersistence` subclasses the shared JSONL provider. Reads retain the ordinary behavior, while record creation and writable open paths call `TaskSessionStore.assertWritable()`. JSONL contains ordinary Session events; the Task SQLite database owns run status and run-to-Session association.
+The [plugin](src/index.ts) mounts the shared JSONL plugin under an isolated `sessionPersistence` key and provides a delegating `SessionPersistence` under the ordinary key for exactly the backend's lifetime. `create` and write `open` call `TaskSessionStore.assertWritable()` before they delegate; reads, `stat`, `list`, and `flush` delegate unchanged. Unloading the row removes the authorized provider before the backend, so consumers that inject `sessionPersistence` unload while the backend still holds their handles. JSONL contains ordinary Session events; the Task SQLite database owns run status and run-to-Session association.
 
-
-No runtime invariant companion is published; the shared JSONL companion owns storage checks, and this wrapper performs one authorization check before delegation.
 -----
 
 <a id="further-exploration"></a>

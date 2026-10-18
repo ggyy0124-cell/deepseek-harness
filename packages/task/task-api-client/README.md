@@ -26,8 +26,6 @@ Construct `TaskApiClient` with an explicit API base URL, Fetch implementation an
 
 `credential(reference, value?)` reads or replaces one shared credential, and `credentials()` lists the references named by installed definitions; neither returns a value. `TaskApiError.problem` carries validated server diagnostics and revision conflicts. Caller cancellation is forwarded to Fetch. Invalid parameters, missing write identities, unexpected response statuses and non-protocol errors reject. Error pages are not copied into exception messages.
 
-**Runtime invariant:** No companion is published. Each operation validates its request and response directly; Fetch tests cover authentication and failure behavior.
-
 Use `events({ signal, cursor? })` to receive `ready` and durable Task events. On a fresh subscription, wait for `ready` before fetching a REST baseline and retain incoming events during that fetch. Store the last delivered cursor and pass it on reconnection; a stale cursor requires a fresh subscription and baseline. Unknown event names are ignored. `eventLimitBytes` bounds a complete received frame, defaults to 262144, and includes UTF-8 framing bytes. Abort the signal to interrupt a pending read; ending iteration releases the reader. Automatic retry/backoff belongs to the calling application.
 
 Use `request('getTranscript', { params: { runId }, query: { cursor, limit: '50' } })` for forward transcript windows; omit the cursor on the first read. Retain the returned `nextCursor` even when `items` is empty. This endpoint exposes stored messages; use `sessionEvents({ runId, signal, cursor? })` for independent Session replay.

@@ -8,7 +8,7 @@
 
 [`TaskDefinition`](../../packages/task/task/src/index.ts)贡献轮询、定时或手动三者之一的特殊触发类型。它负责输入和检查点解析、阶段处理、优先级、资源请求、错误分类及清理。可选的普通任务处理器提供业务身份与发现数据比较逻辑。注册归属于贡献它的 Cordis fiber。
 
-[`TaskRun`](../../packages/task/task/src/types.ts)记录一次执行及一个主 Session。前台子 Agent 可以拥有归属同一执行的辅助 Session；它们不是普通任务执行，也不是 Task 派发的后继。配置、代码版本、来源与创建身份保持不变。检查点、输入修订号、等待、重试资格、结果与清理状态通过已提交决策变化。已完成任务不能重新打开 Session 进行执行。
+[`TaskRun`](../../packages/task/task/src/types.ts)记录一次执行及一个主 Session。在模型操作内启动的子 Agent 可以拥有归属同一执行的辅助 Session；它们不是普通任务执行，也不是 Task 派发的后继。配置、代码版本、来源与创建身份保持不变。检查点、输入修订号、等待、重试资格、结果与清理状态通过已提交决策变化。已完成任务不能重新打开 Session 进行执行。
 
 ## 阶段与外部操作
 
@@ -20,7 +20,7 @@
 
 任务数据库负责任务调度、执行状态、执行到 Session 的关联、资源锁及操作回执。Session JSONL 只负责会话事件。Task Profile 通过 Loader 补丁替换 Session、Agent、Agent Loop、JSONL 持久化与 Agent Preset 提供方；其他 profile 仍使用共享提供方。Task 专用修改检查查询数据库关联及进程内执行授权，不向已发布 Session 格式加入 Task 事件。
 
-只有明确的阶段模型调用会把业务指令加入模型上下文。每次调用先持久化带唯一标识的收件箱消息，再唤醒 Agent，并要求存在匹配的已完成轮次。无论是特殊 Run 还是普通 Run，父 Agent 都根据自身推理决定是否调用随附编码 preset 的有界前台 `subagent` 或 `subagent_fork` 工具；子 Agent 不是必需的。Worker 线程版 workflow 与 Ralph 工具已禁用。需要子 Agent 时，任务数据库在创建前预留其 Session 身份并记录退出；父轮次等待子 Agent，取消任务也会在 Task 清理前等待它们退出。子 Agent 执行被中断后，未确认的父模型操作不会自动重放；插件可通过 `stage.children` 获取子 Session 身份进行业务核对。结果不确定的外部操作及未完成模型轮次仍需由插件恢复。终态 Session 保持可读，受支持的 Task Profile 修改与执行路径会拒绝任务准入之外的访问。
+只有明确的阶段模型调用会把业务指令加入模型上下文。每次调用先持久化带唯一标识的收件箱消息，再唤醒 Agent，并要求存在匹配的已完成轮次。无论是特殊 Run 还是普通 Run，父 Agent 都根据自身推理决定是否调用随附编码 preset 中限制了深度的 `subagent` 或 `subagent_fork` 工具；子 Agent 不是必需的。Worker 线程版 workflow 与定时工具已禁用。需要子 Agent 时，任务数据库在创建前预留其 Session 身份并记录退出；模型操作会等到父 Agent 空闲且没有仍在推进的子 Agent，因此子 agent 结算通知在操作内得到回应；取消任务也会在 Task 清理前等待子 Agent 退出。已结算的子 Agent 只能在创建它的模型操作内继续。子 Agent 执行被中断后，未确认的父模型操作不会自动重放；插件可通过 `stage.children` 获取子 Session 身份进行业务核对。结果不确定的外部操作及未完成模型轮次仍需由插件恢复。终态 Session 保持可读，受支持的 Task Profile 修改与执行路径会拒绝任务准入之外的访问。
 
 ## 管理命令
 

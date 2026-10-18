@@ -1,4 +1,4 @@
-/** Foreground child Agents are optional inside any model-driven Task execution. */
+/** Child Agents are optional inside any model-driven Task execution and settle inside the model operation that starts them. */
 import { afterEach, describe, expect, it } from 'vitest'
 import { DatabaseSync } from 'node:sqlite'
 import { join } from 'node:path'
@@ -14,9 +14,11 @@ import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as Spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import * as Fork from '@deepseek-ai/dsh-subagent-fork-in-process'
 import * as ToolSubagent from '@deepseek-ai/dsh-tool-subagent'
-import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
 import { TaskDatabase } from '../src/database.ts'
 import { taskHost } from './host-fixture.ts'
+import { RoutedAdapter, type Route } from './routed-adapter.ts'
 import { stub } from './stub.ts'
 
 const closes: (() => Promise<void>)[] = []
@@ -34,9 +36,16 @@ interface FixtureOptions {
   readonly probe?: Probe
   readonly definition?: Partial<TaskDefinition>
   readonly beforeTask?: (ctx: Context, directory: string) => void
+  /** Mount the subagent runtime and delegation tools; `false` leaves `subagents` to `beforeTask`. */
+  readonly delegation?: boolean
 }
 
-async function fixture(script: ConstructorParameters<typeof MockAdapter>[0], options: FixtureOptions = {}) {
+/** Parent input after a delegation call returned its child id. */
+const started = 'started subagent'
+/** Parent input carrying a settled child's closing message. */
+const settled = 'Its closing message'
+
+async function fixture(routes: readonly Route[], options: FixtureOptions = {}) {
   const { childConcurrency = 4, specialUsesModel = false, probe } = options
   const host = await taskHost(async (ctx) => {
     options.beforeTask?.(ctx, fileURLToPath(ctx.baseUrl!))
@@ -50,14 +59,16 @@ async function fixture(script: ConstructorParameters<typeof MockAdapter>[0], opt
         return 'probed'
       },
     }))
+    if (options.delegation === false) return
+    await mountWorkingDirectoryFixture(ctx)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(Spawn, { providerName: 'spawn' })
     await ctx.plugin(Fork, { providerName: 'fork' })
-    await ctx.plugin(ToolSubagent, { provider: 'spawn', enableRunInBackground: false, backgroundMode: 'one-shot', maxDepth: 1 })
-    await ctx.plugin(ToolSubagent, { provider: 'fork', toolName: 'subagent_fork', enableRunInBackground: false, backgroundMode: 'one-shot', maxDepth: 1 })
+    await ctx.plugin(ToolSubagent, { provider: 'spawn', maxDepth: 1 })
+    await ctx.plugin(ToolSubagent, { provider: 'fork', toolName: 'subagent_fork', maxDepth: 1 })
   }, { childConcurrency })
   closes.push(host.close)
-  const adapter = new MockAdapter(script)
+  const adapter = new RoutedAdapter(routes)
   host.ctx.llm.registerAdapter(['child-mock'], adapter)
   const definition: TaskDefinition = {
     id, title: 'Child business', codeVersion: '1',
@@ -79,6 +90,16 @@ async function fixture(script: ConstructorParameters<typeof MockAdapter>[0], opt
   return { ...host, adapter }
 }
 
+/** Routes for a parent that delegates one spawned branch, waits, and answers after the branch's closing notice. */
+function oneBranch(prompt: string, answer: string): Route[] {
+  return [
+    ['Explore two branches.', toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt })],
+    [started, textResponse('waiting for the branch')],
+    [prompt, textResponse(answer)],
+    [settled, textResponse('parent complete')],
+  ]
+}
+
 function parallelCalls(): StreamChunk[] {
   return [
     { type: 'block-start', index: 0, blockType: 'tool-call' },
@@ -96,21 +117,24 @@ function parallelCalls(): StreamChunk[] {
   ]
 }
 
+function childRows(directory: string, runId: TaskRunId): { session_id: string; state: string }[] {
+  const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
+  try {
+    return db.prepare('SELECT session_id,state FROM task_children WHERE run_id=? ORDER BY rowid').all(runId) as
+      { session_id: string; state: string }[]
+  } finally { db.close() }
+}
+
 describe('Task child Agents', () => {
   it('lets a special-task parent decide to create a child', async () => {
-    const { ctx, directory } = await fixture([
-      toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Check branch' }),
-      textResponse('branch complete'), textResponse('parent complete'),
-    ], { specialUsesModel: true })
+    const { ctx, directory } = await fixture(oneBranch('Check branch', 'branch complete'), { specialUsesModel: true })
     ctx.tasks.triggerManual(id, request('special-child'), null)
     await expect.poll(() => ctx.tasks.listRuns()[0]?.status, { timeout: 4000 }).toBe('succeeded')
     const run = ctx.tasks.listRuns()[0]!
     expect(run.kind).toBe('manual')
+    expect(run.result).toBe('parent complete')
     expect(ctx.tasks.listRuns()).toHaveLength(1)
-    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
-    const children = db.prepare('SELECT session_id,state FROM task_children WHERE run_id=?').all(run.id) as
-      { session_id: string; state: string }[]
-    db.close()
+    const children = childRows(directory, run.id)
     expect(children).toHaveLength(1)
     expect(children[0]!.state).toBe('complete')
   })
@@ -119,30 +143,21 @@ describe('Task child Agents', () => {
     { kind: 'manual', specialUsesModel: true },
     { kind: 'ordinary', specialUsesModel: false },
   ] as const)('does not create a child when the $kind parent answers directly', async ({ kind, specialUsesModel }) => {
-    const { ctx, directory } = await fixture([textResponse('parent complete')], { specialUsesModel })
+    const { ctx, directory } = await fixture([['Explore two branches.', textResponse('parent complete')]], { specialUsesModel })
     ctx.tasks.triggerManual(id, request(`${kind}-direct`), null)
     await expect.poll(() => ctx.tasks.listRuns().find(run => run.kind === kind)?.status, { timeout: 4000 }).toBe('succeeded')
     const run = ctx.tasks.listRuns().find(value => value.kind === kind)!
-    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
-    const children = db.prepare('SELECT session_id FROM task_children WHERE run_id=?').all(run.id)
-    db.close()
-    expect(children).toEqual([])
+    expect(childRows(directory, run.id)).toEqual([])
   })
 
-  it('runs a foreground child under an ordinary Run and retains a read-only child Session', async () => {
-    const { ctx, directory } = await fixture([
-      toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Check branch A' }),
-      textResponse('branch A complete'), textResponse('parent complete'),
-    ])
+  it('answers after the child settles under an ordinary Run and retains a read-only child Session', async () => {
+    const { ctx, directory } = await fixture(oneBranch('Check branch A', 'branch A complete'))
     ctx.tasks.triggerManual(id, request('start'), null)
     await expect.poll(() => ctx.tasks.listRuns().find(run => run.kind === 'ordinary')?.status, { timeout: 4000 }).toBe('succeeded')
     const ordinary = ctx.tasks.listRuns().find(run => run.kind === 'ordinary')!
     expect(ordinary.result).toBe('parent complete')
     expect(ctx.tasks.listRuns()).toHaveLength(2)
-    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
-    const children = db.prepare('SELECT session_id,state FROM task_children WHERE run_id=?').all(ordinary.id) as
-      { session_id: string; state: string }[]
-    db.close()
+    const children = childRows(directory, ordinary.id)
     expect(children).toHaveLength(1)
     expect(children[0]!.state).toBe('complete')
     expect(children[0]!.session_id).not.toBe(ordinary.sessionId)
@@ -155,55 +170,58 @@ describe('Task child Agents', () => {
 
   it('joins parallel branches before completing the owning ordinary Run', async () => {
     const { ctx, directory } = await fixture([
-      parallelCalls(), textResponse('branch complete'), textResponse('branch complete'), textResponse('parent complete'),
+      ['Explore two branches.', parallelCalls()],
+      [started, textResponse('waiting for the branches')],
+      ['Check A', textResponse('branch A complete')],
+      ['Check B', textResponse('branch B complete')],
+      [settled, textResponse('parent complete')],
     ])
     ctx.tasks.triggerManual(id, request('parallel'), null)
     await expect.poll(() => ctx.tasks.listRuns().find(run => run.kind === 'ordinary')?.status, { timeout: 4000 }).toBe('succeeded')
     const ordinary = ctx.tasks.listRuns().find(run => run.kind === 'ordinary')!
-    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
-    const children = db.prepare('SELECT session_id,state FROM task_children WHERE run_id=?').all(ordinary.id) as
-      { session_id: string; state: string }[]
-    db.close()
+    expect(ordinary.result).toBe('parent complete')
+    const children = childRows(directory, ordinary.id)
     expect(children).toHaveLength(2)
     expect(children.map(child => child.state)).toEqual(['complete', 'complete'])
     expect(new Set(children.map(child => child.session_id)).size).toBe(2)
   })
 
-  it('joins a foreground forked child in the owning model turn', async () => {
+  it('joins a forked child in the owning model operation', async () => {
     const { ctx, directory } = await fixture([
-      toolCallResponse('branch', 'subagent_fork', { description: 'Explore branch', prompt: 'Review prior context' }),
-      textResponse('forked branch complete'), textResponse('parent complete'),
+      ['Explore two branches.', toolCallResponse('branch', 'subagent_fork', { description: 'Explore branch', prompt: 'Review prior context' })],
+      [started, textResponse('waiting for the fork')],
+      ['Review prior context', textResponse('forked branch complete')],
+      [settled, textResponse('parent complete')],
     ])
     ctx.tasks.triggerManual(id, request('fork'), null)
     await expect.poll(() => ctx.tasks.listRuns().find(run => run.kind === 'ordinary')?.status, { timeout: 4000 }).toBe('succeeded')
     const ordinary = ctx.tasks.listRuns().find(run => run.kind === 'ordinary')!
-    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
-    const children = db.prepare('SELECT session_id,state FROM task_children WHERE run_id=?').all(ordinary.id) as
-      { session_id: string; state: string }[]
-    db.close()
+    expect(ordinary.result).toBe('parent complete')
+    const children = childRows(directory, ordinary.id)
     expect(children).toHaveLength(1)
     expect(children[0]!.state).toBe('complete')
   })
 
   it('rejects another live child when the Run reaches its configured limit', async () => {
     const { ctx, directory } = await fixture([
-      parallelCalls(), textResponse('branch complete'), textResponse('parent complete'),
+      ['Explore two branches.', parallelCalls()],
+      ['concurrency limit reached', textResponse('waiting for the admitted branch')],
+      ['Check A', textResponse('branch A complete')],
+      [settled, textResponse('parent complete')],
     ], { childConcurrency: 1 })
     ctx.tasks.triggerManual(id, request('limited'), null)
     await expect.poll(() => ctx.tasks.listRuns().find(run => run.kind === 'ordinary')?.status, { timeout: 4000 }).toBe('succeeded')
     const ordinary = ctx.tasks.listRuns().find(run => run.kind === 'ordinary')!
-    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
-    const children = db.prepare('SELECT session_id,state FROM task_children WHERE run_id=?').all(ordinary.id) as
-      { session_id: string; state: string }[]
-    db.close()
+    const children = childRows(directory, ordinary.id)
     expect(children).toHaveLength(1)
     expect(children[0]!.state).toBe('complete')
   })
 
   it('cancels a running child before the ordinary Run completes cleanup', async () => {
     const { ctx, directory } = await fixture([
-      toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Wait in branch' }),
-      'hang',
+      ['Explore two branches.', toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Wait in branch' })],
+      [started, textResponse('waiting for the branch')],
+      ['Wait in branch', 'hang'],
     ])
     ctx.tasks.triggerManual(id, request('cancel'), null)
     const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
@@ -223,9 +241,32 @@ describe('Task child Agents', () => {
     } finally { db.close() }
   })
 
-  it('rejects entering an unreserved child and resuming a child inside the owning model turn', async () => {
+  it('blocks cleanup when cancellation cannot release the parent\'s children', async () => {
+    const { ctx } = await fixture([['Explore two branches.', 'hang']], {
+      delegation: false,
+      beforeTask: (ctx) => {
+        ctx.provide('subagents', stub<Context['subagents']>({
+          waitForChildren: () => Promise.resolve(false),
+          drainDescendants: () => Promise.reject(new Error('child release failed')),
+        }))
+      },
+    })
+    ctx.tasks.triggerManual(id, request('release'), null)
+    await expect.poll(() => {
+      const run = ctx.tasks.listRuns().find(value => value.kind === 'ordinary')
+      return run === undefined ? undefined : ctx.agents.get(run.sessionId)?.status
+    }, { timeout: 4000 }).toBe('running')
+    const ordinary = ctx.tasks.listRuns().find(run => run.kind === 'ordinary')!
+    await expect(ctx.tasks.cancel(ordinary.id)).rejects.toThrow('child release failed')
+    expect(ctx.tasks.getRun(ordinary.id)).toMatchObject({ cleanup: 'blocked', terminalAt: null })
+  })
+
+  it('rejects entering an unreserved child and resuming a child outside the model operation that created it', async () => {
     const rejected: string[] = []
-    const { ctx, directory } = await fixture([toolCallResponse('probe', 'probe', {}), textResponse('parent complete')], {
+    const { ctx, directory } = await fixture([
+      ['Explore two branches.', toolCallResponse('probe', 'probe', {})],
+      ['probed', textResponse('parent complete')],
+    ], {
       probe: async (ctx, agent) => {
         const attempts = [
           () => ctx.agents.enter(stub<Agent>({ id: SessionId('unreserved') }), agent),
@@ -241,7 +282,7 @@ describe('Task child Agents', () => {
     await expect.poll(() => ctx.tasks.listRuns().find(run => run.kind === 'ordinary')?.status, { timeout: 4000 }).toBe('succeeded')
     expect(rejected).toEqual([
       'task child Agent has no durable owner',
-      'task child Agents cannot resume outside their foreground operation',
+      'task child Agents resume only inside the model operation that created them',
       expect.stringContaining('setup failed'),
     ])
     const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
@@ -252,8 +293,43 @@ describe('Task child Agents', () => {
     expect(events.map(row => row.event)).toContain('child.creation-failed')
   })
 
+  it('resumes a settled child inside the model operation that created it within the live-child limit', async () => {
+    const outcomes: string[] = []
+    let directory = ''
+    const host = await fixture([
+      ...oneBranch('Check branch A', 'branch A complete').filter(([match]) => match !== settled),
+      [settled, toolCallResponse('probe', 'probe', {})],
+      ['probed', textResponse('parent complete')],
+    ], {
+      childConcurrency: 1,
+      probe: async (ctx, agent) => {
+        const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
+        const [child] = db.prepare('SELECT session_id FROM task_children ORDER BY rowid').all() as { session_id: string }[]
+        db.close()
+        const holder = await ctx.agents.create({ sessionId: SessionId('holder'), parentAgent: agent })
+        try { await ctx.agents.resume({ resumeSessionId: SessionId(child!.session_id), parentAgent: agent }) }
+        catch (error) { outcomes.push((error as Error).message) }
+        await holder.dispose()
+        const resumed = await ctx.agents.resume({ resumeSessionId: SessionId(child!.session_id), parentAgent: agent })
+        outcomes.push(resumed.agent.id)
+        await resumed.dispose()
+      },
+    })
+    directory = host.directory
+    host.ctx.tasks.triggerManual(id, request('resume'), null)
+    await expect.poll(() => host.ctx.tasks.listRuns().find(run => run.kind === 'ordinary')?.status, { timeout: 4000 }).toBe('succeeded')
+    const ordinary = host.ctx.tasks.listRuns().find(run => run.kind === 'ordinary')!
+    const children = childRows(directory, ordinary.id)
+    expect(outcomes).toEqual(['task child Agent concurrency limit reached', children[0]!.session_id])
+    expect(children.map(child => child.state)).toEqual(['complete', 'complete'])
+    const db = new DatabaseSync(join(directory, 'tasks.sqlite'))
+    const events = db.prepare("SELECT event FROM journal WHERE event LIKE 'child.%' ORDER BY rowid").all() as { event: string }[]
+    db.close()
+    expect(events.map(row => row.event)).toContain('child.resumed')
+  })
+
   it('rejects child Agents outside an admitted model operation', async () => {
-    const { ctx } = await fixture(['hang'])
+    const { ctx } = await fixture([['Explore two branches.', 'hang']])
     ctx.tasks.triggerManual(id, request('outside'), null)
     await expect.poll(() => {
       const run = ctx.tasks.listRuns().find(value => value.kind === 'ordinary')
@@ -269,8 +345,11 @@ describe('Task child Agents', () => {
   it('checks tool calls made by a child against its owning Run', async () => {
     const callers: string[] = []
     const { ctx } = await fixture([
-      toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Probe branch' }),
-      toolCallResponse('probe', 'probe', {}), textResponse('branch complete'), textResponse('parent complete'),
+      ['Explore two branches.', toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Probe branch' })],
+      [started, textResponse('waiting for the branch')],
+      ['Probe branch', toolCallResponse('probe', 'probe', {})],
+      ['probed', textResponse('branch complete')],
+      [settled, textResponse('parent complete')],
     ], { probe: async (_ctx, agent) => { callers.push(agent.id) } })
     ctx.tasks.triggerManual(id, request('child-tool'), null)
     await expect.poll(() => ctx.tasks.listRuns().find(run => run.kind === 'ordinary')?.status, { timeout: 4000 }).toBe('succeeded')
@@ -280,7 +359,10 @@ describe('Task child Agents', () => {
   })
 
   it('blocks a Run whose child is still active after the parent model turn and blocks its cleanup until the child settles', async () => {
-    const { ctx } = await fixture([toolCallResponse('probe', 'probe', {}), textResponse('parent complete')], {
+    const { ctx } = await fixture([
+      ['Explore two branches.', toolCallResponse('probe', 'probe', {})],
+      ['probed', textResponse('parent complete')],
+    ], {
       probe: async (ctx, agent) => { await ctx.agents.create({ sessionId: SessionId('leaked'), parentAgent: agent }) },
     })
     ctx.tasks.triggerManual(id, request('leaked'), null)
@@ -294,8 +376,10 @@ describe('Task child Agents', () => {
   it('exposes earlier children to a retried stage', async () => {
     let attempt = 0
     const { ctx } = await fixture([
-      toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Check branch' }),
-      textResponse('branch complete'), textResponse('parent complete'),
+      ['Explore one branch.', toolCallResponse('branch', 'subagent', { description: 'Explore branch', prompt: 'Check branch' })],
+      [started, textResponse('waiting for the branch')],
+      ['Check branch', textResponse('branch complete')],
+      [settled, textResponse('parent complete')],
     ], { definition: {
       runOrdinary: async (stage) => {
         if (attempt++ === 0) {

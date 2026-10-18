@@ -25,9 +25,9 @@ Launch the Task engine, the authenticated REST/SSE gateway and the [Task Web cli
 <a id="use-this-package"></a>
 ## Use this package
 
-Launch the backend with `pnpm dsh --profile task`. Its database, including recorded preset revisions, and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port, and `--host 0.0.0.0` listens on all interfaces for [intranet access](#intranet-access). Startup prints the Web client address `/` and the API base address `/api/task/v1/` without issuing a credential or opening a browser; sign in with `--launch-link`. Browser navigations to paths without a built file receive the client's `index.html`, existing files are served directly, and other missing paths return 404. An installation without business plugins has no business definitions.
+Launch the backend with `pnpm dsh --profile task`. Its database, including recorded preset revisions, and Session JSONL live under the DSH home’s `tasks` directory, isolated from Web Profile. The gateway binds loopback port 3081 by default; `--port` selects another port, and `--host <address>` listens on one local interface address for [intranet access](#intranet-access). Startup prints the Web client address `/` and the API base address `/api/task/v1/` without issuing a credential or opening a browser; sign in with `--launch-link`. Browser navigations to paths without a built file receive the client's `index.html`, existing files are served directly, and other missing paths return 404. An installation without business plugins has no business definitions.
 
-The bundle declares the Web presets under `presets/` with delegation kept in the foreground and asynchronous workflow starts disabled. The shipped coding presets let a special or ordinary Task Agent choose whether to call foreground in-process subagents during an admitted model turn. No child is required. `task-local` limits them to four live children per Run by default through `childConcurrency`; each child retains its own Session and must finish before the parent turn settles.
+The bundle declares the Web presets under `presets/` with delegation limited to depth 1, and with asynchronous workflow starts and scheduled follow-ups disabled. The shipped coding presets let a special or ordinary Task Agent choose whether to start in-process subagents during an admitted model operation. No child is required. `task-local` limits them to four live children per Run by default through `childConcurrency`; each child retains its own Session and settles before the parent's model operation completes.
 
 Administration also uses this profile:
 
@@ -45,7 +45,7 @@ pnpm dsh --profile task --restore /absolute/backup
 <a id="intranet-access"></a>
 #### Intranet access
 
-Start the host with `--host 0.0.0.0 --trusted-host <authority>` so browsers on other machines can open it; repeat `--trusted-host` for each address they use, such as `10.0.0.5` or `task.lan:3081`. A bare host means the `--port` value. Listening on all interfaces without a trusted host is refused at startup, and startup prints one Web address per trusted host. Requests with any other Host header return 403.
+Start the host with `--host <address>`, one concrete IPv4 or IPv6 address of a local interface such as `10.0.0.5`, so browsers on other machines can open `http://<address>:<port>/`; wildcard addresses such as `0.0.0.0` are refused at startup. Add `--trusted-host <authority>` for each further address browsers use, such as `task.lan:3081`; a bare host means the `--port` value. Startup prints the listen address and one Web address per trusted host, and `--launch-link --host <address>` issues a link for the same address. Requests with any other Host header return 403.
 
 To sign in without a launch link, enable the gateway's password login in the profile patch. A patch replaces the row's whole configuration, so it restates `attachmentRoot` and the `trustedHosts` wiring:
 
@@ -127,8 +127,6 @@ The [Task REST gateway](../../task/task-api-gateway/README.md) serves `/api/task
 
 </details>
 
-
-No runtime invariant companion is published; Task providers own record checks, while HTTP registration is checked at its operations.
 -----
 
 <a id="further-exploration"></a>

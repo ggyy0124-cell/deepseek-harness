@@ -35,7 +35,7 @@ Mount this consumer alongside the task provider; the `task` profile includes it.
 <details>
 <summary>Implementation details</summary>
 
-The [tool implementation](src/index.ts) verifies the exact calling Agent and delegates admission to `ctx.tasks.dispatch`. Its registration is owned by both the Agent lifetime and the consumer plugin lifetime. No invariant companion is published: the provider owns execution admission and the Task companion owns Session relationships.
+The [tool implementation](src/index.ts) verifies the exact calling Agent and delegates admission to `ctx.tasks.dispatch`. Its registration is owned by both the Agent lifetime and the consumer plugin lifetime.
 
 </details>
 

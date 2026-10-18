@@ -7,6 +7,7 @@ import { TaskAuthenticationStore } from '@deepseek-ai/dsh-task-api-gateway/auth-
 import { backupTaskStore, restoreTaskStore } from '@deepseek-ai/dsh-task-local/maintenance'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TaskDeviceId } from '@deepseek-ai/dsh-task-api-gateway'
+import { directOrigin } from './origin.ts'
 import type {} from './startup.ts'
 /** Administrative command consumer. */
 export const name = 'task-administration'
@@ -122,8 +123,8 @@ export function apply(ctx: Context, config: Config): void {
               process.stdout.write(`${JSON.stringify(await store.createDevice())}\n`)
             else if (command === 'token-revoke') await store.revokeDevice(brandString<TaskDeviceId>(target))
             else if (command === 'launch-link') {
-              // Loopback reaches the host whether it listens on loopback or on all interfaces.
-              const origin = config.publicOrigin === '' ? `http://127.0.0.1:${ctx.taskStartup.port}` : config.publicOrigin
+              // The link names the address given by --host, which the server it reaches must listen on.
+              const origin = config.publicOrigin === '' ? directOrigin(ctx.taskStartup.host, ctx.taskStartup.port) : config.publicOrigin
               const launch = await store.createLaunch()
               // The fragment never reaches HTTP requests or server logs; the client posts it to /auth/exchange.
               process.stdout.write(`${JSON.stringify({ url: `${origin}/#launch=${launch.token}`, expiresAt: new Date(launch.expiresAt).toISOString() })}\n`)

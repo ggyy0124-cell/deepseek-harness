@@ -3,8 +3,8 @@
     "original": "packages/core/agent-loop/src",
     "copy": "packages/task/task-agent-loop/src",
     "path": "agent.ts",
-    "originalSha256": "9c985dd5ce3612b0a6f1833cb592930e4e390d4249821accea53064d8e42015c",
-    "copySha256": "2370bfba3f2a7e1b192cbbf0c2b148ae9ffe166c11972f9b5aafbcf791bf34a2"
+    "originalSha256": "4add12f5c22bb1b8cf1dbc239c9b09fa3351feff2c936cb2b8900036468bd01b",
+    "copySha256": "b6090e9df3b3671feebaa2dbc7bb5bdf0f44f34eb96f5c6b90d67a68eabe8584"
   },
   {
     "original": "packages/core/agent-loop/src",
@@ -24,15 +24,8 @@
     "original": "packages/core/agent-loop/src",
     "copy": "packages/task/task-agent-loop/src",
     "path": "index.ts",
-    "originalSha256": "853e76aef2eecafe5526a5267c3d386780b5c59e3c79c2448532fada7285a605",
-    "copySha256": "448b0f8a45072f3219bdef80f74907c065915d8f47c597efe43adb0ebc14d0ff"
-  },
-  {
-    "original": "packages/core/agent-loop/src",
-    "copy": "packages/task/task-agent-loop/src",
-    "path": "invariant.ts",
-    "originalSha256": "109c89b44b3449b92c10a7116b00af0e49a8a80ff2be3d79a22c7d48992a08b5",
-    "copySha256": null
+    "originalSha256": "3ea0262656c8ddcaa3be315c150bdc2af09371031c3c471d4ded511e21c6e86b",
+    "copySha256": "9fca9378e2d314671800b131b96f0065ca969c82ea610d20b634995a7356020c"
   },
   {
     "original": "packages/core/agent-loop/src",

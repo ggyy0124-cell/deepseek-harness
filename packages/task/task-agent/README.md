@@ -25,7 +25,7 @@ Provide the ordinary Agent registry inside Task Profile while authorizing Agent 
 <a id="use-this-package"></a>
 ## Use this package
 
-Task Profile mounts this provider in place of `dsh-agent`. Task Local installs creation guards with `guardCreation()`. Each guard authorizes a proposed Session and Agent relationship before the shared registry creates, resumes, or enters it. Foreground children may be created only within the owning Task model operation; ordinary tasks remain independent runtime roots. `taskAgentRegistry(ctx)` asserts that the profile uses this replacement.
+Task Profile mounts this provider in place of `dsh-agent`. Task Local installs creation guards with `guardCreation()`. Each guard authorizes a proposed Session and Agent relationship before the shared registry creates, resumes, or enters it. Children may be created, or resumed after they settle, only within the owning Task model operation; ordinary tasks remain independent runtime roots. `taskAgentRegistry(ctx)` asserts that the profile uses this replacement.
 
 -----
 
@@ -34,8 +34,6 @@ Task Profile mounts this provider in place of `dsh-agent`. Task Local installs c
 
 `TaskAgentRegistry` subclasses the shared `AgentRegistry` and delegates accepted operations unchanged. Guard registration is effect-scoped, so removing Task Local removes its policy without leaving process-global state.
 
-
-No runtime invariant companion is published; guard registration and disposal update one private set through the same service.
 -----
 
 <a id="further-exploration"></a>
