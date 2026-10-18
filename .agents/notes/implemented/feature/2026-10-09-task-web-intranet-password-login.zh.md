@@ -16,9 +16,9 @@ Task 宿主原来只在 `127.0.0.1` 上提供 Task Web 和网关，浏览器只�
 
 ### 监听地址与可信主机
 
-`task-startup` 接受 `--host 127.0.0.1`（默认）或 `--host 0.0.0.0`，即 `dsh-host-webserver` 支持的两个值，并接受可重复的 `--trusted-host <authority>`。`--host 0.0.0.0` 而没有可信主机时，在解析参数阶段退出，因为其他机器上的浏览器无法通过 Host 检查。随附的补丁把这些参数传入网关的 `trustedHosts`；对绕过这些参数的组合，网关在加载时拒绝同样的错误配置。
+`task-startup` 接受 `--host 127.0.0.1`（默认）或本机网卡的一个具体 IPv4 或 IPv6 地址，并接受可重复的 `--trusted-host <authority>`。`0.0.0.0` 等通配地址在解析参数阶段退出，`dsh-host-webserver` 也会在加载时拒绝它（[上游 0.2.1 适配](../architecture/2026-10-17-task-profile-upstream-0-2-1-merge.zh.md)）。随附的补丁把这些参数传入网关的 `trustedHosts`。
 
-`trustedHosts` 列出在 `publicOrigin` 或回环来源之外接受的 authority（`host` 或 `host:port`；只写主机时取服务端口），协议取 `publicOrigin` 的协议或 `http`。`browserOrigins()` 返回这些来源；每个请求按 Host 匹配 authority 相同的来源，由该来源决定 Origin 检查、请求 URL 解析和 Cookie 的 `Secure` 属性。匹配是精确匹配，转发请求头不改变任何判断。启动时为每个可信主机输出一个 Web 地址。`--launch-link` 仍输出回环地址（或 `publicOrigin`）的 URL，不会输出 `0.0.0.0`。
+`trustedHosts` 列出在 `publicOrigin` 或回环来源以及监听地址之外接受的 authority（`host` 或 `host:port`；只写主机时取服务端口），协议取 `publicOrigin` 的协议或 `http`。`browserOrigins()` 返回这些来源；每个请求按 Host 匹配 authority 相同的来源，由该来源决定 Origin 检查、请求 URL 解析和 Cookie 的 `Secure` 属性。匹配是精确匹配，转发请求头不改变任何判断。启动时输出监听地址和每个可信主机的 Web 地址。`--launch-link` 输出其 `--host` 值（或 `publicOrigin`）对应的 URL。
 
 ### 密码登录
 
@@ -63,6 +63,6 @@ Profile 补丁会替换一行的全部配置，因此开启密码登录的补丁
 
 已登录的浏览器可以以 `danger-full-access` preset 在宿主上执行代码。密码、把端口限制在内网网段的主机防火墙和专用系统账号是屏障。使用明文 HTTP 时，能抓取内网流量的人可以读到密码和有效期 30 天、不带 `Secure` 属性的会话 Cookie。所有用户共用一个主体，补充输入、回复和配置修改无法对应到具体的人。重启宿主会清除失败计数和锁定；按用户名的锁定在到期前也会挡住真正的用户。
 
-上游 DSH 出于安全考虑拒绝 Web Profile 使用 `0.0.0.0`；`task-startup` 和网关偏离了这一立场，同步上游时涉及这些文件的改动需要手工合并。
+Task Profile 遵循上游的监听地址规则：内网部署绑定宿主的内网地址，而不是所有网卡。
 
 网关单元测试覆盖可信主机匹配、协议继承、密码登录、限速、保留凭据和加载时的错误配置；`task-intranet-login.e2e.ts` 通过发布的 Profile 覆盖 `--password-set`、参数校验和经可信主机登录；`password-login.e2e.ts` 在浏览器中操作 Task Web 表单。

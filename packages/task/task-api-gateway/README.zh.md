@@ -34,7 +34,7 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 | 字段 | 默认值 | 含义 |
 |---|---|---|
 | `publicOrigin` | 空 | 浏览器准确来源；空值解析为 HTTP 回环地址和实际服务端口 |
-| `trustedHosts` | `[]` | 在 `publicOrigin` 之外接受的 `host` 或 `host:port`，协议与其相同；只写主机时取服务端口。监听所有网卡时必填 |
+| `trustedHosts` | `[]` | 在 `publicOrigin` 之外接受的 `host` 或 `host:port`，协议与其相同；只写主机时取服务端口。监听地址本身无需列出 |
 | `passwordLogin.enabled` / `username` | `false` / 空 | 提供固定账号密码登录；开启时用户名必填 |
 | `passwordLogin.passwordRef` | `TASK_WEB_PASSWORD` | 保存密码的凭据引用 |
 | `passwordLogin.maxFailures` / `failureWindowMs` / `lockoutMs` | 5 / 900000 / 900000 | 每个地址或用户名的失败次数上限、计数窗口及随后的锁定时长 |
@@ -66,7 +66,7 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 
 [HTTP 消费者](src/index.ts) 执行 Host/Origin 检查、有界 JSON 解析、运行时协议校验和不包含业务内容的请求诊断。[操作分发](src/operations.ts) 使用引擎的原子命令回执，重放返回最初受理结果的投影。Run 分页保留首次查询的插入上界，排除后续新增记录。状态过滤反映当前状态；续页成员发生变化时返回 `cursor_stale`，客户端重新分页。
 
-[投影](src/projection.ts) 排除执行记录的私有字段。未声明 forms 的定义暴露 Schema 版本零及通用 JSON 编辑；声明 forms 后使用 Draft 2020-12 校验、乐观配置版本和显式迁移。业务等待投影其持久化标识和版本。网关卸载时移除路由、关闭在途请求并等待处理完成。本包不发布不变量伴随插件：Task 包负责记录与 Session 的比较，本消费者直接校验 HTTP 输入和 DTO。
+[投影](src/projection.ts) 排除执行记录的私有字段。未声明 forms 的定义暴露 Schema 版本零及通用 JSON 编辑；声明 forms 后使用 Draft 2020-12 校验、乐观配置版本和显式迁移。业务等待投影其持久化标识和版本。网关卸载时移除路由、关闭在途请求并等待处理完成。
 
 `GET /events` 先发布 `ready` 游标，再发送已经提交的 Task 日志通知。新客户端先订阅，再读取 REST 基线；重连客户端通过 `Last-Event-ID` 或 `cursor` 查询参数传回最后收到的游标。游标包含数据库标识，不兼容或超前的位置在开始流传输前返回 409。载荷只包含事件名、Run 标识和 UTC 时间，不包含日志详情。客户端收到通知后重新读取受影响的资源。有界 SQLite 分页和套接字缓冲避免离线客户端积累内存重放队列。发送阻塞超时、认证过期或插件卸载会关闭连接，客户端重连后从日志补读。网关在每批重放前重新检查认证。
 

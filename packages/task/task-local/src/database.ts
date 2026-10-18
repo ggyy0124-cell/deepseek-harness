@@ -447,11 +447,11 @@ export class TaskDatabase {
   interruptChildren(): number {
     return Number(this.db.prepare("UPDATE task_children SET state='interrupted' WHERE state IN ('prepared','active')").run().changes)
   }
-  /** Record publication or quiescent disposal.
+  /** Record a reservation renewed for resume, publication, or quiescent disposal.
    * @param id - reserved child identity.
    * @param state - confirmed lifecycle state.
    */
-  setChildState(id: SessionId, state: 'active' | 'complete'): void {
+  setChildState(id: SessionId, state: 'prepared' | 'active' | 'complete'): void {
     this.db.prepare('UPDATE task_children SET state=? WHERE session_id=?').run(state, id)
   }
   /** Read an idempotency receipt and reject key reuse with changed input.

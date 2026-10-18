@@ -10,7 +10,7 @@ Status: implemented
 
 ## Decision
 
-Task 应用补丁禁用 Base 挂载的四个共享提供方条目，以新的 Loader 标识插入 Task 专用替代包，并在 Web 挂载共享注册表的位置挂载 Task preset 注册表。`dsh-task-session`、`dsh-task-agent` 与 `dsh-task-session-persistence-jsonl` 继承共享提供方并加入任务归属授权检查；`dsh-task-agent-preset-registry` 继承共享 preset 注册表并保留已记录的 preset 版本。`dsh-task-agent-loop` 复制共享实现，因为所需修改位于私有驱动逻辑中。Base 与 Web Profile 继续挂载共享包，且这些包的源码保持不变。
+Task 应用补丁禁用 Base 挂载的四个共享提供方条目，以新的 Loader 标识插入 Task 专用替代包，并在 Web 挂载共享注册表的位置挂载 Task preset 注册表。`dsh-task-session` 与 `dsh-task-agent` 继承共享提供方，`dsh-task-session-persistence-jsonl` 则用一个委托式持久化提供方包装共享 JSONL 插件（[上游 0.2.1 适配](2026-10-17-task-profile-upstream-0-2-1-merge.zh.md)）；三者都加入任务归属授权检查；`dsh-task-agent-preset-registry` 继承共享 preset 注册表并保留已记录的 preset 版本。`dsh-task-agent-loop` 复制共享实现，因为所需修改位于私有驱动逻辑中。Base 与 Web Profile 继续挂载共享包，且这些包的源码保持不变。
 
 Task SQLite 数据库是执行状态及执行到 Session 关系的权威。Session JSONL 只保存普通会话事件，并存放在 DSH 主目录的 `tasks/sessions` 目录中，使其他 Profile 的 Session 目录不会列出 Task Session。Task 阶段先持久化带唯一标识的收件箱消息，再唤醒 Task Agent；确认模型操作前，将该消息与已完成轮次关联。恢复流程在发布 Agent 前核对数据库关联及持久化记录。终态 Session 仍可读取；Task Profile 的修改、持久化写入、Agent 命令、恢复及任务父级创建路径必须具有提供方的异步 Session 授权。
 

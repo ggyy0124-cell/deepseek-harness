@@ -26,8 +26,6 @@ kind: "package-library"
 
 `credential(reference, value?)` 读取或替换单个共享凭据，`credentials()` 列出已安装定义引用的凭据；二者都不返回凭据值。`TaskApiError.problem` 携带校验后的服务端诊断和版本冲突。调用方取消信号传递给 Fetch。非法参数、缺失写入标识、非预期响应状态和非协议错误均会拒绝。错误页面不会被复制到异常消息中。
 
-**运行时不变量：** 不发布伴随插件。每个操作直接校验请求和响应；Fetch 测试覆盖认证和失败行为。
-
 使用 `events({ signal, cursor? })` 接收 `ready` 和持久化 Task 事件。首次订阅时，等待 `ready` 后再读取 REST 基线，并在读取期间保留收到的事件。保存最后交付的游标，重连时传回；游标失效时重新订阅并读取基线。未知事件名会被忽略。`eventLimitBytes` 限制收到的完整事件帧，默认 262144，计入 UTF-8 编码及帧分隔字节。中止 signal 可打断正在等待的读取，结束迭代会释放 reader。自动重试和退避由调用应用负责。
 
 使用 `request('getTranscript', { params: { runId }, query: { cursor, limit: '50' } })` 向前分页读取会话；首次读取省略游标。即使 `items` 为空，也保留返回的 `nextCursor`。此接口暴露已存储消息，实时 Session SSE 仍待实现。

@@ -51,7 +51,9 @@ kind: "package-bundle"
 
 [Task App](../task-app/README.zh.md) 等应用组合包可以替换这些提供方或选择不同工具；Task App 替换 Session 与 Agent 提供方，并通过任务 preset 挂载工具。
 
-默认文件编辑使用 `read`、`write` 和 `edit`。`str_replace_editor` 工具仍可显式启用。要将它加入基于 base 的 profile，请在 profile、home 或逐次调用 patch 中添加以下条目：
+`subagent` 与 `subagent_fork` 都创建受管理的子任务，并立即返回 child id。使用 `send_message` 可引导活跃子任务，或在完成后继续其对话。[委派工具行为](../../subagent/tool-subagent/README.zh.md)说明了结果交付和后端能力。
+
+内置 `working_directory` 工具改变后续操作使用的目录，已有进程与写权限保持独立。当前目录信息出现在用户上下文中。默认文件编辑使用 `read`、`write` 和 `edit`。`str_replace_editor` 工具仍可显式启用。要将它加入基于 base 的 profile，请在 profile、home 或逐次调用 patch 中添加以下条目：
 
 ```yaml
 - insert:
@@ -95,12 +97,7 @@ patch 在自身上按平台门控两个 shell 栈：`bash-sandbox` 与 `tool-bas
 |---|---|
 | [`cordis.patch.yml`](cordis.patch.yml) | 组合包的实体：基础插件行，附以行内注释说明各行依据 |
 | [`src/index.ts`](src/index.ts) | 包入口；不携带任何运行时 API |
-| — | 不发布运行时不变式伴生入口；本包是静态 patch 列表载体（由其他包拥有的 loader 行构成的 YAML 文档）；它不挂载任何服务、不发出任何事件，也没有任何可检查的可变关系。每条插入行所属的包负责该行的不变式。 |
 | [`tests/base.spec.ts`](tests/base.spec.ts) | manifest（元数据清单）声明与平台门控检查 |
-
-### 不变式归属
-
-不发布不变式伴生入口，因为本包是静态 patch 列表载体：每条插入行由所属的包负责其不变式，组合包自身没有任何可审计的可变关系。
 
 </details>
 

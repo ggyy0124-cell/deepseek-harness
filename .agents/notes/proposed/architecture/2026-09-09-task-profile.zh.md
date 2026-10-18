@@ -122,7 +122,7 @@ flowchart TB
 | [用户审批](../../../../packages/interaction/user-approval/README.zh.md) | 现有交互展示与审计惯例。 | Host 重启需要持久化业务等待并重建交互，不能依赖保留活跃 Promise。 |
 | [领域存储](../../../../packages/storage/storage-domain/README.zh.md) | JSON 校验与持久性惯例。 | 现有 KV 操作没有多记录事务或二级索引；Task 需要事务准入和活跃业务键约束。 |
 
-[Task Surface 提案](../feature/2026-08-04-task-surface.zh.md)讨论的是 Session 内的临时交互。[会话内提醒](../../implemented/feature/2026-08-05-durable-web-schedule.zh.md)、[动态 Workflow](../../implemented/feature/2026-07-05-dynamic-workflows.zh.md)及 [Agent Teams](../../implemented/feature/2026-08-05-agent-teams.zh.md)继续保有各自独立的职责和用途。本提案不取代这些记录，也不意味着它们延期的能力已经可用。
+[Task Surface 提案](../feature/2026-08-04-task-surface.zh.md)讨论的是 Session 内的临时交互。[会话内提醒](../../archived/feature/2026-08-05-durable-web-schedule.md)、[动态 Workflow](../../archived/feature/2026-07-05-dynamic-workflows.md)及 [Agent Teams](../../implemented/feature/2026-08-05-agent-teams.zh.md)继续保有各自独立的职责和用途。本提案不取代这些记录，也不意味着它们延期的能力已经可用。
 
 <a id="domain"></a>
 

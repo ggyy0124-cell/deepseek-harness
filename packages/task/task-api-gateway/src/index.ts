@@ -1,6 +1,7 @@
 /** Authenticated Task REST gateway, scoped to the Task Profile's shared HTTP server. */
 import { randomUUID } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { isIPv6 } from 'node:net'
 import { Context, Service } from '@deepseek-ai/cordis'
 import Schema from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-cmdline'
@@ -84,7 +85,7 @@ export interface Config {
   readonly publicOrigin: string
   /**
    * Further authorities (`host` or `host:port`; a bare host means the bound port) whose origins pass the Host and Origin
-   * checks, with the scheme of `publicOrigin` or `http`. Listening on all interfaces requires at least one.
+   * checks, with the scheme of `publicOrigin` or `http`. The address the server listens on passes without an entry.
    */
   readonly trustedHosts: string[]
   /** Browser password login for the fixed account. */
@@ -201,8 +202,6 @@ export class TaskApiGateway extends Service {
     }
     for (const entry of config.trustedHosts)
       if (!authorityPattern.test(entry)) throw new Error(`Task trustedHosts entry ${JSON.stringify(entry)} must be host or host:port`)
-    if (ctx.webServer.host !== '127.0.0.1' && config.trustedHosts.length === 0)
-      throw new Error('Task listening on all interfaces requires trustedHosts (--trusted-host <authority>)')
     if (config.passwordLogin.enabled && config.passwordLogin.username.trim() === '')
       throw new Error('Task passwordLogin.username is required when password login is enabled')
     this.passwordRef = credentialRef(config.passwordLogin.passwordRef)
@@ -275,13 +274,15 @@ export class TaskApiGateway extends Service {
   private assertRunning(): void {
     if (this.stopping) throw new HttpProblem(503, 'stopping', 'Task gateway is stopping')
   }
-  /** Browser origins that pass the Host and Origin checks: the public or loopback origin first, then each trusted host.
+  /** Browser origins that pass the Host and Origin checks: the public or loopback origin first, then the listen address when the
+   * server binds another interface, then each trusted host.
    * @returns origins in configuration order.
    */
   browserOrigins(): URL[] {
-    const port = this.ctx.webServer.port
+    const { host, port } = this.ctx.webServer
     const primary = new URL(this.config.publicOrigin || `http://127.0.0.1:${port}`)
-    return [primary, ...this.config.trustedHosts.map(entry =>
+    const bound = host === '127.0.0.1' ? [] : [new URL(`http://${isIPv6(host) ? `[${host}]` : host}:${port}`)]
+    return [primary, ...bound, ...this.config.trustedHosts.map(entry =>
       new URL(`${primary.protocol}//${/\]:\d+$|^[^[]*:\d+$/.test(entry) ? entry : `${entry}:${port}`}`))]
   }
   /** Resolve the request's Host to one browser origin and check its Origin against that origin.

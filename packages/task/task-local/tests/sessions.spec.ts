@@ -10,7 +10,7 @@ import Loader from '@deepseek-ai/cordis-plugin-loader'
 import Include from '@deepseek-ai/cordis-plugin-include'
 import AgentDefaultModel from '@deepseek-ai/dsh-agent-default-model'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { createUserMessage, MessageId } from '@deepseek-ai/dsh-llm'
 import type { TaskDefinition, TaskDefinitionId, TaskRequestId, TaskRun } from '@deepseek-ai/dsh-task'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import LlmRuntime from '@deepseek-ai/dsh-llm'
@@ -21,9 +21,9 @@ import TaskSessionStore, { taskSessionStore } from '@deepseek-ai/dsh-task-sessio
 import TaskAgentRegistry from '@deepseek-ai/dsh-task-agent'
 import TaskAgentLoop from '@deepseek-ai/dsh-task-agent-loop'
 import TaskAgentPresetRegistry, { taskAgentPresetRegistry } from '@deepseek-ai/dsh-task-agent-preset-registry'
-import { livePresetMounts, type PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
+import type { PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
 import { createScope } from '@deepseek-ai/dsh-scope'
-import TaskJsonlPersistence from '@deepseek-ai/dsh-task-session-persistence-jsonl'
+import * as TaskJsonlPersistence from '@deepseek-ai/dsh-task-session-persistence-jsonl'
 import { TaskDatabase } from '../src/database.ts'
 import { TaskEngine } from '../src/engine.ts'
 import { AgentTaskSessions, TaskChildRecoveryError, modelAnswer } from '../src/sessions.ts'
@@ -121,9 +121,9 @@ describe('task Session integration', () => {
     const restored = new AgentTaskSessions(ctx, db, access)
     await restored.ensure(run, signal)
     expect(db.operation(run.id, receiptKey)).toEqual(recorded)
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
     await restored.close(run.id)
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
     db.putOperation(run.id, receiptKey, 'confirmed', { ...recorded.value as object, plugins: '- name: ./elsewhere.mjs\n' })
     const tampered = new AgentTaskSessions(ctx, db, access)
     await expect(tampered.ensure(run, signal)).rejects.toThrow('does not match its digest')
@@ -194,11 +194,11 @@ describe('task Session integration', () => {
     try {
       expect(await registry.mountRevision(parent.ctx, revision)).toEqual({ id: 'test' })
       expect(registry.composeFrom(child.ctx, parent.ctx)).toBe('test')
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+      expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
       await parent.dispose()
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+      expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
       await child.dispose()
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+      expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
     } finally { await child.dispose(); await parent.dispose() }
   })
 
@@ -211,11 +211,11 @@ describe('task Session integration', () => {
       await registry.mountRevision(first.ctx, await registry.captureRevision('test'))
       await redeclare([{ name: './presets/fixture.mjs', config: {} }])
       await registry.mountRevision(second.ctx, await registry.captureRevision('test'))
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+      expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
       await first.dispose()
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+      expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
       await second.dispose()
-      expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+      expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
     } finally { await second.dispose(); await first.dispose() }
   })
 
@@ -259,6 +259,27 @@ describe('task Session integration', () => {
       ? { ...event, data: { ...event.data, reason: { kind: 'blocked' as const } } } : event), message.data.id)).toThrow('did not complete with an answer')
     expect(db.outbox(run.id)).toEqual([])
     await expect(ctx.agents.resume({ resumeSessionId: run.sessionId })).rejects.toThrow('task-owned')
+  })
+  it('answers with the last turn of the operation and stops at the next Task input', async () => {
+    const { ctx, engine, definition } = await harness()
+    engine.register(definition)
+    const run = engine.triggerManual(definition.id, brandString<TaskRequestId>('manual'), null)
+    engine.tick(); await engine.drain()
+    const reader = await ctx.sessionPersistence.open(run.sessionId, 'read')
+    const { events } = await reader.read()
+    await reader.close()
+    const message = events.find(event => event.type === 'user/message')!
+    const start = events.find(event => event.type === 'turn/start')!
+    const end = events.find(event => event.type === 'turn/end')!
+    const assistant = events.find(event => event.type === 'assistant/message')!
+    const turn = (number: number, text: string) => [
+      { ...start, data: { ...start.data, turn: number } },
+      { ...assistant, data: { ...assistant.data, turn: number, message: { ...assistant.data.message, content: [{ type: 'text' as const, text }] } } },
+      { ...end, data: { ...end.data, turn: number } },
+    ]
+    const next = { ...message, data: { ...message.data, id: MessageId('task:next'), source: { kind: 'task' as const } } }
+    const [nextStart, ...nextRest] = turn(3, 'next operation answer')
+    expect(modelAnswer([...events, ...turn(2, 'joined answer'), nextStart!, next, ...nextRest], message.data.id)).toBe('joined answer')
   })
 
   it('reuses a recorded model operation after stage recovery without another model request', async () => {

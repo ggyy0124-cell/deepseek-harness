@@ -15,6 +15,26 @@ const repository = fileURLToPath(new URL('../../', import.meta.url))
 const scenario = fileURLToPath(new URL('./model-wait/', import.meta.url))
 const records = (text: string): unknown[] => text.trim().split('\n').map(line => JSON.parse(line))
 
+/** Volatile fields of a time-context reading, each replaced by the token the Web snapshots use. */
+const timeContextFields: readonly (readonly [RegExp, string])[] = [
+  [/(Time sampled while preparing turn \d+, step \d+: )[^\n]*/, '$1{{timeContextTimestamp}}'],
+  [/(Browser time zone for this request: )[^.]*\./, '$1{{clientTimeZone}}.'],
+  [/(Elapsed since the preceding [^:]*: )[^\n]*/, '$1{{elapsed}}'],
+]
+
+function mapStrings(value: unknown, map: (text: string) => string): unknown {
+  if (typeof value === 'string') return map(value)
+  if (Array.isArray(value)) return value.map(item => mapStrings(item, map))
+  if (value !== null && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, mapStrings(item, map)]))
+  return value
+}
+
+/** Replace the sampled instant, client zone, and elapsed duration in every time-context reading of a JSONL Session log. */
+function tokenizeTimeContext(jsonl: string): string {
+  const tokenize = (text: string) => timeContextFields.reduce((value, [pattern, token]) => value.replace(pattern, token), text)
+  return jsonl.split('\n').map(line => line === '' ? line : JSON.stringify(mapStrings(JSON.parse(line), tokenize))).join('\n')
+}
+
 it.skipIf(process.env['DSH_SNAPSHOT'] === 'record')('replays two model stages with a business confirmation through dsh --profile task', async () => {
   const root = await mkdtemp(join(tmpdir(), 'task-session-snapshot-'))
   const home = join(root, 'home')
@@ -71,7 +91,7 @@ it.skipIf(process.env['DSH_SNAPSHOT'] === 'record')('replays two model stages wi
     const files = await readdir(join(home, 'tasks', 'sessions'), { recursive: true })
     const logs = files.filter(path => path.endsWith('.jsonl'))
     expect(logs).toHaveLength(1)
-    const actual = await readFile(join(home, 'tasks', 'sessions', logs[0]!), 'utf8')
+    const actual = tokenizeTimeContext(await readFile(join(home, 'tasks', 'sessions', logs[0]!), 'utf8'))
     const context = { sessionIds: [run.sessionId], cwd: root }
     const prompts = normalizedSystemPrompts(actual, context)
     const prompt = formatSystemPromptSnapshot(prompts[0] ?? '', prompts.slice(1))

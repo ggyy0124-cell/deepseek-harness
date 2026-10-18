@@ -34,8 +34,6 @@ Task Profile mounts this driver in place of `dsh-agent-loop`. Its public configu
 
 The package copies the shared Agent Loop implementation and adds Task Session authorization before model-driving commands. Its explicit wake path schedules a turn without inserting another message. A source-parity test permits only the Task authorization and wake additions.
 
-
-No runtime invariant companion is published; the shared Agent Loop companion owns the copied lifecycle relationships, and source parity rejects Task copy drift.
 -----
 
 <a id="further-exploration"></a>

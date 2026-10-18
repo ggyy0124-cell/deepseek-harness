@@ -34,8 +34,6 @@ Task Profile 使用此提供方替换 `dsh-session`。Task Local 通过 `guardMu
 
 `TaskSessionStore` 继承共享 `SessionStore`，保留 Session 身份和行为。创建与修改方法先检查所有活跃策略，再委托共享实现。策略属于 Cordis effect，会随所属插件作用域一起卸载。
 
-
-不发布运行时不变量 companion；检查注册与卸载通过同一服务更新一个私有集合。
 -----
 
 <a id="further-exploration"></a>

@@ -26,15 +26,15 @@ function rows(plugins: readonly Row[]): Row[] {
   return plugins.flatMap(row => [row, ...Array.isArray(row.config) ? rows(row.config as Row[]) : []])
 }
 
-const foreground = { backgroundMode: 'one-shot', enableRunInBackground: false, maxDepth: 1 }
+const depthLimit = { maxDepth: 1 }
 
 /** The Task delegation limits applied to one Web row; every other row is unchanged. */
 function withTaskLimits(row: Row): Row {
   const config = Array.isArray(row.config) ? row.config.map(child => withTaskLimits(child as Row)) : row.config
   if (row.id === 'tool-subagent' || row.id === 'tool-subagent-fork') {
-    return { ...row, config: { ...config as object, ...foreground } }
+    return { ...row, config: { ...config as object, ...depthLimit } }
   }
-  if (row.id === 'workflow-ptc' || row.id === 'tool-workflow') return { ...row, disabled: true, config }
+  if (row.id === 'workflow-ptc' || row.id === 'tool-workflow' || row.id === 'tool-schedule') return { ...row, disabled: true, config }
   return { ...row, config }
 }
 
@@ -51,11 +51,11 @@ describe('shipped Task presets', () => {
     }
   })
 
-  it('keep delegation foreground and asynchronous workflow starts disabled', async () => {
+  it('limit delegation depth and keep asynchronous workflow starts and scheduled follow-ups disabled', async () => {
     for (const file of await presetPatches('task-app')) {
       for (const row of rows((await declaration('task-app', file)).config.plugins)) {
-        if (row.id === 'tool-subagent' || row.id === 'tool-subagent-fork') expect(row.config, `${file}/${row.id}`).toMatchObject(foreground)
-        if (row.id === 'workflow-ptc' || row.id === 'tool-workflow' || row.id === 'tool-ralph') expect(row.disabled, `${file}/${row.id}`).toBe(true)
+        if (row.id === 'tool-subagent' || row.id === 'tool-subagent-fork') expect(row.config, `${file}/${row.id}`).toMatchObject(depthLimit)
+        if (row.id === 'workflow-ptc' || row.id === 'tool-workflow' || row.id === 'tool-schedule') expect(row.disabled, `${file}/${row.id}`).toBe(true)
       }
     }
   })

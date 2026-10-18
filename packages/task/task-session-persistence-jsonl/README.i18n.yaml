@@ -15,14 +15,11 @@
   en: d152484eb41ac6b4
   zh: 9f0336825ccdaacd
 /deepseek-ai-dsh-task-session-persistence-jsonl/use-this-package:
-  en: d3676b437b117254
-  zh: 1edde32b4821ec7b
+  en: ee6989e5aec48d8e
+  zh: 701170a9f1c5685e
 /deepseek-ai-dsh-task-session-persistence-jsonl/understand-the-implementation:
-  en: f51af61d5462a396
-  zh: 5dec1fb8853b1730
-/deepseek-ai-dsh-task-session-persistence-jsonl/no-runtime-invariant-companion-is-published-the-shared-jsonl-companion-owns-storage-checks-and-this-wrapper-performs-one-authorization-check-before-delegation:
-  en: 79a3281c914c07b2
-  zh: 29c08d70ba3615c1
+  en: 5be319ac65636bdc
+  zh: 9921e52a92f7ead4
 /deepseek-ai-dsh-task-session-persistence-jsonl/further-exploration:
   en: e1f1f4d2987cd03e
   zh: 3f0069219d9dca4a

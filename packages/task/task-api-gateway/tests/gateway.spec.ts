@@ -637,8 +637,6 @@ describe('Task gateway browser access', () => {
     expect(await send(origin, 'auth/methods', { Host: new URL(origin).host }, {}, 'GET'))
       .toMatchObject({ status: 400, body: { code: 'unexpected_body' } })
     await expect(gateway({}, { trustedHosts: ['tasks.lan/path'] })).rejects.toThrow('trustedHosts')
-    await expect(gateway({}, {}, false, (ctx) => { vi.spyOn(ctx.webServer, 'host', 'get').mockReturnValue('0.0.0.0') }))
-      .rejects.toThrow('--trusted-host')
     await expect(gateway({}, { passwordLogin: passwordLogin({ username: ' ' }) })).rejects.toThrow('username')
   })
 
@@ -683,6 +681,21 @@ describe('Task gateway browser access', () => {
       .toMatchObject({ status: 403, body: { code: 'origin_rejected' } })
     expect(await send(origin, 'auth/methods', { Host: `other.lan:${port}` }))
       .toMatchObject({ status: 403, body: { code: 'host_rejected' } })
+  })
+
+  it('accepts the address the server listens on without a trusted-host entry', async () => {
+    for (const [address, authority] of [['10.0.0.7', '10.0.0.7'], ['fd00::7', '[fd00::7]']] as const) {
+      const { ctx, origin } = await gateway({}, { passwordLogin: passwordLogin() }, false, (ctx) => {
+        vi.spyOn(ctx.webServer, 'host', 'get').mockReturnValue(address)
+      })
+      const port = new URL(origin).port
+      const bound = `http://${authority}:${port}`
+      expect(ctx.taskGateway.browserOrigins().map(entry => entry.origin)).toEqual([origin, bound])
+      await ctx.credentials.set(credentialRef('TASK_WEB_PASSWORD'), 'secret-pass')
+      const accepted = await send(origin, 'auth/login', { Host: `${authority}:${port}`, Origin: bound },
+        { username: 'operator', password: 'secret-pass' })
+      expect(accepted.status).toBe(200)
+    }
   })
 
   it('gives trusted hosts the scheme of the public origin', async () => {

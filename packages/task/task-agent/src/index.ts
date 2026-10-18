@@ -12,7 +12,7 @@ export class TaskAgentRegistry extends AgentRegistry {
 
   /** Register a check before an Agent is created or published.
    * @param guard - check of the causal initiator and requested runtime parent.
-   * @param onFailure - settle a reservation when factory creation rolls back before publication.
+   * @param onFailure - settle a reservation when factory creation or resume rolls back before publication.
    * @returns effect-scoped guard removal.
    */
   guardCreation(guard: CreationGuard, onFailure?: (id: SessionId) => void): () => void {
@@ -40,7 +40,11 @@ export class TaskAgentRegistry extends AgentRegistry {
 
   override async resume(options: ResumeAgentOptions): Promise<AgentHandle> {
     this.assertCreation(options.parentAgent, options.resumeSessionId, 'resume')
-    return await super.resume(options)
+    try { return await super.resume(options) }
+    catch (error) {
+      for (const failed of this.creationFailures) failed(options.resumeSessionId)
+      throw error
+    }
   }
 
   override enter(agent: Agent, owner: Agent | undefined): () => void {

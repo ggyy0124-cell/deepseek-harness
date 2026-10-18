@@ -122,7 +122,7 @@ Business plugins consume `ctx.tasks` to register their special task and implemen
 | [User approval](../../../../packages/interaction/user-approval/README.md) | Existing interaction presentation and audit conventions. | Host restart requires persisted business waits and reconstruction, not preservation of a live Promise. |
 | [Domain storage](../../../../packages/storage/storage-domain/README.md) | JSON validation and durability conventions. | Existing KV operations have no multi-record transactions or secondary indexes; Task needs transactional admission and an active-key constraint. |
 
-The [Task Surface proposal](../feature/2026-08-04-task-surface.md) concerns a temporary interaction within a Session. [Session-local reminders](../../implemented/feature/2026-08-05-durable-web-schedule.md), [dynamic Workflow](../../implemented/feature/2026-07-05-dynamic-workflows.md), and [Agent Teams](../../implemented/feature/2026-08-05-agent-teams.md) retain their independent ownership and use cases. This proposal does not supersede those records or make their deferred capabilities available.
+The [Task Surface proposal](../feature/2026-08-04-task-surface.md) concerns a temporary interaction within a Session. [Session-local reminders](../../archived/feature/2026-08-05-durable-web-schedule.md), [dynamic Workflow](../../archived/feature/2026-07-05-dynamic-workflows.md), and [Agent Teams](../../implemented/feature/2026-08-05-agent-teams.md) retain their independent ownership and use cases. This proposal does not supersede those records or make their deferred capabilities available.
 
 <a id="domain"></a>
 ## Domain model and invariants

@@ -156,9 +156,9 @@ export class LocalTaskService extends TaskService {
         const model = access.modelOwner()
         if (model?.owner !== parentRun.sessionId || parentRun.status !== 'running')
           throw new Error('task child Agents require an admitted model operation')
+        if (operation !== 'enter' && this.database.activeChildCount(parentRun.id) >= config.childConcurrency)
+          throw new Error('task child Agent concurrency limit reached')
         if (operation === 'create') {
-          if (this.database.activeChildCount(parentRun.id) >= config.childConcurrency)
-            throw new Error('task child Agent concurrency limit reached')
           this.database.transaction(() => {
             this.database.reserveChild({ sessionId: childId, runId: parentRun.id, modelKey: model.modelKey, state: 'prepared' })
             this.database.log(parentRun.id, 'child.reserved', Date.now(), { sessionId: childId, modelKey: model.modelKey })
@@ -166,7 +166,16 @@ export class LocalTaskService extends TaskService {
         } else if (operation === 'enter') {
           if (this.database.child(childId)?.runId !== parentRun.id)
             throw new Error('task child Agent has no durable owner')
-        } else throw new Error('task child Agents cannot resume outside their foreground operation')
+        } else {
+          // A settled child continues only inside the model operation that created it, which still waits for it.
+          const child = this.database.child(childId)
+          if (child?.runId !== parentRun.id || child.modelKey !== model.modelKey || child.state !== 'complete')
+            throw new Error('task child Agents resume only inside the model operation that created them')
+          this.database.transaction(() => {
+            this.database.setChildState(childId, 'prepared')
+            this.database.log(parentRun.id, 'child.resumed', Date.now(), { sessionId: childId, modelKey: model.modelKey })
+          })
+        }
         return
       }
       if (parentRun !== undefined || initiatorRun !== undefined || parentChild !== undefined || initiatorChild !== undefined)

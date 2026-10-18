@@ -15,14 +15,11 @@
   en: d152484eb41ac6b4
   zh: 9f0336825ccdaacd
 /deepseek-ai-dsh-task-local/use-this-package:
-  en: c127608f9ba1dffb
-  zh: b29fe8b700709549
+  en: c48c2bed71869916
+  zh: 4a8eee8f4739361f
 /deepseek-ai-dsh-task-local/understand-the-implementation:
-  en: b2a69fb21b1609f1
-  zh: 308d27350e062add
-/deepseek-ai-dsh-task-local/no-runtime-invariant-companion-is-published-the-task-service-companion-compares-sqlite-execution-records-with-session-persistence-while-the-provider-enforces-transaction-and-lock-rules-before-admission:
-  en: c0c53e9278bea5b2
-  zh: 7ee7bc33d40ee71e
+  en: 05ce28cbb5339d2c
+  zh: ff36915e33b6dc53
 /deepseek-ai-dsh-task-local/further-exploration:
   en: 58dce19d087bd87d
   zh: 96ff10670caee62a
@@ -33,11 +30,11 @@
   en: aaa97797ce47b11b
   zh: 70557c18eea05734
 /deepseek-ai-dsh-task-local/model-experience/business-model-stage/what-the-model-sees:
-  en: f08f8caf3c7f8894
-  zh: 02bbb1dba4c43c5b
+  en: 76f7f88b8cd1547e
+  zh: 6ddeab489882e47e
 /deepseek-ai-dsh-task-local/model-experience/business-model-stage/token-effect:
-  en: 8380c6e534ac3fa1
-  zh: 6ac273e8ad15cb88
+  en: 851af29f759e6ff6
+  zh: e9cf275e44ba294a
 /deepseek-ai-dsh-task-local/model-experience/business-model-stage/kv-cache-effect:
   en: b8a807c2d056401a
   zh: 8b851f4c92b5f7d3

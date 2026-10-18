@@ -1,11 +1,12 @@
 /** Session ownership, recorded preset revisions, and correlated model delivery. */
 import type { Context } from '@deepseek-ai/cordis'
-import type { AgentHandle } from '@deepseek-ai/dsh-agent'
+import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import { MessageId, createUserMessage, type UserMessage } from '@deepseek-ai/dsh-llm'
 import { Session, SESSION_FORMAT_VERSION, type SessionEvent } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-persistence'
 import type {} from '@deepseek-ai/dsh-permission-presets'
+import type {} from '@deepseek-ai/dsh-subagent'
 import type {} from '@deepseek-ai/dsh-workspace'
 import type { TaskRun, TaskRunId } from '@deepseek-ai/dsh-task'
 import { parseTaskPresetRevision, taskAgentPresetRegistry, type TaskPresetRevision } from '@deepseek-ai/dsh-task-agent-preset-registry'
@@ -27,6 +28,8 @@ export class AgentTaskSessions implements TaskSessions {
   private readonly handles = new Map<TaskRunId, AgentHandle>()
   private readonly preparations = new Map<TaskRunId, Promise<void>>()
   private readonly flushes = new Map<TaskRunId, Promise<void>>()
+  /** Child releases started by cancellation; cleanup waits for them before checking settlement. */
+  private readonly drains = new Map<TaskRunId, Promise<void>>()
   private readonly revisions = new Map<string, Promise<TaskPresetRevision>>()
   private readonly modelCalls = new Map<TaskRunId, { key: string; prompt: string; promise: Promise<string> }>()
 
@@ -178,8 +181,7 @@ export class AgentTaskSessions implements TaskSessions {
     try {
       signal.throwIfAborted()
       if (!consumed) wakeTaskAgent(handle.agent)
-      await handle.agent.whenIdle()
-      signal.throwIfAborted()
+      await this.settle(handle.agent, signal)
       if (this.db.activeChildCount(run.id) !== 0)
         throw new TaskChildRecoveryError('task child Agent did not settle before the parent model turn')
       await this.ctx.sessions.flush(handle.agent.session)
@@ -187,6 +189,22 @@ export class AgentTaskSessions implements TaskSessions {
       this.db.putOperation(run.id, operationKey, 'confirmed', { prompt, answer })
       return answer
     } finally { signal.removeEventListener('abort', abort) }
+  }
+  /** Wait until the parent is idle, joins no progressing child, and has appended nothing since that idle observation.
+   * A settled child's notice wakes another parent turn inside the same model operation; the wait ends after the last turn.
+   * @param agent - parent Agent of the admitted model operation.
+   * @param signal - stage cancellation.
+   */
+  private async settle(agent: Agent, signal: AbortSignal): Promise<void> {
+    const subagents = this.ctx.get('subagents')
+    while (true) {
+      await agent.whenIdle()
+      signal.throwIfAborted()
+      const idleSeq = agent.session.seq
+      const joined = await subagents?.waitForChildren(agent) ?? false
+      signal.throwIfAborted()
+      if (!joined && agent.status === 'idle' && agent.session.seq === idleSeq) return
+    }
   }
   /** Load persisted history for crash reconciliation without synchronous Session event access. */
   private async persistedEvents(id: TaskRun['sessionId']): Promise<readonly SessionEvent[]> {
@@ -196,9 +214,22 @@ export class AgentTaskSessions implements TaskSessions {
   }
   abort(id: TaskRunId): void {
     const handle = this.handles.get(id)
-    if (handle !== undefined) this.access.cancel(handle.agent.id, () => { handle.agent.cancel({ kind: 'user' }, { keepInbox: true }) })
+    if (handle === undefined) return
+    const { agent } = handle
+    const subagents = this.ctx.get('subagents')
+    this.access.cancel(agent.id, () => {
+      agent.cancel({ kind: 'user' }, { keepInbox: true })
+      // Children run independently of the parent turn; stopping the parent alone would leave them running.
+      if (subagents === undefined || this.drains.has(id)) return
+      const drained = subagents.drainDescendants([agent])
+      // Cleanup reports a failed release; this observer keeps the rejection handled until cleanup awaits it.
+      void drained.catch((error: unknown) => { this.ctx.logger.warn(`task.child.drain-failed ${String(error)}`) })
+      this.drains.set(id, drained)
+    })
   }
   async close(id: TaskRunId): Promise<void> {
+    await this.drains.get(id)
+    this.drains.delete(id)
     if (this.db.activeChildCount(id) !== 0) throw new Error('task child Agents must settle before Task cleanup')
     await this.preparations.get(id)
     const handle = this.handles.get(id)
@@ -221,7 +252,8 @@ function assertBinding(db: TaskDatabase, session: Session, run: TaskRun): void {
     throw new Error('task Session binding disagrees with its database')
   }
 }
-/** Match a message to its completed turn and assistant output, including after a crash.
+/** Read a model operation's answer, including after a crash: the final assistant text of the last turn that ended
+ * between the delivered input and the next Task input. Turns woken by settled-child notices belong to the same operation.
  *
  * @param events - complete immutable log.
  * @param messageId - delivered input.
@@ -231,16 +263,24 @@ export function modelAnswer(events: readonly SessionEvent[], messageId: string):
   let turn: number | undefined
   let matched = false
   let text = ''
+  let ended: { readonly text: string; readonly completed: boolean } | undefined
   for (const event of events) {
-    if (event.type === 'turn/start') turn = event.data.turn
-    if (event.type === 'user/message' && event.data.id === messageId) matched = true
+    if (event.type === 'turn/start') {
+      turn = event.data.turn
+      text = ''
+    }
+    if (event.type === 'user/message') {
+      if (event.data.id === messageId) matched = true
+      else if (matched && event.data.source.kind === 'task') break
+    }
     if (matched && event.type === 'assistant/message' && event.data.turn === turn) {
       text = event.data.message.content.filter(block => block.type === 'text').map(block => block.text).join('\n')
     }
     if (matched && event.type === 'turn/end' && event.data.turn === turn) {
-      if (event.data.reason.kind !== 'completed' || text === '') throw new Error('task model operation did not complete with an answer; plugin recovery is required')
-      return text
+      ended = { text, completed: event.data.reason.kind === 'completed' }
     }
   }
-  throw new Error('task model input has no completed turn; plugin recovery is required')
+  if (ended === undefined) throw new Error('task model input has no completed turn; plugin recovery is required')
+  if (!ended.completed || ended.text === '') throw new Error('task model operation did not complete with an answer; plugin recovery is required')
+  return ended.text
 }

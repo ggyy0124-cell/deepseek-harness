@@ -28,8 +28,6 @@ The Run DTO excludes private checkpoints, initial input and operation receipts. 
 
 The [Task gateway](../task-api-gateway/README.md) mounts the declared routes and serves the generated document. Task and Session event schemas validate SSE payloads. Transcript schemas expose original messages with their loop position, the source of user messages, the model, token usage and timing of assistant messages and the start of tool calls, plus the request headers logged in each page, and the input list schema exposes the supplemental information and business-wait replies people gave a Run with their arrival times; Session attachment downloads distinguish missing visible content (404) from unavailable Session persistence (409).
 
-**Runtime invariant:** No companion is published. Schemas and route declarations are immutable; request rejection and document generation are covered by executable tests.
-
 <a id="model-experience"></a>
 ## Model Experience
 

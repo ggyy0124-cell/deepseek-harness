@@ -35,7 +35,7 @@ kind: "package-reference"
 <details>
 <summary>实现细节</summary>
 
-[工具实现](src/index.ts)验证调用 Agent 的精确身份，再交由 `ctx.tasks.dispatch` 检查准入。注册同时受 Agent 生命周期与消费者插件生命周期约束。本包不发布不变量插件：提供方负责执行准入，Task 不变量插件负责 Session 关系。
+[工具实现](src/index.ts)验证调用 Agent 的精确身份，再交由 `ctx.tasks.dispatch` 检查准入。注册同时受 Agent 生命周期与消费者插件生命周期约束。
 
 </details>
 

@@ -29,7 +29,7 @@ Use this interface when business execution must survive the initiating special t
 
 Only an admitted special stage can dispatch ordinary work. A plugin supplies the business key and compares discoveries; unchanged data leaves existing work alone. Confirmation replies carry both wait identity and input revision, so an outdated approval cannot authorize changed work.
 
-Within either special or ordinary runs, the parent Agent decides whether to use the captured preset's foreground in-process subagent tools. A model turn without delegation creates no child. A delegated child remains inside the same Task execution rather than becoming an ordinary run. After an interrupted model turn, `stage.children` identifies retained child Sessions so the plugin can reconcile uncertain work before selecting another model operation.
+Within either special or ordinary runs, the parent Agent decides whether to use the captured preset's in-process subagent tools. A model turn without delegation creates no child. A delegated child remains inside the same Task execution rather than becoming an ordinary run, and `stage.model()` returns only after every child settled and the parent answered its settled-child notices. After an interrupted model operation, `stage.children` identifies retained child Sessions so the plugin can reconcile uncertain work before selecting another model operation.
 
 -----
 
@@ -41,7 +41,7 @@ Cleanup receives an AbortSignal when its configured deadline expires. The plugin
 <details>
 <summary>Implementation details</summary>
 
-The [stage API](src/index.ts) separates model calls, durable external operations, dispatch, and business decisions. The [durable types](src/types.ts) carry configuration snapshots, checkpoints, source relationships, waits, and cleanup state. The [invariant companion](src/invariant.ts) compares task records with independently persisted Session events.
+The [stage API](src/index.ts) separates model calls, durable external operations, dispatch, and business decisions. The [durable types](src/types.ts) carry configuration snapshots, checkpoints, source relationships, waits, and cleanup state.
 
 Administrative clients use `command` with a stable authenticated principal and retry key. Matching replays return the original admission snapshot, including after restart or task completion; changed commands conflict. Configuration and enable commands check the definition revision. Cancellation admission returns before cleanup; `cancel` remains the awaited cleanup operation for plugin retirement. `restart` reserves a new ordinary Run for the business key of a failed or cancelled ordinary Run; the new `TaskRun.restartedFrom` names the Run it follows, and the plugin decides where the new Run continues.
 

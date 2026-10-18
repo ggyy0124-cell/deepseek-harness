@@ -61,7 +61,7 @@ describe('Task Web password sign-in', () => {
     const environment = { DSH_HOME: join(directory, '.dsh'), DSH_TELEMETRY_DISABLED: '1', DEEPSEEK_API_KEY: 'keyless-no-model-call' }
     const store = profile(['--password-set'])
     await execa(store.command, store.args, { cwd: repository, env: { ...store.env, ...environment }, input: 'secret-pass\n' })
-    const launch = profile(['--patch', patch, '--host', '0.0.0.0', '--trusted-host', 'localhost', '--port', String(port)])
+    const launch = profile(['--patch', patch, '--host', '127.0.0.1', '--trusted-host', 'localhost', '--port', String(port)])
     const child = execa(launch.command, launch.args, { cwd: repository, env: { ...launch.env, ...environment }, killSignal: 'SIGKILL', reject: false })
     host = child
     let output = ''

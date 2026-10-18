@@ -9,7 +9,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import AgentRegistry, { type AgentHandle } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import AgentPresetRegistry, { livePresetMounts, type PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
+import AgentPresetRegistry, { type PresetDefinition } from '@deepseek-ai/dsh-agent-preset-registry'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -149,7 +149,7 @@ describe('mounting a revision', () => {
 
     expect(tools(ctx, agent)).toEqual(['standard'])
     expect(registry.composedPreset(agent.ctx)).toBe('standard')
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
     const bare = createScope(ctx, {})
     expect(registry.composedPreset(bare.ctx)).toBeUndefined()
     await bare.dispose()
@@ -168,7 +168,7 @@ describe('mounting a revision', () => {
     expect(tools(ctx, first.agent)).toEqual(['standard'])
     expect(tools(ctx, second.agent)).toEqual(['standard'])
     expect(registry.composedPreset(first.agent.ctx)).toBe('standard')
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
     expect(await presetRows(registry)).toEqual(['standard'])
     expect((await registry.remoteExportList()).presets.map(row => row.id)).toEqual(['standard'])
     expect((await registry.compositionInventory()).map(row => row.id)).toEqual(['standard'])
@@ -181,15 +181,15 @@ describe('mounting a revision', () => {
     await first.dispose()
     await second.dispose()
     // The child joined the private tree, which stays until it leaves.
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
     await child.dispose()
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
 
     const again = await agentOn(ctx, 'again', revision)
     expect(tools(ctx, again.agent)).toEqual(['standard'])
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
     await again.dispose()
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
   })
 
   it('composes nothing from a parent without a preset', async () => {
@@ -234,7 +234,7 @@ describe('mounting a revision', () => {
 
     expect(tools(ctx, agent)).toEqual(['standard'])
     expect(registry.composedPreset(agent.ctx)).toBe('standard')
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(2)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(2)
   })
 
   it('releases a private revision that fails to mount and refuses malformed revisions', async () => {
@@ -249,11 +249,11 @@ describe('mounting a revision', () => {
     const scope = createScope(ctx, {})
 
     await expect(registry.mountRevision(scope.ctx, refusing)).rejects.toThrow('recorded row refused')
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
     await expect(registry.mountRevision(scope.ctx, refusing)).rejects.toThrow('recorded row refused')
     await expect(registry.mountRevision(scope.ctx, { ...recorded, plugins: 'name: not-a-list\n', digest: 'e'.repeat(64) }))
       .rejects.toThrow('top-level list of plugin rows')
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(1)
+    expect(ctx.agentPresets.inspectCompositions()).toHaveLength(1)
     expect(await presetRows(registry)).toEqual(['standard'])
     await scope.dispose()
   })
@@ -266,7 +266,7 @@ describe('mounting a revision', () => {
     const scope = createScope(ctx, {})
 
     await expect(registry.mountRevision(scope.ctx, revision)).rejects.toThrow('not active')
-    expect(livePresetMounts(ctx.fiber)).toHaveLength(0)
+    expect(registry.inspectCompositions()).toHaveLength(0)
     await scope.dispose()
   })
 })

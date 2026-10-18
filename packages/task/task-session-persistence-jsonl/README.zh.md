@@ -25,17 +25,15 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-Task Profile 使用与 `dsh-session-persistence-jsonl` 相同的配置挂载此提供方。它要求 `dsh-task-session`；打开可写 Session 记录时，先调用 Task Session 授权策略，再委托共享后端。
+Task Profile 使用与 `dsh-session-persistence-jsonl` 相同的配置挂载此插件。它要求 `dsh-task-session`；创建 Session 记录或以写入模式打开记录时，先调用 Task Session 授权策略，再委托共享后端。
 
 -----
 
 <a id="understand-the-implementation"></a>
 ## 理解实现
 
-`TaskJsonlSessionPersistence` 继承共享 JSONL 提供方。读取保留普通行为，创建记录和可写打开路径调用 `TaskSessionStore.assertWritable()`。JSONL 只包含普通 Session 事件；Task SQLite 数据库负责执行状态与执行到 Session 的关联。
+[插件](src/index.ts)在隔离的 `sessionPersistence` 键下挂载共享 JSONL 插件，并在普通键下提供一个委托式 `SessionPersistence`，其生命周期与后端完全一致。`create` 与写入模式的 `open` 先调用 `TaskSessionStore.assertWritable()` 再委托；读取、`stat`、`list` 与 `flush` 原样委托。卸载该行时先移除带授权的提供方再移除后端，因此注入 `sessionPersistence` 的消费者卸载时后端仍持有它们的句柄。JSONL 只包含普通 Session 事件；Task SQLite 数据库负责执行状态与执行到 Session 的关联。
 
-
-不发布运行时不变量 companion；共享 JSONL companion 负责存储检查，此包装器只在委托前执行一次授权检查。
 -----
 
 <a id="further-exploration"></a>
