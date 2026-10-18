@@ -97,6 +97,16 @@ describe('maintained repository reference policy', () => {
     expect(scanRepositoryReferences(fixture.root)).toHaveLength(4)
   })
 
+  it('skips generated uv lockfiles, whose artifact sizes can equal abbreviated commit names', () => {
+    // Assembled at runtime so this source never holds the colliding size itself.
+    const size = ['63', '44', '383'].join('')
+    const commits = new Set([size])
+    expect(findRepositoryReferences('python/sdk/uv.lock', `size = ${size}`, commits)).toEqual([])
+    expect(findRepositoryReferences('uv.lock', `size = ${size}`, commits)).toEqual([])
+    expect(findRepositoryReferences('docs/uv.lock.md', `size = ${size}`, commits))
+      .toEqual([{ file: 'docs/uv.lock.md', line: 1, kind: 'commit-hash' }])
+  })
+
   it('checks available unreachable commits without requiring a branch or network', (test) => {
     const fixture = repository(test)
     const unreachable = fixture.git(['commit-tree', fixture.tree, '-m', 'unreachable fixture'])
