@@ -217,7 +217,14 @@ export const en: Messages = {
       nextPoll: 'Next poll', restartedFrom: 'Restarted from' },
     sidebar: { label: 'Right sidebar', open: 'Open right sidebar', close: 'Collapse right sidebar', resize: 'Resize the sidebar', status: 'Status',
       event: 'Event details', closeEvent: 'Close event details' },
-    views: { label: 'Session views', chat: 'Chat', trajectory: 'Trajectory' },
+    views: { label: 'Session views', chat: 'Chat', trajectory: 'Trajectory', sessionLog: 'Raw events' },
+    sessionLog: {
+      label: 'Raw Session events', loading: 'Reading Session events…', failed: 'Reading Session events failed', reload: 'Read again from the start',
+      disabledTitle: 'Raw events are off', disabledBody: 'Raw events include unredacted tool arguments and results. To use them, restart the Task host with --session-log.',
+      pendingTitle: 'The Session does not exist yet', pendingBody: 'Session events appear once the run starts.', empty: 'No Session events yet',
+      noMatch: 'No event type matches', expandAll: 'Expand all', collapseAll: 'Collapse all', expand: 'Expand', collapse: 'Collapse',
+      filter: 'Filter by type', filterPlaceholder: 'Type, e.g. delta or tool*', count: count => `${count} events`, matches: count => `${count} matching rows`,
+      loadMore: 'Load more', copyJson: 'Copy JSON' },
     stats: {
       label: 'Session statistics', counts: (turns: number, steps: number) => `${turns} turns ${steps} steps`,
       cacheHit: (percent: string) => `Cache hit ${percent}%`, cacheHitShort: (percent: string) => `${percent}% hit`,

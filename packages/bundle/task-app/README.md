@@ -42,6 +42,8 @@ pnpm dsh --profile task --restore /absolute/backup
 
 `--token-create` prints a revocable API bearer credential once; callers supply it in `Authorization: Bearer <token>`. `--launch-link` prints `{ "url", "expiresAt" }` for the host on `--port`: a single-use browser launch secret in the URL fragment (`#launch=`), valid for 60 seconds, that the Task Web client posts to `/auth/exchange`. A running host accepts it because the gateway rereads the shared credential document. Set the administration row's `publicOrigin` to the gateway's `publicOrigin` when browsers use another origin. Stop the Task host before backup; an exclusive owner lock rejects a running host. Restore validates hashes and SQLite integrity before publishing into an empty Task data directory, rewrites retained preset locations, marks resource handles for reconciliation and replaces the event-stream identity. Credentials and external-system state are not restored. A copied worktree requires repository registration repair before reuse. `--password-set` stores the browser sign-in password described below. These commands do not start the web server or task scheduler.
 
+Start the host with `--session-log` to let Task Web show a Run's raw Session events: the gateway then serves `GET /runs/{runId}/session-log`, every stored event with unredacted tool arguments and results, to any signed-in client. Without the flag the route answers `404 session_log_disabled` and Task Web explains how to turn it on.
+
 <a id="intranet-access"></a>
 #### Intranet access
 

@@ -217,7 +217,14 @@ export const zhCN = {
       nextPoll: '下次轮询', restartedFrom: '重新执行自' },
     sidebar: { label: '右侧边栏', open: '打开右侧边栏', close: '收起右侧边栏', resize: '调整侧边栏宽度', status: '状态', event: '事件详情',
       closeEvent: '关闭事件详情' },
-    views: { label: '会话视图', chat: '对话', trajectory: '轨迹' },
+    views: { label: '会话视图', chat: '对话', trajectory: '轨迹', sessionLog: '原始事件' },
+    sessionLog: {
+      label: '原始会话事件', loading: '正在读取会话事件…', failed: '读取会话事件失败', reload: '从头重新读取',
+      disabledTitle: '未开启原始事件', disabledBody: '原始事件包含未脱敏的工具参数与结果。需要时，请在 Task 宿主启动命令中加上 --session-log 后重启。',
+      pendingTitle: '会话尚未创建', pendingBody: '执行开始后即可查看会话事件。', empty: '还没有会话事件', noMatch: '没有匹配的事件类型',
+      expandAll: '全部展开', collapseAll: '全部收起', expand: '展开', collapse: '收起', filter: '按类型筛选',
+      filterPlaceholder: '类型，如 delta 或 tool*', count: (count: number) => `${count} 条事件`, matches: (count: number) => `${count} 行匹配`,
+      loadMore: '加载更多', copyJson: '复制 JSON' },
     stats: {
       label: '会话统计', counts: (turns: number, steps: number) => `${turns} 轮 ${steps} 步`, cacheHit: (percent: string) => `缓存命中 ${percent}%`,
       cacheHitShort: (percent: string) => `命中 ${percent}%`,

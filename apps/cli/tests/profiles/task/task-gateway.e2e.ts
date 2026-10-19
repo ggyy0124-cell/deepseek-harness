@@ -18,7 +18,7 @@ describe('Task REST gateway', () => {
     let diagnostics = ''
     await writeFile(patch, JSON.stringify([
       { id: 'task-local', config: { path: join(directory, 'tasks.sqlite'), resourceRoot: join(directory, 'resources'), concurrency: 2, tickMs: 20, catchupLimit: 100 } },
-      { id: 'task-api-gateway', config: { attachmentRoot: join(directory, 'attachments'), bodyLimitBytes: 4096, bodyTimeoutMs: 2000, eventPollMs: 20, eventHeartbeatMs: 100, eventBatchSize: 2 } },
+      { id: 'task-api-gateway', config: { attachmentRoot: join(directory, 'attachments'), bodyLimitBytes: 4096, bodyTimeoutMs: 2000, eventPollMs: 20, eventHeartbeatMs: 100, eventBatchSize: 2, sessionLog: true } },
       { insert: [{ id: 'gateway-smoke', name: fixture, config: { workspace: directory, output } }] },
     ]))
     const launch = taskProfileLaunch(['--patch', patch, '--host', '127.0.0.1', '--port', '0'], mode)
@@ -124,6 +124,9 @@ describe('Task REST gateway', () => {
       expect(continued.sessionId).toBe(initial.sessionId)
       expect((await client.request('getRun', { params: { runId: initial.id } })).status).toBe('cancelled')
       await expect(client.request('getTranscript', { params: { runId: 'unknown-task' } })).rejects.toMatchObject({ problem: { status: 404 } })
+      const sessionLog = await client.request('getSessionLog', { params: { runId: initial.id }, query: { limit: '200' } })
+      expect(sessionLog).toMatchObject({ runId: initial.id, sessionId: initial.sessionId })
+      expect(sessionLog.items.every(item => item.event['seq'] === item.sequence && item.event['type'] === item.type)).toBe(true)
 
       const replay = client.events({ signal: AbortSignal.timeout(10000), cursor: resumeCursor })
       expect((await replay.next()).value).toEqual({ kind: 'ready', cursor: resumeCursor })

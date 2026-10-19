@@ -44,6 +44,7 @@ export type { TaskDeviceId } from './types.ts'
 import { streamSessionEvents } from './session-events.ts'
 import { streamTaskEvents } from './events.ts'
 import { readTaskTranscript } from './transcript.ts'
+import { readSessionLog } from './session-log.ts'
 import { readRunStats, RunStatsCache } from './stats.ts'
 import { downloadSessionAttachment } from './session-attachments.ts'
 import type {} from '@deepseek-ai/dsh-attachment'
@@ -100,6 +101,10 @@ export interface Config {
   readonly pageSize: number
   /** JSON bytes of transcript messages after which one transcript window ends; a single larger message is delivered alone. */
   readonly transcriptPageBytes: number
+  /** Serve `getSessionLog`: unredacted stored Session events of any Run, including tool arguments and results. */
+  readonly sessionLog: boolean
+  /** JSON bytes of Session log events after which one window ends; a single larger event is delivered alone. */
+  readonly sessionLogPageBytes: number
   /** Runs whose Session statistics fold is kept in memory, so a repeated read folds only newly stored events. */
   readonly statsCacheRuns: number
   /** Deadline for plugin configuration checks and option discovery. */
@@ -163,6 +168,8 @@ export class TaskApiGateway extends Service {
     bodyTimeoutMs: Schema.number().min(1).step(1).default(30000),
     pageSize: Schema.number().min(1).max(200).step(1).default(50),
     transcriptPageBytes: Schema.number().min(1024).step(1).default(131072),
+    sessionLog: Schema.boolean().default(false),
+    sessionLogPageBytes: Schema.number().min(1024).step(1).default(524288),
     statsCacheRuns: Schema.number().min(1).step(1).default(32),
     launchTtlMs: Schema.number().min(1).step(1).default(60000),
     eventPollMs: Schema.number().min(1).step(1).default(1000),
@@ -730,23 +737,30 @@ export class TaskApiGateway extends Service {
           : match.candidate.operationId === 'getTranscript'
             ? await this.whileConnected(response, signal => readTaskTranscript(this.ctx.tasks, this.ctx.sessionPersistence,
               params['runId'] as string, validatedQuery, this.config.pageSize, this.config.transcriptPageBytes, signal))
-            : match.candidate.operationId === 'getRunStats'
-              ? await this.whileConnected(response, signal => readRunStats(this.ctx.tasks, this.ctx.sessionPersistence,
-                this.ctx.sessionProjections, this.stats, params['runId'] as string, signal))
-              : match.candidate.operationId === 'getCatalog' ||
+            : match.candidate.operationId === 'getSessionLog'
+              ? await this.whileConnected(response, (signal) => {
+                if (!this.config.sessionLog)
+                  throw new HttpProblem(404, 'session_log_disabled', 'Session log reading is disabled on this Task host')
+                return readSessionLog(this.ctx.tasks, this.ctx.sessionPersistence, params['runId'] as string, validatedQuery,
+                  { pageSize: this.config.pageSize, maxBytes: this.config.sessionLogPageBytes }, signal)
+              })
+              : match.candidate.operationId === 'getRunStats'
+                ? await this.whileConnected(response, signal => readRunStats(this.ctx.tasks, this.ctx.sessionPersistence,
+                  this.ctx.sessionProjections, this.stats, params['runId'] as string, signal))
+                : match.candidate.operationId === 'getCatalog' ||
                 match.candidate.operationId === 'checkConfig' ||
                 match.candidate.operationId === 'getOptions'
-                ? await this.formOperation(match.candidate.operationId, params, validatedBody, response)
-                : executeOperation(
-                  this.ctx.tasks,
-                  match.candidate.operationId,
-                  params,
-                  validatedQuery,
-                  validatedBody,
-                  auth.principal,
-                  brandString<TaskRequestId>(retryKey),
-                  this.config.pageSize,
-                )
+                  ? await this.formOperation(match.candidate.operationId, params, validatedBody, response)
+                  : executeOperation(
+                    this.ctx.tasks,
+                    match.candidate.operationId,
+                    params,
+                    validatedQuery,
+                    validatedBody,
+                    auth.principal,
+                    brandString<TaskRequestId>(retryKey),
+                    this.config.pageSize,
+                  )
       this.assertRunning()
       const output = route.response.parse(value)
       status = route.status

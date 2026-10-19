@@ -86,6 +86,7 @@
       config:
         attachmentRoot: !!js ctx.dshHomePath('tasks/attachments')
         trustedHosts: !!js ctx.taskStartup.trustedHosts
+        sessionLog: !!js ctx.taskStartup.sessionLog
     - id: tool-task-dispatch
       disabled: !!js "ctx.get('cmdlineArgs').get().some(arg => ['--token-create', '--token-revoke', '--launch-link', '--password-set', '--backup', '--restore'].some(flag => arg === flag || arg.startsWith(flag + '=')))"
       name: '@deepseek-ai/dsh-tool-task-dispatch'

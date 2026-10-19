@@ -8,7 +8,7 @@ import {
   SessionPersistenceNotFoundError,
   type SessionPersistence,
 } from '@deepseek-ai/dsh-session-persistence'
-import type { TaskRunId, TaskService } from '@deepseek-ai/dsh-task'
+import type { TaskRun, TaskRunId, TaskService } from '@deepseek-ai/dsh-task'
 import {
   pageQuerySchema,
   type transcriptBlockSchema,
@@ -214,6 +214,37 @@ function fitWindow(events: readonly SessionEvent[], maxBytes: number, start: Lif
   return { events, items, requests, lifecycle: state }
 }
 
+/** Resolve the Run and forward cursor of a Session window read.
+ * @param tasks - Task ownership lookup.
+ * @param runId - execution selected by the authenticated owner.
+ * @param raw - pagination fields.
+ * @param schema - cursor shape of the reading route.
+ * @param label - reader named in a rejection.
+ * @param signal - caller lifetime.
+ * @returns the Run, the requested event limit and the decoded cursor; an unknown Run rejects with 404, and a malformed cursor, one of
+ * another Session or an anchored first position with `invalid_cursor`.
+ */
+export function resolveSessionWindow<Cursor extends { readonly session: string; readonly offset: number; readonly anchor: string }>(
+  tasks: Pick<TaskService, 'getRun'>, runId: string, raw: Record<string, string>, schema: z.ZodType<Cursor>, label: string, signal: AbortSignal,
+): { run: TaskRun; limit: number | undefined; cursor: Cursor | undefined } {
+  signal.throwIfAborted()
+  const run = tasks.getRun(brandString<TaskRunId>(runId))
+  if (run === undefined) throw new HttpProblem(404, 'not_found', 'Task execution not found')
+  const query = validate(pageQuerySchema, raw)
+  const limit = query.limit === undefined ? undefined : Number(query.limit)
+  if (query.cursor === undefined) return { run, limit, cursor: undefined }
+  let decoded: unknown
+  try {
+    decoded = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8'))
+  } catch {
+    throw new HttpProblem(400, 'invalid_cursor', `Invalid ${label} cursor`)
+  }
+  const cursor = validate(schema, decoded)
+  if (cursor.session !== run.sessionId || (cursor.offset === 0 && cursor.anchor !== ''))
+    throw new HttpProblem(400, 'invalid_cursor', `${label} cursor does not match this execution`)
+  return { run, limit, cursor }
+}
+
 /** Read a bounded Session event window without preparing a Session or activating an Agent.
  * @param tasks - Task ownership lookup; arbitrary Session identities are never accepted.
  * @param persistence - existing read-only Session storage access.
@@ -234,28 +265,10 @@ export async function readTaskTranscript(
   maxBytes: number,
   signal: AbortSignal,
 ): Promise<unknown> {
-  signal.throwIfAborted()
-  const run = tasks.getRun(brandString<TaskRunId>(runId))
-  if (run === undefined) throw new HttpProblem(404, 'not_found', 'Task execution not found')
-  const query = validate(pageQuerySchema, raw)
-  let offset = 0
-  let anchor = ''
-  let lifecycle = BETWEEN_TURNS
-  if (query.cursor !== undefined) {
-    let decoded: unknown
-    try {
-      decoded = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8'))
-    } catch {
-      throw new HttpProblem(400, 'invalid_cursor', 'Invalid transcript cursor')
-    }
-    const cursor = validate(cursorSchema, decoded)
-    if (cursor.session !== run.sessionId || (cursor.offset === 0 && cursor.anchor !== '')) {
-      throw new HttpProblem(400, 'invalid_cursor', 'Transcript cursor does not match this execution')
-    }
-    offset = cursor.offset
-    anchor = cursor.anchor
-    lifecycle = cursor.lifecycle
-  }
+  const { run, limit, cursor } = resolveSessionWindow(tasks, runId, raw, cursorSchema, 'Transcript', signal)
+  const offset = cursor?.offset ?? 0
+  const anchor = cursor?.anchor ?? ''
+  const lifecycle = cursor?.lifecycle ?? BETWEEN_TURNS
   try {
     await using handle = await persistence.open(run.sessionId, 'read', { signal })
     if (offset > 0) {
@@ -265,7 +278,7 @@ export async function readTaskTranscript(
         throw new HttpProblem(409, 'cursor_stale', 'Session history changed; restart transcript loading')
       }
     }
-    const size = query.limit === undefined ? pageSize : Number(query.limit)
+    const size = limit ?? pageSize
     const read = await handle.read(offset, size + 1, { signal })
     signal.throwIfAborted()
     const window = fitWindow(read.events.slice(0, size), maxBytes, lifecycle)

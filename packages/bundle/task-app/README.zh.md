@@ -42,6 +42,8 @@ pnpm dsh --profile task --restore /absolute/backup
 
 `--token-create` 只输出一次可撤销的 API Bearer 凭据，调用者通过 `Authorization: Bearer <token>` 提交。`--launch-link` 为 `--port` 上的宿主输出 `{ "url", "expiresAt" }`：URL 片段（`#launch=`）中携带一次性浏览器登录凭据，有效期 60 秒，由 Task Web 客户端提交到 `/auth/exchange`。网关会重新读取共享凭据文档，因此正在运行的宿主也能接受该凭据。浏览器使用其他源时，将管理行的 `publicOrigin` 设为与网关 `publicOrigin` 相同的值。备份前须停止 Task 宿主；排他所有者锁会拒绝仍在运行的宿主。恢复先校验摘要和 SQLite 完整性，再发布到空 Task 数据目录，重写保留预设的位置、标记资源句柄需要重新核实，并替换事件流身份。凭据和外部系统状态不随之恢复。复制的工作树再次使用前需要修复仓库登记。`--password-set` 保存下文所述的浏览器登录密码。这些命令不会启动 Web 服务器或任务调度器。
 
+使用 `--session-log` 启动宿主后，Task Web 可以显示 Run 的原始 Session 事件：网关会向任何已登录的客户端提供 `GET /runs/{runId}/session-log`，内容为所有已存储事件，工具参数和结果未经脱敏。不加该参数时，该路由返回 `404 session_log_disabled`，Task Web 会说明如何开启。
+
 <a id="intranet-access"></a>
 #### 内网访问
 

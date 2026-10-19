@@ -318,6 +318,22 @@ export const transcriptPageSchema = z.object({
   hasMore: z.boolean(),
 })
 
+/** One stored Session event, unprojected; `event` is the persisted JSON including fields Task Web does not interpret. */
+export const sessionLogEntrySchema = z.object({
+  sequence: revisionSchema,
+  at: timestampSchema,
+  type: z.string(),
+  event: z.record(z.string(), z.json()),
+})
+/** Forward window of raw Session events; `nextCursor` also continues after later appends. */
+export const sessionLogPageSchema = z.object({
+  runId: idSchema,
+  sessionId: idSchema,
+  items: z.array(sessionLogEntrySchema),
+  nextCursor: z.string(),
+  hasMore: z.boolean(),
+})
+
 /** Session feed events carry an independent transcript cursor and bounded durable message windows. */
 export const sessionStreamEventSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('session_ready'), cursor: z.string().max(2048) }),

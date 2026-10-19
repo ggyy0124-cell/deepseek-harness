@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-19-task-web-raw-session-events.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-19-task-web-raw-session-events.md
+/agent-note-raw-session-events-in-task-web-behind-a-host-flag:
+  en: b77353b023d636ae
+  zh: 0319a6c04e8c66ed
+/agent-note-raw-session-events-in-task-web-behind-a-host-flag/problem:
+  en: 743dfbb3f1b0c05e
+  zh: 5facf8f002c3ce42
+/agent-note-raw-session-events-in-task-web-behind-a-host-flag/decision:
+  en: f3154018ca418bad
+  zh: 32cce8fbaba51823
+/agent-note-raw-session-events-in-task-web-behind-a-host-flag/alternatives-considered:
+  en: c56961d78fb67d6a
+  zh: e00494fb42b4b62d
+/agent-note-raw-session-events-in-task-web-behind-a-host-flag/consequences:
+  en: 2c6675aa5f7a9735
+  zh: 30530d65268126f2

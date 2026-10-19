@@ -220,6 +220,23 @@ describe('Task gateway composition', () => {
     } finally { open.mockRestore() }
   })
 
+  it('serves the raw Session log only when enabled and rejects unknown Runs', async () => {
+    const disabled = await gateway()
+    const stored = await disabled.client.request('triggerManual', { params: { definitionId: disabled.definition.id },
+      body: { input: null }, idempotencyKey: 'session-log-disabled' })
+    await expect(disabled.client.request('getSessionLog', { params: { runId: stored.id } }))
+      .rejects.toMatchObject({ problem: { status: 404, code: 'session_log_disabled' } })
+    const { client, definition } = await gateway({}, { sessionLog: true })
+    const run = await client.request('triggerManual', { params: { definitionId: definition.id },
+      body: { input: null }, idempotencyKey: 'session-log-run' })
+    await expect.poll(async () => (await client.request('getRun', { params: { runId: run.id } })).status).toBe('waiting_input')
+    const page = await client.request('getSessionLog', { params: { runId: run.id }, query: { limit: '200' } })
+    expect(page).toMatchObject({ runId: run.id, sessionId: run.sessionId, hasMore: false })
+    expect(page.items.length).toBeGreaterThan(0)
+    expect(page.items.every(item => item.event['type'] === item.type && item.event['seq'] === item.sequence)).toBe(true)
+    await expect(client.request('getSessionLog', { params: { runId: 'missing' } })).rejects.toMatchObject({ problem: { status: 404, code: 'not_found' } })
+  })
+
   it('downloads a visible Session attachment through the authenticated run route', async () => {
     const { ctx, raw, definition, client } = await gateway()
     const run = await client.request('triggerManual', { params: { definitionId: definition.id },
