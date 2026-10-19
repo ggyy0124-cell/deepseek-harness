@@ -1,7 +1,7 @@
 /** Public Task API records used by the Web client, inferred from the protocol catalog. */
 import type { TaskOperationResult } from '@deepseek-ai/dsh-task-api-client'
 import type {
-  attachmentSchema, resultDocumentSchema, transcriptEntrySchema, transcriptRequestSchema, taskStreamEventSchema,
+  attachmentSchema, resultDocumentSchema, sessionLogEntrySchema, transcriptEntrySchema, transcriptRequestSchema, taskStreamEventSchema,
 } from '@deepseek-ai/dsh-task-api-protocol'
 import type { z } from 'zod'
 
@@ -39,6 +39,8 @@ export type TranscriptBlock = TranscriptEntry['blocks'][number]
 export type TranscriptRequest = z.infer<typeof transcriptRequestSchema>
 /** One tool definition sent to the model in a request header. */
 export type TranscriptTool = TranscriptRequest['tools'][number]
+/** One stored Session event as the Session log returns it, unprojected. */
+export type SessionLogEntry = z.infer<typeof sessionLogEntrySchema>
 /** Run attachment metadata. */
 export type Attachment = z.infer<typeof attachmentSchema>
 /** Structured business result. */

@@ -19,6 +19,7 @@ import {
   runInputSchema,
   runSchema,
   runStatsSchema,
+  sessionLogPageSchema,
   runsPageSchema,
   runsQuerySchema,
 } from './schemas.ts'
@@ -136,6 +137,15 @@ export const taskJsonRoutes = [
     params: runParams,
     query: pageQuerySchema,
     response: transcriptPageSchema,
+    status: 200,
+  },
+  {
+    operationId: 'getSessionLog',
+    method: 'get',
+    path: '/runs/{runId}/session-log',
+    params: runParams,
+    query: pageQuerySchema,
+    response: sessionLogPageSchema,
     status: 200,
   },
   {

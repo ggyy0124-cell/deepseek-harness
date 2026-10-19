@@ -15,6 +15,8 @@ export interface TaskStartup {
   readonly port: number
   /** `--trusted-host` authorities in argument order, passed to the gateway's `trustedHosts`. */
   readonly trustedHosts: string[]
+  /** `--session-log`: the gateway serves unredacted stored Session events for Task Web's raw event view. */
+  readonly sessionLog: boolean
   readonly command: 'serve' | 'token-create' | 'token-revoke' | 'launch-link' | 'password-set' | 'backup' | 'restore'
   readonly target: string
 }
@@ -33,6 +35,7 @@ export function apply(ctx: Context): void {
     .option('--host <host>', 'listen address: 127.0.0.1, or one concrete IPv4 or IPv6 address of a local interface; wildcard addresses are rejected', '127.0.0.1')
     .option('--port <port>', 'listen port; 0 selects a free port', '3081')
     .option('--trusted-host <authority...>', 'browser address host or host:port accepted besides loopback (repeatable)')
+    .option('--session-log', 'serve unredacted stored Session events to Task Web for diagnosis')
     .option('--token-create', 'issue a native client credential without starting the server')
     .option('--token-revoke <id>', 'revoke a native client credential')
     .option('--launch-link', 'issue a one-time browser launch link for the Task host on --port')
@@ -44,6 +47,7 @@ export function apply(ctx: Context): void {
       host: string
       port: string
       trustedHost?: string[]
+      sessionLog?: boolean
       tokenCreate?: boolean
       tokenRevoke?: string
       launchLink?: boolean
@@ -66,6 +70,7 @@ export function apply(ctx: Context): void {
       host,
       port: Number(flags.port),
       trustedHosts: flags.trustedHost ?? [],
+      sessionLog: flags.sessionLog === true,
       command: flags.tokenCreate
         ? 'token-create'
         : flags.tokenRevoke !== undefined

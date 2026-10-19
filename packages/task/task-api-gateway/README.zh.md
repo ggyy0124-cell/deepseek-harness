@@ -42,6 +42,8 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 | `bodyTimeoutMs` | 30000 | 读取请求体的期限 |
 | `pageSize` | 50 | 默认 Run 分页大小，上限为 200 |
 | `transcriptPageBytes` | 131072 | 一个 transcript 窗口内已投影消息的 JSON 字节数上限，超出后窗口结束 |
+| `sessionLog` | false | 提供 `GET /runs/{runId}/session-log`，即未脱敏的已存储 Session 事件；Task 应用按 `--session-log` 设置 |
+| `sessionLogPageBytes` | 524288 | 一个 Session 日志窗口内事件的 JSON 字节数上限，超出后窗口结束 |
 | `statsCacheRuns` | 32 | 在内存中保留 Session 统计折叠结果的 Run 数，重复读取时只折叠新存储的事件 |
 | `launchTtlMs` / `sessionTtlMs` | 60000 / 2592000000 | 登录凭据和浏览器凭据有效期 |
 | `credentialLimit` | 100 | 每种凭据最多保留的有效条目数 |
@@ -73,6 +75,8 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 `GET /runs/{runId}/transcript` 通过只读句柄读取现有 Session 持久化记录，不激活 Agent。`limit` 限制源事件数，`transcriptPageBytes` 限制已投影消息的 JSON 字节数，因此仅含内部事件的页面可以为空而游标仍会前进，页面也可能在达到 `limit` 之前结束；超过字节上限的单条消息独占一页。`hasMore` 为真时继续使用 `nextCursor`，并保留最终游标用于后续追加。锚点缺失或改变返回 `cursor_stale`。仅公开原始用户、助手和工具结果消息，排除仅供模型使用的替换、回放状态和工具私有元数据。图片及文件块公开展示元数据。每条消息带有记录它的循环 `turn` 和 `step`，回合首步之前和回合之间为 null。用户消息带有 `source`（`kind` 及该类型的字段），用于区分人工输入和注入的上下文。助手消息带有模型名称、提供方为该次请求报告的 token 计数、请求的 `startedAt`（所在步骤的开始时间）和 `firstTokenAt`；工具结果带有对应工具调用的 `startedAt`；不适用或日志中缺失的字段为 null。每页的 `requests` 列出窗口内记录的请求头：序号、时间、原因、调用选项和模型看到的工具 Schema。不透明游标还携带循环位置和最多四个尚无结果的工具调用，因此这些字段在分页和实时轮询中保持准确；调用 id 长于 128 个字符时没有开始时间。`/runs/{runId}/session-attachments/{sequence}/{index}` 验证可见消息的引用后，通过附件提供者传输字节。Session 尚未持久化时返回 `409 session_unavailable`；可见附件不存在时返回 404。网关卸载和客户端提前断开会中止下载并等待读取句柄关闭；响应成功写完后正常关闭。存储内部可能物化比请求窗口更多的数据。
 
 `GET /runs/{runId}/stats` 通过投影注册表的冷读取，用宿主注册的 Session 投影单元折叠整个已存储的 Session，不激活 Agent：`session`（轮次、步数，以及模型、工具、首 token 和解码用时）来自 `dsh-session-stats`；`usage`（未缓存输入、缓存读取、缓存写入和输出，含重试的尝试）、`context`（最近一次请求的提示词大小、对下一次请求的推算值和模型路由的上下文窗口）和 `composition`（估算的系统提示词、工具定义和对话消息 token 数）来自 `dsh-token-meter`。这些正是 DSH Web 在输入框下方显示的数值。未注册对应单元的数值为 null，`asOfSeq` 指明折叠到的最后一个事件。网关为 `statsCacheRuns` 个 Run 保留折叠结果，之后只读取其后新存储的事件；折叠结果最后一个事件的指纹改变、单元被移除或折叠结果被淘汰时，从第一个事件重新折叠。Session 尚未持久化时返回 `409 session_unavailable`。
+
+`GET /runs/{runId}/session-log` 返回 Run 已存储的原始 Session 事件，不做投影，用于排查问题：每项包含事件的 `sequence`、ISO 时间 `at`、`type` 和持久化的 JSON `event`，其中包括 transcript 省略的流式分片、回放状态、工具参数和结果。它与 transcript 使用相同的只读句柄和前向游标，不激活 Agent；`limit` 限制事件数，`sessionLogPageBytes` 限制其 JSON 字节数，超过字节上限的单个事件独占一页，锚点缺失或改变返回 `cursor_stale`。这些值未经脱敏，因此未设置 `sessionLog` 时该路由返回 `404 session_log_disabled`。Session 尚未持久化时返回 `409 session_unavailable`。
 
 
 `GET /runs/{runId}/inputs` 按到达顺序列出人工给 Run 的补充信息和业务等待回复，并给出到达时间及阶段是否已消费；插件派发和等待超时不在其中。`/runs/{runId}/events` 提供独立游标的 Session SSE，不激活 Agent。业务等待、工具审批和模型提问共用交互 API；`GET /interactions` 按创建顺序列出所有执行中等待回复的交互。取消及重启中断的运行时请求会撤销，插件恢复后需要重新请求工具批准。`POST /runs/{runId}/cleanup` 以开始结算时记录的终态重试被阻塞的清理，并返回 202。`POST /runs/{runId}/restart` 为已失败或已取消的普通 Run 的业务键预留新的普通 Run，返回 201 和新 Run；该 Run 不是业务键最新的 Run，或定义未启用时，以 `409 invalid_state` 失败。`/catalog` 提供模型、preset 和权限目录，preset 附带显示名称和说明；配置检查与动态选项获取接收取消信号。

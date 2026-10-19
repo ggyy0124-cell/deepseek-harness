@@ -18,6 +18,7 @@ import { useRunSidebar } from '../support/sidebar.ts'
 import { useTranscript } from '../support/transcript.ts'
 import { buildTrajectory } from '../support/trajectory.ts'
 import { useRunStats } from '../support/stats.ts'
+import { useSessionLog } from '../support/session-log.ts'
 import { acceptsInput, type Attachment, type Json, type Run, type RunInput } from '../support/types.ts'
 import {
   Card, CopyButton, Dot, EmptyState, KeyValue, Mono, Notice, StatusMark, StatusTag, Tabs, Time,
@@ -27,6 +28,7 @@ import { RecordDetail } from '../components/RecordDetail.tsx'
 import { Sidebar, SidebarToggle, type SidebarTab } from '../components/Sidebar.tsx'
 import { TrajectoryView } from '../components/Trajectory.tsx'
 import { RunStatsBar } from '../components/RunStats.tsx'
+import { SessionLogView } from '../components/SessionLog.tsx'
 import { InteractionCard } from '../components/Interaction.tsx'
 import { ResultView } from '../components/Result.tsx'
 import { RestartCard } from '../components/Restart.tsx'
@@ -36,7 +38,7 @@ import { hasFormControls, SchemaForm, schemaDefault } from '../components/Schema
 type Tab = 'session' | 'interactions' | 'result' | 'files' | 'lineage'
 
 /** How the Session tab shows the stored messages. */
-type SessionView = 'chat' | 'trajectory'
+type SessionView = 'chat' | 'trajectory' | 'sessionLog'
 
 /** Tabs of the right sidebar; the record tab exists while a trajectory record is selected. */
 type SideTab = 'status' | 'record'
@@ -138,6 +140,8 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
     [needsTrajectory, transcript.entries, transcript.requests, inputs.value])
   // Statistics fold the whole stored log, so a new message or status change schedules one read while the Session shows.
   const stats = useRunStats(run.id, `${lastMessage?.sequence ?? -1}:${transcript.requests.length}:${run.revision}`, tab === 'session')
+  const sessionLog = useSessionLog(run.id, tab === 'session' && view === 'sessionLog',
+    `${lastMessage?.sequence ?? -1}:${transcript.requests.length}:${run.revision}`)
   const activeSide: SideTab = selectedId !== null && sideTab === 'record' ? 'record' : 'status'
   const sideTabs: readonly SidebarTab<SideTab>[] = [
     { id: 'status', label: t.run.sidebar.status },
@@ -242,7 +246,8 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
             {tab === 'session' && (
               <div className="tw-run-column">
                 <Tabs variant="underline" label={t.run.views.label} value={view} onChange={setView}
-                  items={[{ value: 'chat', label: t.run.views.chat }, { value: 'trajectory', label: t.run.views.trajectory }]} />
+                  items={[{ value: 'chat', label: t.run.views.chat }, { value: 'trajectory', label: t.run.views.trajectory },
+                    { value: 'sessionLog', label: t.run.views.sessionLog }]} />
               </div>
             )}
           </div>
@@ -278,11 +283,13 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
                         : transcript.failure.error.detail)}
                     </Notice>
                   )}
-                  {view === 'chat' || trajectory === undefined
-                    ? <Transcript run={run} entries={transcript.entries} inputs={inputs.value ?? NO_INPUTS} working={working}
-                      startLabel={startLabel(run, t)} />
-                    : <TrajectoryView run={run} trajectory={trajectory} working={working} selectedId={selectedId}
-                      onSelect={selectRecord} />}
+                  {view === 'sessionLog'
+                    ? <SessionLogView feed={sessionLog} />
+                    : view === 'chat' || trajectory === undefined
+                      ? <Transcript run={run} entries={transcript.entries} inputs={inputs.value ?? NO_INPUTS} working={working}
+                        startLabel={startLabel(run, t)} />
+                      : <TrajectoryView run={run} trajectory={trajectory} working={working} selectedId={selectedId}
+                        onSelect={selectRecord} />}
                   {waiting.length > 0 && <MetaLine text={t.status.waiting_input} />}
                 </>
               )}
