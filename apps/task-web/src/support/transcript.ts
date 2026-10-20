@@ -18,6 +18,8 @@ export interface TranscriptFeed {
   readonly entries: readonly TranscriptEntry[]
   /** Request headers (model configuration and tool schemas) in sequence order. */
   readonly requests: readonly TranscriptRequest[]
+  /** Latest transcript window cursor, advancing on every stored Session event even between public messages. */
+  readonly cursor: string | undefined
   readonly state: TranscriptState
   /** Present while reads keep failing; a Session that is not ready yet is not a failure. */
   readonly failure: TranscriptFailure | undefined
@@ -43,13 +45,14 @@ export function useTranscript(run: Pick<Run, 'id' | 'terminalAt'> | undefined): 
   const { connection } = useApp()
   const [entries, setEntries] = useState<readonly TranscriptEntry[]>([])
   const [requests, setRequests] = useState<readonly TranscriptRequest[]>([])
+  const [cursor, setCursor] = useState<string | undefined>(undefined)
   const [state, setState] = useState<TranscriptState>('connecting')
   const [failure, setFailure] = useState<TranscriptFailure | undefined>(undefined)
   const [attempt, setAttempt] = useState(0)
   const runId = run?.id
   const ended = run !== undefined && run.terminalAt !== null
 
-  useEffect(() => { setEntries([]); setRequests([]); setState('connecting'); setFailure(undefined) }, [runId])
+  useEffect(() => { setEntries([]); setRequests([]); setCursor(undefined); setState('connecting'); setFailure(undefined) }, [runId])
 
   useEffect(() => {
     if (runId === undefined) return
@@ -66,12 +69,13 @@ export function useTranscript(run: Pick<Run, 'id' | 'terminalAt'> | undefined): 
       setRequests(current => merge(current, page.requests))
     }
     const readPages = async () => {
-      let cursor: string | undefined
+      let next: string | undefined
       for (;;) {
-        const page = await connection.call('getTranscript', { params: { runId }, query: cursor === undefined ? { limit: '200' } : { cursor, limit: '200' }, signal })
+        const page = await connection.call('getTranscript', { params: { runId }, query: next === undefined ? { limit: '200' } : { cursor: next, limit: '200' }, signal })
         setFailure(undefined)
         accept(page)
-        cursor = page.nextCursor
+        next = page.nextCursor
+        setCursor(next)
         if (!page.hasMore) return
       }
     }
@@ -81,19 +85,20 @@ export function useTranscript(run: Pick<Run, 'id' | 'terminalAt'> | undefined): 
       setFailure(previous => (pending ? undefined : { error: describeFailure(error), count: (previous?.count ?? 0) + 1 }))
     }
     const follow = async () => {
-      let cursor: string | undefined
+      let next: string | undefined
       for (;;) {
         try {
-          for await (const event of connection.client.sessionEvents({ runId, signal, ...(cursor === undefined ? {} : { cursor }) })) {
-            if (event.kind === 'session_ready') { setState('live'); setFailure(undefined); continue }
+          for await (const event of connection.client.sessionEvents({ runId, signal, ...(next === undefined ? {} : { cursor: next }) })) {
+            if (event.kind === 'session_ready') { setState('live'); setFailure(undefined); setCursor(event.cursor); continue }
             setFailure(undefined)
             accept(event.page)
-            cursor = event.cursor
+            next = event.cursor
+            setCursor(next)
           }
         } catch (error) {
           if (signal.aborted) return
           if (isProblem(error, 'authentication_required')) { await connection.guard(() => Promise.reject(error)).catch(() => undefined); return }
-          if (isProblem(error, 'cursor_stale', 'invalid_cursor')) { cursor = undefined; setEntries([]); setRequests([]) }
+          if (isProblem(error, 'cursor_stale', 'invalid_cursor')) { next = undefined; setCursor(undefined); setEntries([]); setRequests([]) }
           fail(error)
         }
         if (signal.aborted) return
@@ -119,5 +124,5 @@ export function useTranscript(run: Pick<Run, 'id' | 'terminalAt'> | undefined): 
   }, [connection, runId, ended, attempt])
 
   const retry = useCallback(() => { setAttempt(count => count + 1) }, [])
-  return { entries, requests, state, failure, retry }
+  return { entries, requests, cursor, state, failure, retry }
 }

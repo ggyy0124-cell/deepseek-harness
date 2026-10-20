@@ -5,8 +5,9 @@ import {
   IconSearchOutlineRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useT } from '../i18n/index.ts'
-import { failureText } from '../support/format.ts'
+import { elapsed, failureText } from '../support/format.ts'
 import { buildLogTree, flattenLog, openByDefault, type LogNode, type SessionLogFeed } from '../support/session-log.ts'
+import type { Run } from '../support/types.ts'
 import { CopyButton, EmptyState, Notice, Spinner } from './ui.tsx'
 
 /** Time of a row in UTC with milliseconds, as stored. */
@@ -16,9 +17,15 @@ function clock(iso: string): string {
 
 /** Session log view.
  * @param props.feed - loaded events and paging actions from `useSessionLog`.
+ * @param props.run - execution, for the live activity line.
+ * @param props.working - the Agent is working; the log ends with its activity line.
  * @returns toolbar, rows and the detail of the selected row.
  */
-export function SessionLogView({ feed }: { feed: SessionLogFeed }) {
+export function SessionLogView({ feed, run, working = false }: {
+  feed: SessionLogFeed
+  run?: Pick<Run, 'createdAt'>
+  working?: boolean
+}) {
   const t = useT()
   const copy = t.run.sessionLog
   const [filter, setFilter] = useState('')
@@ -115,6 +122,7 @@ export function SessionLogView({ feed }: { feed: SessionLogFeed }) {
           <Button variant="outline" size="sm" disabled={feed.busy} onClick={feed.loadMore}>{copy.loadMore}</Button>
         </div>
       )}
+      {working && run !== undefined && <div className="tw-working"><Spinner tone="deep" /><span>{t.run.working(elapsed(run.createdAt, t))}</span></div>}
     </div>
   )
 }

@@ -829,7 +829,7 @@ button.tw-stat:focus-visible { outline: 2px solid var(--dsw-alias-state-business
 }
 .tw-traj-summary-button:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }
 .tw-traj-summary-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tw-traj > .tw-muted-line, .tw-traj > .tw-working { margin: 0; padding: 12px; border-top: 0.5px solid var(--dsw-alias-border-l2); }
+.tw-traj > .tw-muted-line, .tw-traj > .tw-working, .tw-log > .tw-working { margin: 0; padding: 12px; border-top: 0.5px solid var(--dsw-alias-border-l2); }
 @container (max-width: 720px) {
   .tw-traj-grid { --tw-traj-columns: 36px 64px minmax(0, 1fr) 56px 56px 64px; }
   .tw-traj-think { display: none; }

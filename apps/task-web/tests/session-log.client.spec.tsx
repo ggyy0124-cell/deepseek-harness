@@ -73,8 +73,9 @@ describe('Session log view', () => {
     expect(loadMore).toHaveBeenCalledOnce()
     fireEvent.click(screen.getByRole('button', { name: '从头重新读取' }))
     expect(reload).toHaveBeenCalledOnce()
-    rerender(<SessionLogView feed={feed({ hasMore: true, busy: true })} />)
+    rerender(<SessionLogView feed={feed({ hasMore: true, busy: true })} run={{ createdAt: new Date(0).toISOString() }} working />)
     expect(screen.getByRole('button', { name: '加载更多' }).hasAttribute('disabled')).toBe(true)
+    screen.getByText(/Agent 正在工作/)
   })
 })
 
@@ -169,5 +170,31 @@ describe('useSessionLog', () => {
     rerender(mount(value, 'run-4', true, 'b'))
     await waitFor(() => { screen.getByText('ready:0,1,2,3:false') })
     expect(reads.slice(-2).map(read => read.cursor)).toEqual(['3', null])
+  })
+  it('finishes an in-flight read without aborting and catches up when change advances mid-flight', async () => {
+    const value = app()
+    let releaseFirst: (() => void) | undefined
+    vi.stubGlobal('fetch', vi.fn(async (input: string | URL) => {
+      const url = new URL(input)
+      const cursor = url.searchParams.get('cursor')
+      reads.push({ cursor, limit: url.searchParams.get('limit') })
+      const count = stored
+      if (cursor === null) {
+        await new Promise<void>((resolve) => { releaseFirst = resolve })
+      }
+      const offset = cursor === null ? 0 : Number(cursor)
+      const limit = Number(url.searchParams.get('limit'))
+      const end = Math.min(count, offset + limit)
+      const items = Array.from({ length: end - offset }, (_, index) => entry(offset + index, 'custom'))
+      return new Response(JSON.stringify({ runId: 'run-1', sessionId: 'session-1', items, nextCursor: String(end), hasMore: end < count }),
+        { status: 200, headers: { 'content-type': 'application/json' } })
+    }))
+    const { rerender } = render(mount(value, 'run-1', true, 'a'))
+    await waitFor(() => { expect(reads).toHaveLength(1) })
+    stored = 5
+    rerender(mount(value, 'run-1', true, 'b'))
+    act(() => { releaseFirst?.() })
+    await waitFor(() => { screen.getByText('ready:0,1,2,3,4:false') })
+    expect(reads.map(read => read.cursor)).toEqual([null, '3'])
   })
 })
