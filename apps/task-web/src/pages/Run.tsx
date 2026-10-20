@@ -129,19 +129,22 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
   const working = !ended && (run.status === 'running' || run.status === 'provisioning' || run.status === 'recovering')
   const files = attachments.value ?? []
   const lastMessage = transcript.entries.at(-1)
-  // Both Session views follow new messages, inputs, the waiting-for-input line and the activity line; each view starts from its end.
-  // Waiting confirmations are answered in the Interactions tab and the Inbox, not in the Session.
-  useStickToBottom(scroller, `${lastMessage?.sequence ?? 0}:${inputs.value?.length ?? 0}:${waiting.length > 0}:${working}`,
-    tab === 'session' ? view : null)
   const selectedId = selection?.id ?? null
   const needsTrajectory = selectedId !== null || (tab === 'session' && view === 'trajectory')
   const trajectory = useMemo(
     () => (needsTrajectory ? buildTrajectory(transcript.entries, inputs.value ?? NO_INPUTS, transcript.requests) : undefined),
     [needsTrajectory, transcript.entries, transcript.requests, inputs.value])
-  // Statistics fold the whole stored log, so a new message or status change schedules one read while the Session shows.
-  const stats = useRunStats(run.id, `${lastMessage?.sequence ?? -1}:${transcript.requests.length}:${run.revision}`, tab === 'session')
-  const sessionLog = useSessionLog(run.id, tab === 'session' && view === 'sessionLog',
-    `${lastMessage?.sequence ?? -1}:${transcript.requests.length}:${run.revision}`)
+  const sessionChange = `${transcript.state}:${transcript.cursor ?? ''}:${lastMessage?.sequence ?? -1}:`
+    + `${transcript.requests.length}:${run.revision}`
+  // Statistics fold the whole stored log, so a new event or status change schedules one read while the Session shows.
+  const stats = useRunStats(run.id, sessionChange, tab === 'session')
+  const sessionLog = useSessionLog(run.id, tab === 'session' && view === 'sessionLog', sessionChange)
+  const lastLogEntry = sessionLog.entries.at(-1)
+  // Every Session view follows new messages, requests, raw events, inputs, the waiting-for-input line and the activity line.
+  // Waiting confirmations are answered in the Interactions tab and the Inbox, not in the Session.
+  const scrollContent = `${lastMessage?.sequence ?? 0}:${transcript.requests.length}:${inputs.value?.length ?? 0}:`
+    + `${waiting.length > 0}:${working}:${sessionLog.status}:${sessionLog.entries.length}:${lastLogEntry?.sequence ?? -1}`
+  useStickToBottom(scroller, scrollContent, tab === 'session' ? view : null)
   const activeSide: SideTab = selectedId !== null && sideTab === 'record' ? 'record' : 'status'
   const sideTabs: readonly SidebarTab<SideTab>[] = [
     { id: 'status', label: t.run.sidebar.status },
@@ -284,7 +287,7 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
                     </Notice>
                   )}
                   {view === 'sessionLog'
-                    ? <SessionLogView feed={sessionLog} />
+                    ? <SessionLogView feed={sessionLog} run={run} working={working} />
                     : view === 'chat' || trajectory === undefined
                       ? <Transcript run={run} entries={transcript.entries} inputs={inputs.value ?? NO_INPUTS} working={working}
                         startLabel={startLabel(run, t)} />

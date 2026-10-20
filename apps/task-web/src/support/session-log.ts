@@ -263,6 +263,10 @@ export function useSessionLog(runId: string, active: boolean, change: string): S
   const [generation, setGeneration] = useState(0)
   const [request, setRequest] = useState(0)
   const cursor = useRef<string | undefined>(undefined)
+  const lifetime = useRef<AbortController | undefined>(undefined)
+  const reading = useRef(false)
+  const latestChange = useRef(change)
+  latestChange.current = change
   // At the end of the log a Session change reads appended events; while more stored events wait the person pages on instead.
   const followed = useRef(change)
   if (!hasMore) followed.current = change
@@ -276,9 +280,24 @@ export function useSessionLog(runId: string, active: boolean, change: string): S
   useEffect(() => {
     if (!active) return
     const controller = new AbortController()
+    lifetime.current = controller
+    return () => {
+      controller.abort()
+      if (lifetime.current === controller) lifetime.current = undefined
+      reading.current = false
+      setBusy(false)
+    }
+  }, [connection, runId, active, generation])
+
+  useEffect(() => {
+    if (!active || reading.current) return
+    const controller = lifetime.current
+    if (controller === undefined || controller.signal.aborted) return
     const { signal } = controller
+    reading.current = true
+    setBusy(true)
     const read = async () => {
-      setBusy(true)
+      let seenChange = latestChange.current
       let loaded = 0
       try {
         for (;;) {
@@ -291,7 +310,14 @@ export function useSessionLog(runId: string, active: boolean, change: string): S
           setHasMore(page.hasMore)
           setStatus('ready')
           setFailure(undefined)
-          if (!page.hasMore || loaded >= SESSION_LOG_BATCH) return
+          if (page.hasMore) {
+            if (loaded >= SESSION_LOG_BATCH) return
+            continue
+          }
+          followed.current = seenChange
+          if (seenChange === latestChange.current) return
+          seenChange = latestChange.current
+          loaded = 0
         }
       } catch (error) {
         if (signal.aborted) return
@@ -301,11 +327,13 @@ export function useSessionLog(runId: string, active: boolean, change: string): S
         setStatus(isProblem(error, 'session_log_disabled') ? 'disabled' : isProblem(error, 'session_unavailable') ? 'pending' : 'failed')
         setFailure(describeFailure(error))
       } finally {
-        if (!signal.aborted) setBusy(false)
+        if (!signal.aborted) {
+          reading.current = false
+          setBusy(false)
+        }
       }
     }
     void read()
-    return () => { controller.abort(); setBusy(false) }
   }, [connection, runId, active, generation, request, follow])
 
   const loadMore = useCallback(() => { setRequest(value => value + 1) }, [])

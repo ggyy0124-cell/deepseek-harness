@@ -47,6 +47,7 @@ describe('Task Web raw Session events', () => {
   let directory: string
   let host: (Pick<ReturnType<typeof execa>, 'kill'> & PromiseLike<unknown>) | undefined
   let browser: Browser | undefined
+  let client: TaskApiClient
   let origin: string
   let runId: string
   let environment: NodeJS.ProcessEnv
@@ -96,7 +97,7 @@ describe('Task Web raw Session events', () => {
       await new Promise(resolveDelay => setTimeout(resolveDelay, 200))
     }
     const device = JSON.parse((await run(['--token-create'])).stdout.split('\n').find(line => line.startsWith('{"id":')) ?? '{}') as { token: string }
-    const client = new TaskApiClient({ baseUrl: `${origin}/api/task/v1/`, fetch, authentication: () => ({ bearer: device.token }) })
+    client = new TaskApiClient({ baseUrl: `${origin}/api/task/v1/`, fetch, authentication: () => ({ bearer: device.token }) })
     const created = await client.request('triggerManual', { params: { definitionId: 'model-wait' }, body: { input: null }, idempotencyKey: 'log' })
     runId = created.id
     const status = async () => {
@@ -104,9 +105,6 @@ describe('Task Web raw Session events', () => {
       return current.status === 'blocked' ? `blocked: ${current.reason ?? ''}` : current.status
     }
     await reach(status, 'waiting_input').catch((error: unknown) => { throw new Error(output.slice(-4000), { cause: error }) })
-    const wait = (await client.request('listInteractions', { params: { runId } })).items[0]!
-    await client.request('respond', { params: { runId, waitId: wait.id }, body: { revision: wait.revision, response: true }, idempotencyKey: 'confirm' })
-    await reach(status, 'succeeded')
     const executablePath = process.env['DSH_PLAYWRIGHT_EXECUTABLE_PATH']
     browser = await chromium.launch(executablePath === undefined ? {} : { executablePath })
   }, 120000)
@@ -118,8 +116,8 @@ describe('Task Web raw Session events', () => {
     await rm(directory, { recursive: true, force: true })
   })
 
-  it('lists stored events by turn and step, expands a stream, filters by type and shows the stored JSON', async () => {
-    const page = await browser!.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-CN', colorScheme: 'light' })
+  it('starts at the bottom, follows new raw events as the Run advances, expands a stream, filters by type and shows the stored JSON', async () => {
+    const page = await browser!.newPage({ viewport: { width: 1440, height: 360 }, locale: 'zh-CN', colorScheme: 'light' })
     const link = JSON.parse((await run(['--launch-link', '--port', new URL(origin).port])).stdout.trim().split('\n').at(-1) ?? '{}') as { url: string }
     await page.goto(link.url)
     await page.getByRole('heading', { name: '概览' }).waitFor()
@@ -130,6 +128,20 @@ describe('Task Web raw Session events', () => {
     await tree.waitFor()
     await page.getByText(/^\d+ 条事件$/).waitFor()
     const types = async () => tree.locator('.tw-log-type').allTextContents()
+    expect((await types()).filter(type => type === 'turn/start')).toHaveLength(1)
+    const scroller = page.locator('.tw-run-scroll')
+    const scrollState = () => scroller.evaluate(el => ({ top: el.scrollTop, gap: el.scrollHeight - el.scrollTop - el.clientHeight }))
+    await expect.poll(async () => (await scrollState()).top).toBeGreaterThan(0)
+    expect((await scrollState()).gap).toBeLessThanOrEqual(32)
+    const topBefore = (await scrollState()).top
+
+    const wait = (await client.request('listInteractions', { params: { runId } })).items[0]!
+    await client.request('respond', { params: { runId, waitId: wait.id }, body: { revision: wait.revision, response: true }, idempotencyKey: 'confirm' })
+    await expect.poll(async () => (await types()).filter(type => type === 'turn/start').length).toBe(2)
+    await expect.poll(async () => (await scrollState()).top).toBeGreaterThan(topBefore)
+    expect((await scrollState()).gap).toBeLessThanOrEqual(32)
+
+    await page.setViewportSize({ width: 1440, height: 900 })
     const listed = await types()
     expect(listed.filter(type => type === 'turn/start')).toHaveLength(2)
     expect(listed).toContain('step/start')

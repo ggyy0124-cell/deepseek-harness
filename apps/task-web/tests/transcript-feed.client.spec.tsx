@@ -59,8 +59,10 @@ describe('transcript feed', () => {
   it('keeps one copy of a message and a request header that arrive in more than one page', async () => {
     const { result } = feed(() => stream(
       frame('session_ready', 'cursor-1', {}), frame('session', 'cursor-2', { page }), frame('session', 'cursor-3', { page: { ...page, nextCursor: 'cursor-3' } }),
+      frame('session', 'cursor-4', { page: { ...page, items: [], requests: [], nextCursor: 'cursor-4' } }),
     ))
-    await waitFor(() => { expect(result.current.entries).toHaveLength(1) })
+    await waitFor(() => { expect(result.current.cursor).toBe('cursor-4') })
+    expect(result.current.entries).toHaveLength(1)
     expect(result.current.requests).toEqual([request])
   })
 
