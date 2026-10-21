@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-21-task-web-context-insight.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-21-task-web-context-insight.md
+/agent-note-context-insight-in-task-web-from-the-dsh-context-plugin:
+  en: 3733fb84da7491ca
+  zh: 8108885d9f24d26b
+/agent-note-context-insight-in-task-web-from-the-dsh-context-plugin/problem:
+  en: cfba0df35fc47a91
+  zh: 2c30f2c3589de1c2
+/agent-note-context-insight-in-task-web-from-the-dsh-context-plugin/decision:
+  en: 96714b727122a8c9
+  zh: e0eb93c2a0089c3b
+/agent-note-context-insight-in-task-web-from-the-dsh-context-plugin/alternatives-considered:
+  en: f390eb6be694ae00
+  zh: 90127ff59ac33749
+/agent-note-context-insight-in-task-web-from-the-dsh-context-plugin/consequences:
+  en: df7ee47b24e0d123
+  zh: 0c68f955e91539b7

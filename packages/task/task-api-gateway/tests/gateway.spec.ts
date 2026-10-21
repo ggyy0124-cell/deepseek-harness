@@ -220,6 +220,15 @@ describe('Task gateway composition', () => {
     } finally { open.mockRestore() }
   })
 
+  it('routes Run context insight and reports a host without the dsh-context plugin as unavailable', async () => {
+    const { client, definition } = await gateway()
+    const run = await client.request('triggerManual', { params: { definitionId: definition.id },
+      body: { input: null }, idempotencyKey: 'context-run' })
+    await expect.poll(async () => (await client.request('getRun', { params: { runId: run.id } })).status).toBe('waiting_input')
+    await expect(client.request('getRunContext', { params: { runId: run.id } }))
+      .rejects.toMatchObject({ problem: { status: 404, code: 'context_unavailable' } })
+  })
+
   it('serves the raw Session log only when enabled and rejects unknown Runs', async () => {
     const disabled = await gateway()
     const stored = await disabled.client.request('triggerManual', { params: { definitionId: disabled.definition.id },

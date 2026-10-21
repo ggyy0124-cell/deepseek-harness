@@ -29,6 +29,8 @@ export type Catalog = TaskOperationResult<'getCatalog'>
 export type Retirement = TaskOperationResult<'getRetirement'>
 /** Whole-log statistics of a Run's Session: loop counts and times, token usage and context occupancy. */
 export type RunStats = TaskOperationResult<'getRunStats'>
+/** Context insight of a Run's Session, as the `dsh-context` plugin folds it; the views are validated in `support/context.ts`. */
+export type RunContext = TaskOperationResult<'getRunContext'>
 /** One input a person gave a Run: supplemental information or a business-wait reply. */
 export type RunInput = TaskOperationResult<'listInputs'>['items'][number]
 /** One stored transcript message. */

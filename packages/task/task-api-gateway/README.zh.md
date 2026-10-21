@@ -76,6 +76,8 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 
 `GET /runs/{runId}/stats` 通过投影注册表的冷读取，用宿主注册的 Session 投影单元折叠整个已存储的 Session，不激活 Agent：`session`（轮次、步数，以及模型、工具、首 token 和解码用时）来自 `dsh-session-stats`；`usage`（未缓存输入、缓存读取、缓存写入和输出，含重试的尝试）、`context`（最近一次请求的提示词大小、对下一次请求的推算值和模型路由的上下文窗口）和 `composition`（估算的系统提示词、工具定义和对话消息 token 数）来自 `dsh-token-meter`。这些正是 DSH Web 在输入框下方显示的数值。未注册对应单元的数值为 null，`asOfSeq` 指明折叠到的最后一个事件。网关为 `statsCacheRuns` 个 Run 保留折叠结果，之后只读取其后新存储的事件；折叠结果最后一个事件的指纹改变、单元被移除或折叠结果被淘汰时，从第一个事件重新折叠。Session 尚未持久化时返回 `409 session_unavailable`。
 
+`GET /runs/{runId}/context` 在 Task Profile 安装了第三方插件 [dsh-context](https://www.npmjs.com/package/dsh-context)（`dsh plugin --profile task add dsh-context`）时返回它统计的上下文：插件在宿主上注册 Session 投影单元，该路由与统计接口一样用冷读取和缓存折叠已存储的 Session，同样在 Session 尚未持久化时返回 `409 session_unavailable`，并按键读取其中两个值：`timeline`（`contextTimeline` 视图：当前构成、逐次请求记录、上下文事件、计时、计费 token 和文件操作）和 `headers`（`contextHeaders` 视图：请求头各阶段的工具 Schema 占用与来源，未注册时为 null）。这些值是插件自己的传输格式，原样透传，由客户端校验它读取的字段。未安装插件时该路由返回 `404 context_unavailable`。
+
 `GET /runs/{runId}/session-log` 返回 Run 已存储的原始 Session 事件，不做投影，用于排查问题：每项包含事件的 `sequence`、ISO 时间 `at`、`type` 和持久化的 JSON `event`，其中包括 transcript 省略的流式分片、回放状态、工具参数和结果。它与 transcript 使用相同的只读句柄和前向游标，不激活 Agent；`limit` 限制事件数，`sessionLogPageBytes` 限制其 JSON 字节数，超过字节上限的单个事件独占一页，锚点缺失或改变返回 `cursor_stale`。这些值未经脱敏，因此未设置 `sessionLog` 时该路由返回 `404 session_log_disabled`。Session 尚未持久化时返回 `409 session_unavailable`。
 
 
