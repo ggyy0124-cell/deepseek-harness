@@ -28,6 +28,26 @@ describe('Task attachment inventory', () => {
     expect(await attachments.list(run)).toEqual([])
   })
 
+  it('lists only this Run\'s uploads oldest first with the path of their immutable blobs', async () => {
+    const { root, attachments, run } = await fixture()
+    const records = join(root, 'records')
+    await mkdir(records)
+    const item = (id: string, runId: string, createdAt: string, digest: string) => ({
+      id, runId, sessionId: runId === 'run' ? 'session' : 'other', name: `${id}.png`, mime: 'image/png', size: 4, digest, createdAt,
+    })
+    const receipt = (items: ReturnType<typeof item>[]) => JSON.stringify({ fingerprint: 'f', items })
+    await writeFile(join(records, `${'b'.repeat(64)}.json`), receipt([item('late', 'run', '2026-10-22T10:00:02.000Z', 'c'.repeat(64))]))
+    await writeFile(join(records, `${'a'.repeat(64)}.json`), receipt([
+      item('early', 'run', '2026-10-22T10:00:01.000Z', 'd'.repeat(64)), item('foreign', 'elsewhere', '2026-10-22T10:00:00.000Z', 'e'.repeat(64)),
+    ]))
+    const uploads = await attachments.uploads(run, new AbortController().signal)
+    expect(uploads).toEqual([
+      { id: 'early', name: 'early.png', mime: 'image/png', size: 4, digest: 'd'.repeat(64), createdAt: Date.UTC(2026, 9, 22, 10, 0, 1), path: join(root, 'blobs', 'd'.repeat(64)) },
+      { id: 'late', name: 'late.png', mime: 'image/png', size: 4, digest: 'c'.repeat(64), createdAt: Date.UTC(2026, 9, 22, 10, 0, 2), path: join(root, 'blobs', 'c'.repeat(64)) },
+    ])
+    await expect(attachments.uploads(run, AbortSignal.abort())).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
   it('rejects an upload whose request omits multipart content type', async () => {
     const { attachments, run } = await fixture()
     const request = Object.assign(Readable.from([Buffer.from('broken')]), { headers: {} }) as IncomingMessage

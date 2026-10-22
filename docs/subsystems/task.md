@@ -12,7 +12,9 @@ Task execution is defined by a business plugin and hosted by a durable provider.
 
 ## Stages and external effects
 
-[`TaskStage`](../../packages/task/task/src/index.ts) exposes the admitted snapshot, ordered inputs, retained child Session identities, cancellation signal, model calls, dispatch, and durable external operations. Its capabilities expire when the handler settles. `advance`, `wait`, `retry`, and `block` retain the execution; `succeed` and `fail` require cleanup before a terminal state is committed. The Run records that decision as `outcome` when cleanup starts, so blocked cleanup and its retry keep the business result.
+[`TaskStage`](../../packages/task/task/src/index.ts) exposes the admitted snapshot, ordered inputs, retained child Session identities, cancellation signal, model calls, uploaded files, dispatch, and durable external operations. Its capabilities expire when the handler settles. `advance`, `wait`, `retry`, and `block` retain the execution; `succeed` and `fail` require cleanup before a terminal state is committed. The Run records that decision as `outcome` when cleanup starts, so blocked cleanup and its retry keep the business result.
+
+`TaskUploadProvider` reads the files people uploaded to a run, and the [Task Gateway](../../packages/task/task-api-gateway/README.md) registers the provider that stores them through `registerUploadProvider`. `stage.uploads()` reads the current uploads oldest first, each with the path of its immutable stored file; a host without a provider reports none. An upload is not an input: it does not wake the run or enter model context, so a stage decides whether to copy a file and where.
 
 An operation identity is local to a run. A confirmed result is reused; a prepared operation invokes plugin reconciliation instead of blindly repeating an external write. Business updates and confirmations are persisted inputs. Confirmations reference a specific wait and input revision; stale replies are rejected.
 
@@ -90,6 +92,13 @@ abstract register(owner: Context, definition: TaskDefinition): () => Promise<voi
  * @returns asynchronous unregistration after active delivery settles.
  */
 abstract registerNotificationProvider(owner: Context, id: string, provider: TaskNotificationProvider): () => Promise<void>
+
+/** Attach the store of files people upload to runs; stages read it through {@link TaskStage.uploads}.
+ * @param owner - contributing plugin lifecycle.
+ * @param provider - reads the uploads of one run. Only one provider may be registered; a second registration throws.
+ * @returns asynchronous unregistration.
+ */
+abstract registerUploadProvider(owner: Context, provider: TaskUploadProvider): () => Promise<void>
 
 /** Read value-free scheduler, cleanup and storage diagnostics.
  * @returns current operating state; storage is null when unavailable.

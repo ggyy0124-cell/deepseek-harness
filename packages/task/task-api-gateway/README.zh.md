@@ -85,6 +85,8 @@ Task 应用通过未修改的 Host WebServer、Task 服务和 Credentials 提供
 
 `/runs/{runId}/attachments` 接收认证 multipart `files`，保存不可变 SHA-256 文件及主体范围内的重试回执，Run 处于取消中、清理受阻或终态时，以 `409 run_readonly` 拒绝新上传。下载按执行身份隔离，支持单个字节范围。`attachmentRoot` 必填；文件和请求默认上限分别为 52428800、209715200 字节，`attachmentUploadTimeoutMs` 默认 120000，`attachmentFileLimit` 默认 20。`configCheckTimeoutMs` 默认 60000，插件必须响应取消信号。
 
+网关启动时把自己的附件存储注册为 Task 上传提供方，阶段通过 `stage.uploads()` 按上传先后读取某个 Run 的上传文件，得到的是不可变文件的路径。已有其他提供方注册时，网关启动失败。
+
 `GET /credentials` 列出已安装定义中 `x-dsh-widget: credential` 字段引用的凭据，附带引用它们的定义及不含值的状态。`GET /credentials/{reference}` 只返回是否配置及可写状态；`PUT` 以幂等赋值方式替换共享凭据，不回显值，不使用 Task 命令回执。Cookie 写操作需要 CSRF。`/health` 和 `/ready` 需要认证，`/ready` 仅在启动器与 Task 恢复成功、调度器运行后返回 200，否则返回 503；`/auth/logout` 撤销浏览器会话。
 
 </details>

@@ -61,6 +61,8 @@ kind: "package-reference"
 
 `registerNotificationProvider(owner, id, provider)` 为每个通知目标维护独立的持久确认游标，并等待其释放完成。`diagnostics()` 读取全历史计数，报告排队时长、持久化屏障、资源占用、未完成卸载和磁盘压力。`diskFreeRatio` 默认为 0.1；文件系统统计不可用时明确报告缺失。
 
+`registerUploadProvider(owner, provider)` 挂载 `stage.uploads()` 读取的唯一存储；重复注册会抛出错误，移除后后续阶段读到的上传文件为空。
+
 清理阻塞期间，恢复加载的插件 fiber 保持加载。重试完成卸载流程后，调度器释放这些 fiber；服务关闭等待正在进行的释放结束。释放失败会记录 `task.retirement.dispose-failed`，并保留到下一轮释放重试。
 
 <details>

@@ -12,7 +12,9 @@
 
 ## 阶段与外部操作
 
-[`TaskStage`](../../packages/task/task/src/index.ts)提供已获准入的快照、有序输入、保留的子 Session 身份、取消信号、模型调用、派发与持久外部操作。处理器结束时，其能力失效。`advance`、`wait`、`retry` 与 `block` 保留此次执行；`succeed` 与 `fail` 在提交结束状态前必须完成清理。清理开始时，Run 将该决定记录为 `outcome`，因此清理受阻及其重试都会保留业务结果。
+[`TaskStage`](../../packages/task/task/src/index.ts)提供已获准入的快照、有序输入、保留的子 Session 身份、取消信号、模型调用、已上传文件、派发与持久外部操作。处理器结束时，其能力失效。`advance`、`wait`、`retry` 与 `block` 保留此次执行；`succeed` 与 `fail` 在提交结束状态前必须完成清理。清理开始时，Run 将该决定记录为 `outcome`，因此清理受阻及其重试都会保留业务结果。
+
+`TaskUploadProvider` 读取用户上传到某次执行的文件，[Task Gateway](../../packages/task/task-api-gateway/README.zh.md) 通过 `registerUploadProvider` 注册保存这些文件的提供方。`stage.uploads()` 按上传先后读取当前的上传文件，每项带有其不可变存储文件的路径；没有提供方的宿主报告为空。上传不是输入：它不会唤醒此次执行，也不会进入模型上下文，是否复制文件以及复制到哪里由阶段决定。
 
 操作身份局限于一次执行。已确认结果直接复用；准备状态的操作调用插件核对逻辑，不盲目重复外部写入。业务更新与确认都是持久输入。确认引用特定等待及输入修订号；过期回复被拒绝。
 
@@ -90,6 +92,13 @@ abstract register(owner: Context, definition: TaskDefinition): () => Promise<voi
  * @returns asynchronous unregistration after active delivery settles.
  */
 abstract registerNotificationProvider(owner: Context, id: string, provider: TaskNotificationProvider): () => Promise<void>
+
+/** Attach the store of files people upload to runs; stages read it through {@link TaskStage.uploads}.
+ * @param owner - contributing plugin lifecycle.
+ * @param provider - reads the uploads of one run. Only one provider may be registered; a second registration throws.
+ * @returns asynchronous unregistration.
+ */
+abstract registerUploadProvider(owner: Context, provider: TaskUploadProvider): () => Promise<void>
 
 /** Read value-free scheduler, cleanup and storage diagnostics.
  * @returns current operating state; storage is null when unavailable.

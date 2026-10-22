@@ -2,7 +2,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { TaskRetirement, TaskRunQuery, TaskRunPage, TaskNotificationProvider, TaskResourceHandler, TaskDiagnostics, TaskForms, TaskInputRecord, TaskInteraction, TaskCommand, TaskCommandResult, TaskPrincipalId, TaskConfig, TaskDefinitionId, TaskDefinitionView, TaskDispatchReceipt, TaskInput, TaskJournalCursor, TaskJournalEntry, TaskRequestId, TaskRun, TaskRunId, TaskStageResult, TaskWaitId } from './types.ts'
+import type { TaskRetirement, TaskRunQuery, TaskRunPage, TaskNotificationProvider, TaskResourceHandler, TaskDiagnostics, TaskForms, TaskInputRecord, TaskInteraction, TaskCommand, TaskCommandResult, TaskPrincipalId, TaskConfig, TaskDefinitionId, TaskDefinitionView, TaskDispatchReceipt, TaskInput, TaskJournalCursor, TaskJournalEntry, TaskRequestId, TaskRun, TaskRunId, TaskStageResult, TaskUpload, TaskUploadProvider, TaskWaitId } from './types.ts'
 export type * from './types.ts'
 export { TaskCommandError, type TaskCommandErrorCode } from './errors.ts'
 
@@ -29,6 +29,11 @@ export interface TaskStage {
    * @returns the completed model text, never an idle-state guess.
    */
   model(operationId: string, prompt: string): Promise<string>
+  /** Read the files people uploaded to this run so far. Uploads can arrive while the run waits, so each call reads the current set.
+   *
+   * @returns uploads oldest first; empty when no upload provider is registered, because nobody could have uploaded.
+   */
+  uploads(): Promise<readonly TaskUpload[]>
   /** Dispatch or associate ordinary work from a special run.
    *
    * @param requestId - stable dispatch identity within this run.
@@ -186,6 +191,12 @@ export abstract class TaskService extends Service {
    * @returns asynchronous unregistration after active delivery settles.
    */
   abstract registerNotificationProvider(owner: Context, id: string, provider: TaskNotificationProvider): () => Promise<void>
+  /** Attach the store of files people upload to runs; stages read it through {@link TaskStage.uploads}.
+   * @param owner - contributing plugin lifecycle.
+   * @param provider - reads the uploads of one run. Only one provider may be registered; a second registration throws.
+   * @returns asynchronous unregistration.
+   */
+  abstract registerUploadProvider(owner: Context, provider: TaskUploadProvider): () => Promise<void>
   /** Read value-free scheduler, cleanup and storage diagnostics.
    * @returns current operating state; storage is null when unavailable.
    */
