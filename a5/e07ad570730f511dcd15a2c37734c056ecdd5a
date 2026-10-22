@@ -1,0 +1,83 @@
+packages/task/task-local/src/engine.ts
+  s_ee315801ab9ee3::t_dc283b3ee70dbe 26
+  s_ee315801ab9ee3::t_79e94f6b9d5d65 1073
+  s_ee315801ab9ee3::t_331252eda20b75 110
+  s_ee315801ab9ee3::t_872175e7081b0e 142-152
+packages/task/task-local/README.zh.md
+  s_ee315801ab9ee3::t_b3da305d9a4e29 64-65
+packages/task/task-api-gateway/README.i18n.yaml
+  s_ee315801ab9ee3::t_40e0fc2edb63fb 21-22
+packages/task/task-local/src/index.ts
+  s_ee315801ab9ee3::t_6455e33e1ba67a 318-321
+  s_ee315801ab9ee3::t_b31d7a2b1ae446 23
+packages/task/task-api-gateway/tests/attachments.spec.ts
+  s_ee315801ab9ee3::t_7a3c8b19e7b834 31-50
+packages/task/task/src/types.ts
+  s_ee315801ab9ee3::t_908c54f1974ef6 293,295
+  s_ee315801ab9ee3::t_e49e296198b584 16-17
+  s_ee315801ab9ee3::t_0f5da9cb019a98 290-292,294,296-315
+docs/subsystems/task.md
+  s_ee315801ab9ee3::t_f35402d8b44097 15-17
+  s_ee315801ab9ee3::t_80e44f1ada8fae 96-101
+  s_ee315801ab9ee3::t_bca0a69d25543c 102
+docs/subsystems/task.zh.md
+  s_ee315801ab9ee3::t_80e44f1ada8fae 96-101
+  s_ee315801ab9ee3::t_4e5e94004d12c5 17
+  s_ee315801ab9ee3::t_d9bb92ded0b242 15-16
+  s_ee315801ab9ee3::t_0cb5116d01ae82 102
+packages/task/task-api-gateway/src/attachments.ts
+  s_ee315801ab9ee3::t_92c2be6cd25e93 131-146
+  s_ee315801ab9ee3::t_a78be4c8587329 8-9
+packages/task/task/README.md
+  s_ee315801ab9ee3::t_acac40dddac1eb 52-53
+packages/task/task-api-gateway/tests/gateway.spec.ts
+  s_ee315801ab9ee3::t_e770b57ef5702e 3
+  s_ee315801ab9ee3::t_79fa20e423a42e 537-557
+packages/task/task-api-gateway/README.zh.md
+  s_ee315801ab9ee3::t_b23be2df9b66fd 88-89
+.agents/notes/implemented/feature/2026-10-22-task-run-uploads-in-stages.md
+  s_ee315801ab9ee3::t_78ddc97cc4e6e6 1-31
+.agents/notes/implemented/feature/2026-10-22-task-run-uploads-in-stages.i18n.yaml
+  s_ee315801ab9ee3::t_40e0fc2edb63fb 1-19
+packages/task/task/src/index.ts
+  s_ee315801ab9ee3::t_0495c1f3dee668 5
+  s_ee315801ab9ee3::t_2f8728be620f85 32-36
+  s_ee315801ab9ee3::t_17213fc9d50cd2 194-199
+packages/task/task-api-gateway/src/index.ts
+  s_ee315801ab9ee3::t_9a7a8218c90a8c 260
+packages/task/task/README.zh.md
+  s_ee315801ab9ee3::t_874b7fd2478842 52-53
+packages/task/task-local/tests/provider.spec.ts
+  s_ee315801ab9ee3::t_911102f914c397 7
+  s_ee315801ab9ee3::t_b9516ed1c15c07 169-192
+.agents/notes/implemented/feature/2026-10-22-task-run-uploads-in-stages.zh.md
+  s_ee315801ab9ee3::t_a7247aff6377ee 1-31
+packages/task/task-api-gateway/README.md
+  s_ee315801ab9ee3::t_52ca59746a65c1 88-89
+docs/subsystems/task.i18n.yaml
+  s_ee315801ab9ee3::t_40e0fc2edb63fb 12-13
+packages/task/task/README.i18n.yaml
+  s_ee315801ab9ee3::t_40e0fc2edb63fb 21-22
+packages/task/task-local/README.md
+  s_ee315801ab9ee3::t_c186099d292846 64-65
+packages/task/task-local/README.i18n.yaml
+  s_ee315801ab9ee3::t_40e0fc2edb63fb 21-22
+scripts/gen-cordis-catalog.ts
+  s_ee315801ab9ee3::t_e65927881e221b 682-684
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a5e07ad570730f511dcd15a2c37734c056ecdd5a",
+  "prompts": {},
+  "sessions": {
+    "s_ee315801ab9ee3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9688fb9d-d72e-44af-be3c-6bbefc9c1db5",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
