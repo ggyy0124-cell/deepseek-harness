@@ -308,6 +308,20 @@ export const runStatsSchema = z.object({
     messageTokens: count,
   }).nullable(),
 })
+/** Context insight of a Run's Session, folded from every stored event by the `dsh-context` plugin's Session projection units
+ * when the Task host composes them. The values are that plugin's own wire views, passed through unchanged; clients validate
+ * the fields they read.
+ */
+export const runContextSchema = z.object({
+  runId: idSchema,
+  sessionId: idSchema,
+  /** Sequence of the last Session event the values reflect; -1 for an empty log. */
+  asOfSeq: z.number().int().min(-1),
+  /** The `contextTimeline` view: current composition, per-request records, context events, timing, billed tokens and file operations. */
+  timeline: z.record(z.string(), z.json()),
+  /** The `contextHeaders` view: request-header epochs with tool schema prices and sources; null when not composed. */
+  headers: z.record(z.string(), z.json()).nullable(),
+})
 /** Forward event window; an empty page can advance over internal records. */
 export const transcriptPageSchema = z.object({
   runId: idSchema,

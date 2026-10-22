@@ -45,7 +45,7 @@ import { streamSessionEvents } from './session-events.ts'
 import { streamTaskEvents } from './events.ts'
 import { readTaskTranscript } from './transcript.ts'
 import { readSessionLog } from './session-log.ts'
-import { readRunStats, RunStatsCache } from './stats.ts'
+import { readRunContext, readRunStats, RunStatsCache } from './stats.ts'
 import { downloadSessionAttachment } from './session-attachments.ts'
 import type {} from '@deepseek-ai/dsh-attachment'
 import { executeOperation } from './operations.ts'
@@ -747,20 +747,23 @@ export class TaskApiGateway extends Service {
               : match.candidate.operationId === 'getRunStats'
                 ? await this.whileConnected(response, signal => readRunStats(this.ctx.tasks, this.ctx.sessionPersistence,
                   this.ctx.sessionProjections, this.stats, params['runId'] as string, signal))
-                : match.candidate.operationId === 'getCatalog' ||
+                : match.candidate.operationId === 'getRunContext'
+                  ? await this.whileConnected(response, signal => readRunContext(this.ctx.tasks, this.ctx.sessionPersistence,
+                    this.ctx.sessionProjections, this.stats, params['runId'] as string, signal))
+                  : match.candidate.operationId === 'getCatalog' ||
                 match.candidate.operationId === 'checkConfig' ||
                 match.candidate.operationId === 'getOptions'
-                  ? await this.formOperation(match.candidate.operationId, params, validatedBody, response)
-                  : executeOperation(
-                    this.ctx.tasks,
-                    match.candidate.operationId,
-                    params,
-                    validatedQuery,
-                    validatedBody,
-                    auth.principal,
-                    brandString<TaskRequestId>(retryKey),
-                    this.config.pageSize,
-                  )
+                    ? await this.formOperation(match.candidate.operationId, params, validatedBody, response)
+                    : executeOperation(
+                      this.ctx.tasks,
+                      match.candidate.operationId,
+                      params,
+                      validatedQuery,
+                      validatedBody,
+                      auth.principal,
+                      brandString<TaskRequestId>(retryKey),
+                      this.config.pageSize,
+                    )
       this.assertRunning()
       const output = route.response.parse(value)
       status = route.status

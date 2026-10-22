@@ -7,13 +7,15 @@ import type { ProjectionCheckpoint, ProjectionSnapshot } from '@deepseek-ai/dsh-
 // Type-only: the `sessionStats`, `tokenUsage`, `contextPressure` and `contextBreakdown` projection key merges.
 import type {} from '@deepseek-ai/dsh-session-stats/types'
 import type {} from '@deepseek-ai/dsh-token-meter/client'
-import type { TaskRunId, TaskService } from '@deepseek-ai/dsh-task'
-import type { runStatsSchema } from '@deepseek-ai/dsh-task-api-protocol'
-import type { z } from 'zod'
+import type { TaskRun, TaskRunId, TaskService } from '@deepseek-ai/dsh-task'
+import type { runContextSchema, runStatsSchema } from '@deepseek-ai/dsh-task-api-protocol'
+import { z } from 'zod'
 import { HttpProblem } from './http.ts'
 import { fingerprint } from './transcript.ts'
 
 type RunStats = z.input<typeof runStatsSchema>
+type RunContext = z.input<typeof runContextSchema>
+type JsonValue = z.infer<ReturnType<typeof z.json>>
 
 /** Projection state of one Session at a log position, kept so the next read folds only the events stored after it. */
 interface Fold {
@@ -76,6 +78,38 @@ async function foldLog(projections: Pick<SessionProjectionRegistry, 'restore' | 
   return { snapshot: restored.snapshot, fold }
 }
 
+/** Fold the stored log of a Run's Session through every registered unit, reusing and refreshing the cached fold.
+ * @param tasks - Task ownership lookup; arbitrary Session identities are never accepted.
+ * @param persistence - existing read-only Session storage access.
+ * @param projections - registry whose units fold the log.
+ * @param cache - last fold per Session, so repeated reads of a growing log fold only the new events.
+ * @param runId - execution selected by the authenticated owner.
+ * @param signal - caller lifetime, including gateway disposal.
+ * @returns the Run and the snapshot as of the last stored event.
+ */
+async function foldRun(
+  tasks: Pick<TaskService, 'getRun'>,
+  persistence: Pick<SessionPersistence, 'open'>,
+  projections: Pick<SessionProjectionRegistry, 'restore' | 'restoreFloor'>,
+  cache: RunStatsCache,
+  runId: string,
+  signal: AbortSignal,
+): Promise<{ run: TaskRun; snapshot: ProjectionSnapshot }> {
+  signal.throwIfAborted()
+  const run = tasks.getRun(brandString<TaskRunId>(runId))
+  if (run === undefined) throw new HttpProblem(404, 'not_found', 'Task execution not found')
+  try {
+    await using handle = await persistence.open(run.sessionId, 'read', { signal })
+    const { snapshot, fold } = await foldLog(projections, handle, cache.take(run.sessionId), signal)
+    cache.put(run.sessionId, fold)
+    return { run, snapshot }
+  } catch (error) {
+    if (error instanceof SessionPersistenceNotFoundError)
+      throw new HttpProblem(409, 'session_unavailable', 'Task Session is not available yet')
+    throw error
+  }
+}
+
 /** Read the whole-log figures of a Run without preparing its Session or activating an Agent.
  * @param tasks - Task ownership lookup; arbitrary Session identities are never accepted.
  * @param persistence - existing read-only Session storage access.
@@ -93,30 +127,51 @@ export async function readRunStats(
   runId: string,
   signal: AbortSignal,
 ): Promise<RunStats> {
-  signal.throwIfAborted()
-  const run = tasks.getRun(brandString<TaskRunId>(runId))
-  if (run === undefined) throw new HttpProblem(404, 'not_found', 'Task execution not found')
-  try {
-    await using handle = await persistence.open(run.sessionId, 'read', { signal })
-    const { snapshot, fold } = await foldLog(projections, handle, cache.take(run.sessionId), signal)
-    cache.put(run.sessionId, fold)
-    const { sessionStats, tokenUsage, contextPressure, contextBreakdown } = snapshot.values
-    return {
-      runId: run.id,
-      sessionId: run.sessionId,
-      asOfSeq: snapshot.asOfSeq,
-      session: sessionStats ?? null,
-      usage: tokenUsage ?? null,
-      context: contextPressure === undefined ? null : {
-        pressureTokens: contextPressure.pressureTokens ?? null,
-        projectedTokens: contextPressure.projectedTokens ?? null,
-        contextWindow: contextPressure.contextWindow ?? null,
-      },
-      composition: contextBreakdown ?? null,
-    }
-  } catch (error) {
-    if (error instanceof SessionPersistenceNotFoundError)
-      throw new HttpProblem(409, 'session_unavailable', 'Task Session is not available yet')
-    throw error
+  const { run, snapshot } = await foldRun(tasks, persistence, projections, cache, runId, signal)
+  const { sessionStats, tokenUsage, contextPressure, contextBreakdown } = snapshot.values
+  return {
+    runId: run.id,
+    sessionId: run.sessionId,
+    asOfSeq: snapshot.asOfSeq,
+    session: sessionStats ?? null,
+    usage: tokenUsage ?? null,
+    context: contextPressure === undefined ? null : {
+      pressureTokens: contextPressure.pressureTokens ?? null,
+      projectedTokens: contextPressure.projectedTokens ?? null,
+      contextWindow: contextPressure.contextWindow ?? null,
+    },
+    composition: contextBreakdown ?? null,
   }
+}
+
+/** A projection view as JSON: fields the view leaves undefined are dropped, as they would be on any wire. */
+function jsonView(value: unknown): Record<string, JsonValue> | null {
+  if (value === undefined || value === null) return null
+  return z.record(z.string(), z.json()).parse(JSON.parse(JSON.stringify(value)))
+}
+
+/** Read the context insight of a Run, folded by the `dsh-context` plugin's units, without preparing its Session.
+ * @param tasks - Task ownership lookup; arbitrary Session identities are never accepted.
+ * @param persistence - existing read-only Session storage access.
+ * @param projections - registry whose units fold the log; the plugin's units are registered only when it is installed.
+ * @param cache - last fold per Session, shared with the Run statistics.
+ * @param runId - execution selected by the authenticated owner.
+ * @param signal - caller lifetime, including gateway disposal.
+ * @returns the plugin's views as of the last stored event; 404 `context_unavailable` when the plugin is not installed.
+ */
+export async function readRunContext(
+  tasks: Pick<TaskService, 'getRun'>,
+  persistence: Pick<SessionPersistence, 'open'>,
+  projections: Pick<SessionProjectionRegistry, 'restore' | 'restoreFloor'>,
+  cache: RunStatsCache,
+  runId: string,
+  signal: AbortSignal,
+): Promise<RunContext> {
+  const { run, snapshot } = await foldRun(tasks, persistence, projections, cache, runId, signal)
+  // The plugin's keys are not part of the harness projection map; read them by name.
+  const values: Readonly<Record<string, unknown>> = snapshot.values
+  const timeline = jsonView(values['contextTimeline'])
+  if (timeline === null)
+    throw new HttpProblem(404, 'context_unavailable', 'The dsh-context plugin is not installed on this Task host')
+  return { runId: run.id, sessionId: run.sessionId, asOfSeq: snapshot.asOfSeq, timeline, headers: jsonView(values['contextHeaders']) }
 }

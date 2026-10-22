@@ -1,4 +1,5 @@
-/** Run statistics fold the stored Session log with the registered projection units and read only new events afterwards. */
+/** Run statistics and context insight fold the stored Session log with the registered projection units and read only new events
+ * afterwards. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { createMessage, createSystemMessage, createToolResultMessage, createUserMessage, ToolCallId, type TokenUsage } from '@deepseek-ai/dsh-llm'
@@ -8,9 +9,10 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import * as sessionStats from '@deepseek-ai/dsh-session-stats'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import type { TaskRun } from '@deepseek-ai/dsh-task'
-import { runStatsSchema } from '@deepseek-ai/dsh-task-api-protocol'
+import { runContextSchema, runStatsSchema } from '@deepseek-ai/dsh-task-api-protocol'
+import { z } from 'zod'
 import { HttpProblem } from '../src/http.ts'
-import { readRunStats, RunStatsCache } from '../src/stats.ts'
+import { readRunContext, readRunStats, RunStatsCache } from '../src/stats.ts'
 import { stub } from '../../task-local/tests/stub.ts'
 
 const contexts: Context[] = []
@@ -18,7 +20,7 @@ afterEach(async () => { await Promise.all(contexts.splice(0).map(ctx => ctx.fibe
 const signal = new AbortController().signal
 
 /** A live Session whose committed events are recorded the way they reach storage. */
-async function harness(units = true) {
+async function harness(units = true, context = false) {
   const ctx = new Context()
   contexts.push(ctx)
   await ctx.plugin(SessionStore)
@@ -27,6 +29,7 @@ async function harness(units = true) {
     await ctx.plugin(TokenMeter)
     await ctx.plugin(sessionStats)
   }
+  if (context) registerContextUnits(ctx)
   const session = ctx.sessions.create()
   const stored: SessionEvent[] = []
   ctx.on('session/event', (owner: Session, event: SessionEvent) => { if (owner === session) stored.push(event) })
@@ -42,7 +45,28 @@ async function harness(units = true) {
   const tasks = { getRun: vi.fn((id: string) => (id === run.id ? run : undefined)) }
   const read$ = (cache: RunStatsCache) => readRunStats(tasks, { open }, ctx.sessionProjections, cache, run.id, signal)
     .then(value => runStatsSchema.parse(value))
-  return { ctx, session, stored, read, open, tasks, run, stats: read$ }
+  const context$ = (cache: RunStatsCache) => readRunContext(tasks, { open }, ctx.sessionProjections, cache, run.id, signal)
+    .then(value => runContextSchema.parse(value))
+  return { ctx, session, stored, read, open, tasks, run, stats: read$, context: context$ }
+}
+
+/** Stand-ins for the `dsh-context` plugin's units: the gateway reads them only by key, so their values are opaque here. */
+function registerContextUnits(ctx: Context) {
+  const counter = z.object({ steps: z.number() })
+  // The plugin's keys are not in the harness projection maps; it registers them the same way.
+  ctx.sessionProjections.register({
+    key: 'contextTimeline', stateSchema: counter, stateVersion: 1, init: () => ({ steps: 0 }),
+    apply: (state: { steps: number }, event: SessionEvent) => (event.type === 'assistant/message' ? { steps: state.steps + 1 } : state),
+    wire: {
+      viewSchema: z.any(),
+      view: (state: { steps: number }) =>
+        ({ ok: true, requests: Array.from({ length: state.steps }, (_, seq) => ({ seq })), model: undefined }),
+    },
+  } as never)
+  ctx.sessionProjections.register({
+    key: 'contextHeaders', stateSchema: counter, stateVersion: 1, init: () => ({ steps: 0 }), apply: (state: { steps: number }) => state,
+    wire: { viewSchema: z.any(), view: () => ({ headers: [] }) },
+  } as never)
 }
 
 const usage = (inputTokens: number, outputTokens: number, cacheReadTokens: number): TokenUsage =>
@@ -139,5 +163,42 @@ describe('Run statistics', () => {
     await expect(h.stats(cache)).rejects.not.toBeInstanceOf(HttpProblem)
     const aborted = AbortSignal.abort()
     await expect(readRunStats(h.tasks, { open: h.open }, h.ctx.sessionProjections, cache, h.run.id, aborted)).rejects.toThrow()
+  })
+})
+
+describe('Run context insight', () => {
+  it('passes the plugin views through as JSON and shares the fold cache with the statistics', async () => {
+    const h = await harness(true, true)
+    turn(h.session, 1, usage(100, 20, 300))
+    const cache = new RunStatsCache(4)
+    expect(await h.context(cache)).toEqual({ runId: 'run-1', sessionId: h.session.id, asOfSeq: h.stored.length - 1,
+      timeline: { ok: true, requests: [{ seq: 0 }] }, headers: { headers: [] } })
+    const end = h.stored.length - 1
+    turn(h.session, 2, usage(50, 10, 450))
+    expect((await h.stats(cache)).session).toMatchObject({ turns: 2 })
+    expect(h.read).toHaveBeenLastCalledWith(end, undefined, { signal })
+    expect((await h.context(cache)).timeline).toEqual({ ok: true, requests: [{ seq: 0 }, { seq: 1 }] })
+    expect(h.read).toHaveBeenLastCalledWith(h.stored.length - 1, undefined, { signal })
+  })
+
+  it('reports a host without the plugin as unavailable and a missing header unit as null', async () => {
+    const h = await harness()
+    turn(h.session, 1, usage(100, 20, 300))
+    await expect(h.context(new RunStatsCache(2))).rejects.toMatchObject({ status: 404, code: 'context_unavailable' })
+    const partial = await harness(false)
+    partial.ctx.sessionProjections.register({
+      key: 'contextTimeline', stateSchema: z.object({}), stateVersion: 1, init: () => ({}), apply: (state: object) => state,
+      wire: { viewSchema: z.any(), view: () => ({ ok: true }) },
+    } as never)
+    expect(await partial.context(new RunStatsCache(2))).toMatchObject({ asOfSeq: -1, timeline: { ok: true }, headers: null })
+  })
+
+  it('rejects unknown Runs and Sessions that storage does not have yet', async () => {
+    const h = await harness(true, true)
+    const cache = new RunStatsCache(2)
+    await expect(readRunContext(h.tasks, { open: h.open }, h.ctx.sessionProjections, cache, 'missing', signal))
+      .rejects.toMatchObject({ status: 404, code: 'not_found' })
+    h.open.mockRejectedValueOnce(new SessionPersistenceNotFoundError(h.session.id))
+    await expect(h.context(cache)).rejects.toMatchObject({ status: 409, code: 'session_unavailable' })
   })
 })

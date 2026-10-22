@@ -142,6 +142,12 @@ describe('Task Web Session statistics', () => {
     await contextPanel.waitFor({ state: 'detached' })
     await page.getByRole('tab', { name: '轨迹' }).click()
     await stats.getByText('2 轮 2 步').waitFor()
+    // The Context view sits beside the trajectory; this host does not compose the dsh-context plugin.
+    const views = page.getByRole('tablist', { name: '会话视图' }).getByRole('tab')
+    expect(await views.allTextContents()).toEqual(['对话', '轨迹', '上下文', '原始事件'])
+    await page.getByRole('tab', { name: '上下文' }).click()
+    await page.getByText('未安装 dsh-context 插件').waitFor()
+    await page.getByText('dsh plugin --profile task add dsh-context').waitFor()
     await page.close()
   }, 60000)
 

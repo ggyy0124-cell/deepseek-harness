@@ -19,6 +19,7 @@ import { useTranscript } from '../support/transcript.ts'
 import { buildTrajectory } from '../support/trajectory.ts'
 import { useRunStats } from '../support/stats.ts'
 import { useSessionLog } from '../support/session-log.ts'
+import { useRunContext } from '../support/context.ts'
 import { acceptsInput, type Attachment, type Json, type Run, type RunInput } from '../support/types.ts'
 import {
   Card, CopyButton, Dot, EmptyState, KeyValue, Mono, Notice, StatusMark, StatusTag, Tabs, Time,
@@ -29,6 +30,7 @@ import { Sidebar, SidebarToggle, type SidebarTab } from '../components/Sidebar.t
 import { TrajectoryView } from '../components/Trajectory.tsx'
 import { RunStatsBar } from '../components/RunStats.tsx'
 import { SessionLogView } from '../components/SessionLog.tsx'
+import { ContextView } from '../components/ContextView.tsx'
 import { InteractionCard } from '../components/Interaction.tsx'
 import { ResultView } from '../components/Result.tsx'
 import { RestartCard } from '../components/Restart.tsx'
@@ -38,7 +40,7 @@ import { hasFormControls, SchemaForm, schemaDefault } from '../components/Schema
 type Tab = 'session' | 'interactions' | 'result' | 'files' | 'lineage'
 
 /** How the Session tab shows the stored messages. */
-type SessionView = 'chat' | 'trajectory' | 'sessionLog'
+type SessionView = 'chat' | 'trajectory' | 'context' | 'sessionLog'
 
 /** Tabs of the right sidebar; the record tab exists while a trajectory record is selected. */
 type SideTab = 'status' | 'record'
@@ -139,12 +141,14 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
   // Statistics fold the whole stored log, so a new event or status change schedules one read while the Session shows.
   const stats = useRunStats(run.id, sessionChange, tab === 'session')
   const sessionLog = useSessionLog(run.id, tab === 'session' && view === 'sessionLog', sessionChange)
+  const context = useRunContext(run.id, sessionChange, tab === 'session' && view === 'context')
   const lastLogEntry = sessionLog.entries.at(-1)
   // Every Session view follows new messages, requests, raw events, inputs, the waiting-for-input line and the activity line.
   // Waiting confirmations are answered in the Interactions tab and the Inbox, not in the Session.
   const scrollContent = `${lastMessage?.sequence ?? 0}:${transcript.requests.length}:${inputs.value?.length ?? 0}:`
     + `${waiting.length > 0}:${working}:${sessionLog.status}:${sessionLog.entries.length}:${lastLogEntry?.sequence ?? -1}`
-  useStickToBottom(scroller, scrollContent, tab === 'session' ? view : null)
+  // The Context view is a dashboard read from its top; the other Session views follow new content at the end.
+  useStickToBottom(scroller, scrollContent, tab === 'session' && view !== 'context' ? view : null)
   const activeSide: SideTab = selectedId !== null && sideTab === 'record' ? 'record' : 'status'
   const sideTabs: readonly SidebarTab<SideTab>[] = [
     { id: 'status', label: t.run.sidebar.status },
@@ -250,7 +254,7 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
               <div className="tw-run-column">
                 <Tabs variant="underline" label={t.run.views.label} value={view} onChange={setView}
                   items={[{ value: 'chat', label: t.run.views.chat }, { value: 'trajectory', label: t.run.views.trajectory },
-                    { value: 'sessionLog', label: t.run.views.sessionLog }]} />
+                    { value: 'context', label: t.run.views.context }, { value: 'sessionLog', label: t.run.views.sessionLog }]} />
               </div>
             )}
           </div>
@@ -288,11 +292,13 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
                   )}
                   {view === 'sessionLog'
                     ? <SessionLogView feed={sessionLog} run={run} working={working} />
-                    : view === 'chat' || trajectory === undefined
-                      ? <Transcript run={run} entries={transcript.entries} inputs={inputs.value ?? NO_INPUTS} working={working}
-                        startLabel={startLabel(run, t)} />
-                      : <TrajectoryView run={run} trajectory={trajectory} working={working} selectedId={selectedId}
-                        onSelect={selectRecord} />}
+                    : view === 'context'
+                      ? <ContextView state={context} />
+                      : view === 'chat' || trajectory === undefined
+                        ? <Transcript run={run} entries={transcript.entries} inputs={inputs.value ?? NO_INPUTS} working={working}
+                          startLabel={startLabel(run, t)} />
+                        : <TrajectoryView run={run} trajectory={trajectory} working={working} selectedId={selectedId}
+                          onSelect={selectRecord} />}
                   {waiting.length > 0 && <MetaLine text={t.status.waiting_input} />}
                 </>
               )}
