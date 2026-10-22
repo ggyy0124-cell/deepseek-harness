@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-task-agent-preset-registry",
   "description": "Task Profile Agent preset registry that retains recorded preset revisions",
-  "version": "0.2.1-rc.2-task.0.0.11",
+  "version": "0.2.1-rc.2-task.0.0.12",
   "publishConfig": {
     "access": "public"
   },
