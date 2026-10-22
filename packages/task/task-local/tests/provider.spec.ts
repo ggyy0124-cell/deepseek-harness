@@ -4,7 +4,7 @@ import { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
-import type { TaskDefinition, TaskDefinitionId, TaskRequestId } from '@deepseek-ai/dsh-task'
+import type { TaskDefinition, TaskDefinitionId, TaskRequestId, TaskUpload, TaskUploadId } from '@deepseek-ai/dsh-task'
 import { z } from 'zod'
 import * as fs from 'node:fs/promises'
 import { join } from 'node:path'
@@ -164,6 +164,30 @@ describe('Local Task provider', () => {
     await expect.poll(() => ctx.tasks.getRun(next.id)?.status).toBe('waiting_input')
     expect(deliver).toHaveBeenCalledTimes(before)
     errors.mockRestore()
+  })
+
+  it('reads uploads from the one registered provider and sees none after its owner is disposed', async () => {
+    const { ctx } = await fixture(false, {
+      runSpecial: async stage => ({ kind: 'succeed', result: (await stage.uploads()).map(({ id: uploadId, name, path }) => ({ id: uploadId, name, path })) }),
+    })
+    const stageView = async (key: string) => {
+      const run = ctx.tasks.triggerManual(id, request(key), null)
+      await expect.poll(() => ctx.tasks.getRun(run.id)?.status).toBe('succeeded')
+      return { run, result: ctx.tasks.getRun(run.id)!.result }
+    }
+    expect((await stageView('before')).result).toEqual([])
+    const upload: TaskUpload = { id: brandString<TaskUploadId>('upload-1'), name: 'shot.png', mime: 'image/png', size: 3, digest: 'a'.repeat(64), createdAt: 1, path: '/blobs/a' }
+    const list = vi.fn(async () => [upload])
+    let unregister = async () => {}
+    const owner = await ctx.plugin({ name: 'upload-owner', inject: ['tasks'], apply(owner: Context) {
+      unregister = owner.tasks.registerUploadProvider(owner, { list })
+      expect(() => owner.tasks.registerUploadProvider(owner, { list })).toThrow('already registered')
+    } })
+    const during = await stageView('during')
+    expect(during.result).toEqual([{ id: 'upload-1', name: 'shot.png', path: '/blobs/a' }])
+    expect(list).toHaveBeenCalledWith(expect.objectContaining({ id: during.run.id }), expect.any(AbortSignal))
+    await unregister(); await owner.dispose()
+    expect((await stageView('after')).result).toEqual([])
   })
 
   it('denies Agent parenting, steps and tools while a Task Session waits', async () => {

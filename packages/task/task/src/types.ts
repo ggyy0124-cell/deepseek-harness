@@ -13,6 +13,8 @@ export type TaskRequestId = Branded<'TaskRequestId'>
 export type TaskWaitId = Branded<'TaskWaitId'>
 /** Persistent identity of one task database. */
 export type TaskStoreId = Branded<'TaskStoreId'>
+/** Identity of one file uploaded to a Run. */
+export type TaskUploadId = Branded<'TaskUploadId'>
 /** Durable plugin retirement identity. */
 export type TaskRetirementId = Branded<'TaskRetirementId'>
 /** Removal remains pending until every owned execution and resource settles. */
@@ -283,6 +285,32 @@ export interface TaskNotificationProvider {
    * @returns completion after delivery is acknowledged.
    */
   deliver(store: TaskStoreId, entry: Omit<TaskJournalEntry, 'details'>, signal: AbortSignal): Promise<void>
+}
+
+/** One file a person uploaded to a Run. Its stored bytes never change. */
+export interface TaskUpload {
+  readonly id: TaskUploadId
+  /** File name without path separators or control characters. */
+  readonly name: string
+  /** Media type reported with the upload. */
+  readonly mime: string
+  readonly size: number
+  /** Lowercase hexadecimal SHA-256 of the stored bytes. */
+  readonly digest: string
+  /** Upload instant in epoch milliseconds. */
+  readonly createdAt: number
+  /** Absolute path of the stored bytes. Read or copy the file; never modify, rename or delete it. */
+  readonly path: string
+}
+
+/** Reads the uploads a store holds for Runs; the API gateway registers the provider that stores them. */
+export interface TaskUploadProvider {
+  /** List the uploads of one Run.
+   * @param run - execution whose uploads are read.
+   * @param signal - cancellation of the requesting stage.
+   * @returns every stored upload of the Run, oldest first.
+   */
+  list(run: TaskRun, signal: AbortSignal): Promise<readonly TaskUpload[]>
 }
 
 /** Bounded history selection; head and after retain insertion-order pagination. */

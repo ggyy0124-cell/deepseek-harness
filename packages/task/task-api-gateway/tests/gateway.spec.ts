@@ -1,5 +1,6 @@
 /** Instrumented gateway composition exercises HTTP, engine receipts and real Session persistence together. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { request as httpRequest } from 'node:http'
 import { EventEmitter } from 'node:events'
@@ -531,6 +532,27 @@ describe('Task gateway composition', () => {
     expect((await raw(`${path}/missing`)).status).toBe(404)
     await expect(client.upload(run.id, [new File(['y'], 'other.txt')], 'first-content'))
       .rejects.toMatchObject({ problem: { status: 409, code: 'idempotency_conflict' } })
+  })
+
+  it('hands a Run\'s uploaded files to its stages as readable immutable files', async () => {
+    const { client, definition } = await gateway({
+      runSpecial: async stage => stage.run.checkpoint === null
+        ? { kind: 'wait', checkpoint: true, prompt: 'Upload files', schema: { type: 'boolean' } }
+        : { kind: 'succeed', result: await Promise.all((await stage.uploads()).map(async upload => (
+          { name: upload.name, size: upload.size, text: await readFile(upload.path, 'utf8') }))) },
+    })
+    const run = await client.request('triggerManual', {
+      params: { definitionId: definition.id }, body: { input: null }, idempotencyKey: 'stage-upload-run',
+    })
+    await expect.poll(async () => (await client.request('getRun', { params: { runId: run.id } })).status).toBe('waiting_input')
+    await client.upload(run.id, [new File(['first'], 'one.txt'), new File(['second'], 'two.txt')], 'stage-upload')
+    const waiting = (await client.request('listInteractions', { params: { runId: run.id } })).items[0]!
+    await client.request('respond', { params: { runId: run.id, waitId: waiting.id },
+      body: { revision: waiting.revision, response: true }, idempotencyKey: 'stage-upload-response' })
+    await expect.poll(async () => (await client.request('getRun', { params: { runId: run.id } })).status).toBe('succeeded')
+    expect((await client.request('getRun', { params: { runId: run.id } })).result).toEqual([
+      { name: 'one.txt', size: 5, text: 'first' }, { name: 'two.txt', size: 6, text: 'second' },
+    ])
   })
 
   it('enforces per-file and per-upload file-count limits', async () => {

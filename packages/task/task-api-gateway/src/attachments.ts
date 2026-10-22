@@ -5,7 +5,8 @@ import { join } from 'node:path'
 import { createReadStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { TaskRun, TaskPrincipalId } from '@deepseek-ai/dsh-task'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { TaskRun, TaskPrincipalId, TaskUpload, TaskUploadId } from '@deepseek-ai/dsh-task'
 import { attachmentSchema } from '@deepseek-ai/dsh-task-api-protocol'
 import { z } from 'zod'
 import { HttpProblem, readBody, validate } from './http.ts'
@@ -126,6 +127,22 @@ export class TaskAttachments {
       )
     }
     return items
+  }
+  /** Read this Run's attachments as files that a stage can open.
+   * @param run - execution identity.
+   * @param signal - cancellation of the requesting stage.
+   * @returns uploads oldest first, each with the path of its immutable blob.
+   */
+  async uploads(run: TaskRun, signal: AbortSignal): Promise<TaskUpload[]> {
+    signal.throwIfAborted()
+    const items = await this.list(run)
+    signal.throwIfAborted()
+    return items
+      .map(item => ({
+        id: brandString<TaskUploadId>(item.id), name: item.name, mime: item.mime, size: item.size, digest: item.digest,
+        createdAt: Date.parse(item.createdAt), path: join(this.options.root, 'blobs', item.digest),
+      }))
+      .sort((left, right) => left.createdAt - right.createdAt)
   }
   /** Download a Run-owned blob; only a single validated byte range is accepted.
    * @param run - execution selected by the authenticated caller.

@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-22-task-run-uploads-in-stages.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-22-task-run-uploads-in-stages.md
+/agent-note-run-uploads-reach-task-stages-through-an-upload-provider:
+  en: f424c0f50a59d0e9
+  zh: a7af93497d435817
+/agent-note-run-uploads-reach-task-stages-through-an-upload-provider/problem:
+  en: 25777c71d54b40e6
+  zh: afb6a25768cdc64f
+/agent-note-run-uploads-reach-task-stages-through-an-upload-provider/decision:
+  en: aa4d75a3f6d05982
+  zh: e1117ac98813a47e
+/agent-note-run-uploads-reach-task-stages-through-an-upload-provider/alternatives-considered:
+  en: 40f0df39cf9d9b9f
+  zh: 1016f6fb8e638f69
+/agent-note-run-uploads-reach-task-stages-through-an-upload-provider/consequences:
+  en: ecb2e9c950f164e2
+  zh: e7159dbc25a237e5

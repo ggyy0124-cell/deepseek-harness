@@ -49,6 +49,8 @@ A definition may declare versioned `forms`, deterministic `migrateConfig`, and c
 
 A business wait prompt is either a title string or `{ title, body, attachments }`, where `body` is Markdown and `attachments` name Run attachments. Polling and calendar runs record their schedule instant in `occurrence`, including the range of coalesced calendar occurrences.
 
+`stage.uploads()` lists the files people uploaded to the Run, oldest first, as `TaskUpload` records whose `path` names the immutable stored file; a stage copies what it needs and never modifies the file. The [Task gateway](../task-api-gateway/README.md) registers the provider through `TaskService.registerUploadProvider`, and a host without a provider reports no uploads.
+
 </details>
 
 -----

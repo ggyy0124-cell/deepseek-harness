@@ -85,6 +85,8 @@ The [projection](src/projection.ts) excludes private execution fields. Definitio
 
 `/runs/{runId}/attachments` accepts authenticated multipart `files`, persists an immutable SHA-256 blob and a principal-scoped retry receipt, and rejects new uploads with `409 run_readonly` once the Run is cancelling, cleanup-blocked or terminal. Scoped downloads support one byte range. Configure `attachmentRoot` (required), `attachmentFileLimitBytes` (52428800), `attachmentUploadLimitBytes` (209715200), `attachmentUploadTimeoutMs` (120000), and `attachmentFileLimit` (20). Configuration checks use `configCheckTimeoutMs` (60000). Plugins must honor their cancellation signal.
 
+The gateway registers its attachment store as the Task upload provider when it starts, so a stage reads a Run's uploads through `stage.uploads()` as paths of the immutable blobs, oldest first. The gateway fails to start when another provider is already registered.
+
 `GET /credentials` lists the references named by installed definitions' `x-dsh-widget: credential` fields, each with its naming definitions and value-free status. `GET /credentials/{reference}` returns only configured/writable booleans; `PUT` replaces a shared credential value and never echoes it. Credential replacement is an idempotent assignment, separate from Task command receipts. Cookie writes require CSRF. `/health` and `/ready` require authentication; `/ready` returns 200 only after successful launcher startup and Task recovery with a running scheduler, otherwise 503. `/auth/logout` revokes the browser session.
 
 </details>

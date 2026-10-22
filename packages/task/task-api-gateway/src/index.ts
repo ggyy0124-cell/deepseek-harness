@@ -257,6 +257,7 @@ export class TaskApiGateway extends Service {
         await Promise.allSettled([...this.pending.keys()])
       }
     }, 'task-api.routes')
+    this.ctx.tasks.registerUploadProvider(this.ctx, { list: (run, signal) => this.attachments.uploads(run, signal) })
   }
   /** Create a browser launch secret for an authorized local application entry.
    * @returns single-use secret and its expiry; the gateway never logs the secret.

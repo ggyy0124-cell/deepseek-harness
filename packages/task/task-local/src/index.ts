@@ -20,6 +20,7 @@ import TaskService, {
   type TaskRunQuery,
   type TaskRun,
   type TaskRunId,
+  type TaskUploadProvider,
   type TaskWaitId,
 } from '@deepseek-ai/dsh-task'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
@@ -312,6 +313,10 @@ export class LocalTaskService extends TaskService {
       this.notifications.set(id, delivery)
       return async () => { this.notifications.delete(id); await delivery.close() }
     })
+    return async () => { await dispose() }
+  }
+  override registerUploadProvider(owner: Context, provider: TaskUploadProvider): () => Promise<void> {
+    const dispose = owner.effect(() => this.engine.registerUploads(provider), 'task.upload-provider')
     return async () => { await dispose() }
   }
   override async diagnostics() {

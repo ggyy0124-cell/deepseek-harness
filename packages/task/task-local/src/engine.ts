@@ -23,6 +23,7 @@ import type {
   TaskSchedule,
   TaskStage,
   TaskStageResult,
+  TaskUploadProvider,
   TaskWaitId,
 } from '@deepseek-ai/dsh-task'
 import { TaskDatabase, TIMEOUT_REQUEST_PREFIX } from './database.ts'
@@ -106,6 +107,7 @@ export class TaskEngine {
   private readonly cancelling = new Map<TaskRunId, Promise<void>>()
   /** Durable requests and live answer waiters owned by this engine. */
   readonly interactions: RuntimeInteractions
+  private uploadProvider: TaskUploadProvider | undefined
   private stopping = false
   private stopped: Promise<void> | undefined
 
@@ -136,6 +138,17 @@ export class TaskEngine {
         }
       }
     })
+  }
+  /** Attach the store that `TaskStage.uploads` reads.
+   *
+   * @param provider - reads the uploads of one run.
+   *
+   * @returns removal; later stages see no uploads.
+   */
+  registerUploads(provider: TaskUploadProvider): () => void {
+    if (this.uploadProvider !== undefined) throw new Error('Task upload provider is already registered')
+    this.uploadProvider = provider
+    return () => { this.uploadProvider = undefined }
   }
   /** Admit a plugin definition, preserving saved configuration across restarts.
    *
@@ -1057,6 +1070,7 @@ export class TaskEngine {
           return result
         }),
         model: (key, prompt) => tracked(() => this.sessions.model(run, key, prompt, signal)),
+        uploads: () => tracked(async () => this.uploadProvider === undefined ? [] : this.uploadProvider.list(run, signal)),
         dispatch: (request, input) => tracked(() => this.dispatch(id, request, input)),
         operation: (key, execute, reconcile) =>
           tracked(() => {

@@ -61,6 +61,8 @@ Retirement commits disabled admission and a durable operation before cancellatio
 
 `registerNotificationProvider(owner, id, provider)` gives each destination its own durable acknowledgement cursor and awaited disposal. `diagnostics()` reads complete-history counts and reports queue age, persistence barriers, resource holders, outstanding retirement and disk pressure. `diskFreeRatio` defaults to 0.1; unavailable filesystem statistics remain explicit.
 
+`registerUploadProvider(owner, provider)` attaches the one store that `stage.uploads()` reads; a second registration throws, and removal makes later stages see no uploads.
+
 Restored plugin fibers remain loaded while cleanup is blocked. After a retry completes retirement, the scheduler releases those fibers; shutdown awaits any ongoing release. Failed disposal logs `task.retirement.dispose-failed` and remains eligible for another release pass.
 
 <details>

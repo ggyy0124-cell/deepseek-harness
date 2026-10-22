@@ -49,6 +49,8 @@ kind: "package-reference"
 
 业务等待的提示内容可以是标题字符串，也可以是 `{ title, body, attachments }`，其中 `body` 为 Markdown，`attachments` 为 Run 附件 ID。轮询和日历执行在 `occurrence` 中记录调度时刻，包括合并补跑的日历调度点范围。
 
+`stage.uploads()` 按上传先后列出用户上传到该 Run 的文件，以 `TaskUpload` 记录返回，其 `path` 指向不可变的存储文件；阶段按需复制，不得修改该文件。[Task 网关](../task-api-gateway/README.zh.md)通过 `TaskService.registerUploadProvider` 注册提供方，没有提供方的宿主报告为空。
+
 </details>
 
 -----
