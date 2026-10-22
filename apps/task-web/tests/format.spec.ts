@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { zhCN } from '../src/i18n/zh-CN.ts'
 import { en } from '../src/i18n/en.ts'
 import {
-  bytes, compactCount, describeCron, failureText, formatDuration, formatSpan, formatTime, intervalParts, relative, scheduleSummary,
+  bytes, compactCount, describeCron, failureText, fileKind, formatDuration, formatSpan, formatTime, intervalParts, relative,
+  scheduleSummary,
 } from '../src/support/format.ts'
 import { updatePreferences } from '../src/support/preferences.ts'
 
@@ -37,6 +38,10 @@ describe('values', () => {
     expect(bytes(512)).toBe('512 B')
     expect(bytes(18 * 1024)).toBe('18 KB')
     expect(bytes(1.25 * 1024 * 1024)).toBe('1.3 MB')
+    expect(fileKind('run.log')).toBe('LOG')
+    expect(fileKind('bundle.tar.gz')).toBe('GZ')
+    expect(fileKind('notes.markdown')).toBe('MARK')
+    expect(fileKind('Makefile')).toBe('FILE')
     expect(failureText({ kind: 'problem', code: 'stale_interaction', status: 409, detail: 'x' }, zhCN)).toBe('此确认已更新或已关闭')
     expect(failureText({ kind: 'problem', code: 'teapot', status: 418, detail: 'short' }, en)).toBe('Request rejected (teapot) short')
     expect(failureText({ kind: 'transport', detail: 'offline' }, en)).toBe('Cannot reach the Task service')

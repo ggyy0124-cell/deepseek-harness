@@ -200,6 +200,8 @@ export const en: Messages = {
     composerLabel: 'Supplemental information', composer: 'Add information for this run…', composerBlocked: 'Describe the repair, for example "credential configured, please retry"',
     composerHint: 'Stored as durable business input and wakes the run', sendKeys: 'Enter to send, Shift+Enter for a new line', attach: 'Attach',
     send: 'Send', wake: 'Wake run', sent: 'Supplemental input sent', sendFailed: 'Could not send', upload: 'Upload attachments',
+    sentWithFiles: n => `Supplemental input sent and ${n} files uploaded`,
+    draft: { label: 'Attachments to upload', hint: 'Attachments upload when you send', remove: name => `Remove ${name}`, directory: 'Folders cannot be uploaded and were skipped' },
     readonlyEnded: 'This run has ended and its Session is read-only: inputs, replies and uploads are closed.',
     readonlyCleanup: 'The outcome is recorded and the run only waits for cleanup: inputs and replies are closed.',
     readonlyCancelling: 'The run is cancelling: inputs and replies are closed.',

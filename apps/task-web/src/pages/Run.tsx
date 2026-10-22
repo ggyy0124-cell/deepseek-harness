@@ -1,15 +1,14 @@
 /** Run detail: conversation and trajectory, interactions, result, attachments, lineage and the right sidebar. */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
-  Button, IconChecklistOutlineRegular, IconEllipsisOutlineRegular, IconPaperclipOutlineRegular, IconQuestionOutlineRegular,
-  IconQueueOutlineRegular, IconRefreshOutlineRegular, IconSendOutlineRegular, IconStopFillRegular, IconWarningOutlineRegular,
+  Button, IconChecklistOutlineRegular, IconEllipsisOutlineRegular, IconQuestionOutlineRegular,
+  IconQueueOutlineRegular, IconRefreshOutlineRegular, IconStopFillRegular, IconWarningOutlineRegular,
   Menu, Modal, Tag, writeClipboard,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useT, type Messages } from '../i18n/index.ts'
 import { useApp, useShared } from '../app/context.tsx'
 import { commandKey, describeFailure } from '../support/connection.ts'
 import { definitionTitle, failureText, formatTime, runName, shortId } from '../support/format.ts'
-import { sendOnEnter } from '../support/keys.ts'
 import { useResource } from '../support/resource.ts'
 import { Link, paths, useRouter } from '../support/router.tsx'
 import { useStickToBottom } from '../support/scroll.ts'
@@ -20,7 +19,7 @@ import { buildTrajectory } from '../support/trajectory.ts'
 import { useRunStats } from '../support/stats.ts'
 import { useSessionLog } from '../support/session-log.ts'
 import { useRunContext } from '../support/context.ts'
-import { acceptsInput, type Attachment, type Json, type Run, type RunInput } from '../support/types.ts'
+import { acceptsInput, type Attachment, type Run, type RunInput } from '../support/types.ts'
 import {
   Card, CopyButton, Dot, EmptyState, KeyValue, Mono, Notice, StatusMark, StatusTag, Tabs, Time,
 } from '../components/ui.tsx'
@@ -34,8 +33,8 @@ import { ContextView } from '../components/ContextView.tsx'
 import { InteractionCard } from '../components/Interaction.tsx'
 import { ResultView } from '../components/Result.tsx'
 import { RestartCard } from '../components/Restart.tsx'
-import { AttachmentsPanel, useUpload } from '../components/Attachments.tsx'
-import { hasFormControls, SchemaForm, schemaDefault } from '../components/SchemaForm.tsx'
+import { AttachmentsPanel } from '../components/Attachments.tsx'
+import { Composer } from '../components/Composer.tsx'
 
 type Tab = 'session' | 'interactions' | 'result' | 'files' | 'lineage'
 
@@ -49,9 +48,6 @@ const NO_INPUTS: readonly RunInput[] = []
 
 /** Consecutive failed reads before the Session tab names the failure; the first one is a routine reconnect. */
 const STREAM_FAILURES_BEFORE_NOTICE = 2
-
-/** Tallest the supplemental input grows, in px, before it scrolls. */
-const COMPOSER_MAX_PX = 240
 
 /** Run detail page.
  * @param props.id - Run identity.
@@ -319,7 +315,7 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
           </div>
           {/* Supplemental input belongs to the Session; the Interactions tab answers waits through its own cards. */}
           {tab === 'session' && (open
-            ? <Composer run={run} onSent={refreshAll} onUploaded={attachments.reload} footer={<RunStatsBar stats={stats} />} />
+            ? <Composer key={run.id} run={run} onSent={refreshAll} onUploaded={attachments.reload} footer={<RunStatsBar stats={stats} />} />
             : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} footer={<RunStatsBar stats={stats} />} />)}
         </div>
         <Sidebar open={sidebar.open} covering={sidebar.covering} width={sidebar.width} tabs={sideTabs} active={activeSide}
@@ -438,69 +434,6 @@ function LineageRow({ run, title }: { run: Run; title: string }) {
       <StatusTag status={run.status} />
       <span className="tw-muted-small tw-time-col"><Time value={run.createdAt} /></span>
     </Link>
-  )
-}
-
-function Composer({ run, onSent, onUploaded, footer }: { run: Run; onSent: () => void; onUploaded: () => void; footer: ReactNode }) {
-  const t = useT()
-  const { connection, toast } = useApp()
-  const schema = run.supplementalInputSchema
-  const structured = schema !== null && schema['type'] !== 'string' && hasFormControls(schema)
-  const [text, setText] = useState('')
-  const [form, setForm] = useState<Json>(() => (schema === null ? null : schemaDefault(schema, schema)))
-  const [busy, setBusy] = useState(false)
-  const [key, setKey] = useState(commandKey)
-  const area = useRef<HTMLTextAreaElement | null>(null)
-  const { upload, uploading } = useUpload(run, onUploaded)
-  const blocked = run.status === 'blocked'
-  const empty = !structured && text.trim() === ''
-  useLayoutEffect(() => {
-    const node = area.current
-    if (node === null) return
-    node.style.height = 'auto'
-    node.style.height = `${Math.min(node.scrollHeight + node.offsetHeight - node.clientHeight, COMPOSER_MAX_PX)}px`
-  }, [text])
-  const send = () => {
-    if (busy || empty) return
-    const input: Json = structured ? form : text.trim()
-    setBusy(true)
-    connection.call('sendInput', { params: { runId: run.id }, body: { input }, idempotencyKey: key }).then(() => {
-      toast(t.run.sent)
-      setText('')
-      setForm(schema === null ? null : schemaDefault(schema, schema))
-      setKey(commandKey())
-      onSent()
-      area.current?.focus()
-    }, (error: unknown) => { toast(`${t.run.sendFailed}：${failureText(describeFailure(error), t)}`,
-      'error') }).finally(() => { setBusy(false) })
-  }
-  const sendLabel = blocked ? t.run.wake : t.run.send
-  return (
-    <div className="tw-composer-wrap">
-      <div className="tw-composer">
-        <div className="tw-composer-title"><span className="tw-strong">{t.run.composerLabel}</span><span className="tw-muted-small">{t.run.composerHint}</span></div>
-        {structured
-          ? <div className="tw-composer-form"><SchemaForm schema={schema} value={form} onChange={setForm} layout="stack" /></div>
-          : <textarea ref={area} className="tw-composer-input" aria-label={t.run.composerLabel} rows={3}
-            placeholder={blocked ? t.run.composerBlocked : t.run.composer} value={text}
-            onChange={(event) => { setText(event.target.value) }} onKeyDown={sendOnEnter(send)} />}
-        <div className="tw-composer-bar">
-          <div className="tw-inline-flex tw-gap-8">
-            <label className="tw-attach" title={t.run.upload}>
-              <IconPaperclipOutlineRegular size={14} /><span>{t.run.attach}</span>
-              <input type="file" multiple hidden aria-label={t.run.upload}
-                onChange={(event) => { upload([...(event.target.files ?? [])]); event.target.value = '' }} />
-            </label>
-            {uploading > 0
-              ? <span className="tw-muted-small">{t.run.files.uploading(uploading)}</span>
-              : !structured && <span className="tw-muted-small tw-send-keys">{t.run.sendKeys}</span>}
-          </div>
-          <Button variant="primary" size="sm" icon={<IconSendOutlineRegular size={14} />} disabled={busy || empty}
-            onClick={send}>{sendLabel}</Button>
-        </div>
-      </div>
-      {footer}
-    </div>
   )
 }
 

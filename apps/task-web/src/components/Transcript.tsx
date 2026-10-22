@@ -4,7 +4,7 @@ import { IconChevronDownOutlineRegular, IconChevronRightOutlineRegular, IconInfo
   IconCodeOutlineRegular, Tag } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useT } from '../i18n/index.ts'
 import { useApp } from '../app/context.tsx'
-import { bytes, elapsed, formatDuration, formatTime } from '../support/format.ts'
+import { bytes, elapsed, fileKind, formatDuration, formatTime } from '../support/format.ts'
 import { saveBlob } from '../support/download.ts'
 import { blockText, buildTimeline, inputDisplayLines, prettyArguments, type InputItem, type Step, type Turn } from '../support/timeline.ts'
 import type { Run, RunInput, TranscriptBlock, TranscriptEntry } from '../support/types.ts'
@@ -256,10 +256,9 @@ export function BlockChip({ run, entry, block, index }: { run: Pick<Run, 'id'>; 
  * @returns chip button.
  */
 export function FileChip({ name, detail, onClick, label }: { name: string; detail: ReactNode; onClick?: () => void; label?: string }) {
-  const extension = name.includes('.') ? (name.split('.').pop() ?? '').slice(0, 4).toUpperCase() : 'FILE'
   return (
     <button type="button" className="tw-file-chip" onClick={onClick} aria-label={label}>
-      <span className="tw-file-kind" aria-hidden="true">{extension}</span>
+      <span className="tw-file-kind" aria-hidden="true">{fileKind(name)}</span>
       <span className="tw-file-text"><span className="tw-file-name">{name}</span><span className="tw-muted-small">{detail}</span></span>
     </button>
   )

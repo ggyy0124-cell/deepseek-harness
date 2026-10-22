@@ -4,7 +4,7 @@ import { IconDownloadOutlineRegular, IconPaperclipOutlineRegular } from '@deepse
 import { useT } from '../i18n/index.ts'
 import { useApp } from '../app/context.tsx'
 import { commandKey, describeFailure } from '../support/connection.ts'
-import { bytes, failureText } from '../support/format.ts'
+import { bytes, failureText, fileKind } from '../support/format.ts'
 import { saveBlob } from '../support/download.ts'
 import type { Attachment, Run } from '../support/types.ts'
 import { IconButton, Time } from './ui.tsx'
@@ -72,7 +72,7 @@ export function AttachmentsPanel({ run, items, canUpload, closedText, onChanged 
       <div className="tw-attachment-list">
         {items.map(item => (
           <div key={item.id} className="tw-attachment-row">
-            <span className="tw-file-kind" aria-hidden="true">{(item.name.split('.').pop() ?? '').slice(0, 4).toUpperCase()}</span>
+            <span className="tw-file-kind" aria-hidden="true">{fileKind(item.name)}</span>
             <span className="tw-attachment-text">
               <span>{item.name}</span>
               <span className="tw-muted-small">{item.mime} · {bytes(item.size)} · {t.run.files.sha} {item.digest.slice(0, 8)}…</span>

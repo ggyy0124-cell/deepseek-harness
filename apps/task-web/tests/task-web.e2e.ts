@@ -322,6 +322,30 @@ describe('Task Web client', () => {
     }
   }, 90000)
 
+  it('uploads a file pasted into the input box together with the input and lists it among the Run attachments', async () => {
+    const composer = page.getByRole('textbox', { name: '补充信息' })
+    const drafts = page.getByRole('list', { name: '待上传的附件' })
+    // The paste event of a copied file: the clipboard carries the file and, as text, its name.
+    const inserted = await composer.evaluate((element) => {
+      const data = new DataTransfer()
+      data.items.add(new File(['stack trace'], 'crash.log', { type: 'text/plain' }))
+      data.setData('text/plain', 'crash.log')
+      const event = new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true })
+      element.dispatchEvent(event)
+      return !event.defaultPrevented
+    })
+    expect(inserted).toBe(false)
+    await drafts.getByText('crash.log').waitFor()
+    expect(await composer.inputValue()).toBe('')
+    await composer.fill('log attached')
+    await composer.press('Enter')
+    await page.locator('.tw-user-message').filter({ hasText: 'log attached' }).waitFor({ timeout: 30000 })
+    await drafts.waitFor({ state: 'detached' })
+    await page.getByRole('tab', { name: /附件\s*1/ }).click()
+    await page.getByText('crash.log').waitFor()
+    await page.getByRole('tab', { name: '会话' }).click()
+  }, 60000)
+
   it('retries a blocked cleanup and keeps the recorded outcome', async () => {
     await page.getByRole('button', { name: '手动触发' }).first().click()
     const dialog = page.getByRole('dialog', { name: '手动触发' })

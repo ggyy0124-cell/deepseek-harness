@@ -200,6 +200,8 @@ export const zhCN = {
     composerLabel: '补充信息', composer: '补充信息给这次执行…', composerBlocked: '说明已完成的处理，例如「已配置凭据，请重试」',
     composerHint: '作为业务输入持久保存，并唤醒执行', sendKeys: 'Enter 发送，Shift+Enter 换行', attach: '附件',
     send: '发送', wake: '唤醒执行', sent: '已发送补充输入', sendFailed: '发送失败', upload: '上传附件',
+    sentWithFiles: (n: number) => `已发送补充输入，并上传 ${n} 个文件`,
+    draft: { label: '待上传的附件', hint: '附件将在发送时一并上传', remove: (name: string) => `移除 ${name}`, directory: '不支持上传文件夹，已跳过' },
     readonlyEnded: '此执行已结束，会话只读：不能再发送输入、回复交互或上传附件。',
     readonlyCleanup: '结论已记录，执行只等待资源清理：不能再发送输入或回复交互。',
     readonlyCancelling: '执行正在取消：不能再发送输入或回复交互。',
