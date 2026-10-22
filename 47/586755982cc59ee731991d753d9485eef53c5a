@@ -1,0 +1,57 @@
+apps/task-web/src/pages/Run.tsx
+  s_ee315801ab9ee3::t_d4970120aafa9c 2,4-5,22
+  s_ee315801ab9ee3::t_c2920985ca039e 36-37,318
+apps/task-web/README.i18n.yaml
+  s_ee315801ab9ee3::t_3e8c59d561e2fd 9-10,15-16
+apps/task-web/src/support/drafts.ts
+  s_ee315801ab9ee3::t_908d2292d7deee 1-85,87-99
+  s_ee315801ab9ee3::t_40dcb8a046ad58 86
+apps/task-web/tests/composer.client.spec.tsx
+  s_ee315801ab9ee3::t_a4e0d610343a88 84
+  s_ee315801ab9ee3::t_ffe3943d29908f 1-83,85-289
+apps/task-web/tests/format.spec.ts
+  s_ee315801ab9ee3::t_219dfd600e4526 41-44
+  s_ee315801ab9ee3::t_3f177757e201c7 7-8
+apps/task-web/tests/task-web.e2e.ts
+  s_ee315801ab9ee3::t_159c290d2b3b93 325-348
+apps/task-web/README.zh.md
+  s_ee315801ab9ee3::t_3e8c59d561e2fd 25,48
+apps/task-web/src/support/format.ts
+  s_ee315801ab9ee3::t_55be9333fa44ee 177-184
+apps/task-web/src/components/Attachments.tsx
+  s_ee315801ab9ee3::t_8fc8fa0dc3abea 7
+  s_ee315801ab9ee3::t_46b4ed2a78f2fe 75
+apps/task-web/tests/drafts.spec.ts
+  s_ee315801ab9ee3::t_3f177757e201c7 13
+  s_ee315801ab9ee3::t_683d98c754fc17 1-12,14-57
+apps/task-web/src/styles/app.css
+  s_ee315801ab9ee3::t_93d2c071f1d778 611-621,623-628
+  s_ee315801ab9ee3::t_166b8f377c4f54 622
+apps/task-web/src/components/Transcript.tsx
+  s_ee315801ab9ee3::t_615c45fff00a6d 7
+  s_ee315801ab9ee3::t_e7feb96495b536 261
+apps/task-web/src/i18n/zh-CN.ts
+  s_ee315801ab9ee3::t_670ab66099e15f 203-204
+apps/task-web/src/components/Composer.tsx
+  s_ee315801ab9ee3::t_76af64a953bc3d 1-157
+apps/task-web/src/i18n/en.ts
+  s_ee315801ab9ee3::t_81de909f62a12f 203-204
+apps/task-web/README.md
+  s_ee315801ab9ee3::t_3e8c59d561e2fd 25,48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "47586755982cc59ee731991d753d9485eef53c5a",
+  "prompts": {},
+  "sessions": {
+    "s_ee315801ab9ee3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9688fb9d-d72e-44af-be3c-6bbefc9c1db5",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
