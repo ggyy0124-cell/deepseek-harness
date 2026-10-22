@@ -174,6 +174,14 @@ export function bytes(bytes: number): string {
   return `${value >= 100 ? Math.round(value) : Math.round(value * 10) / 10} ${units[unit]}`
 }
 
+/** Short file-type label of a file card.
+ * @param name - file name.
+ * @returns the extension in upper case, at most four characters; FILE when the name has no extension.
+ */
+export function fileKind(name: string): string {
+  return name.includes('.') ? (name.split('.').pop() ?? '').slice(0, 4).toUpperCase() : 'FILE'
+}
+
 /** Split a polling interval into a value and the largest exact unit.
  * @param intervalMs - polling interval.
  * @returns value and unit.
