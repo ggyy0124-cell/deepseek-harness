@@ -1,0 +1,739 @@
+packages/web/web-search-perplexity/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/schedule/schedule/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/extensions/cordis-host-runner/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/hooks-claude-code/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/extensions/cordis-client-runner/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/open-in-app/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/jobs/tool-jobs/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/context/agent-instructions/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-format-v0-to-v1/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/skill/tool-skill/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/pwsh-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/remote-access/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/bash-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/sandbox/sandbox/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/jobs/jobs/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/skill/skill-filesystem/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/deque/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-account/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/tools/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/agent-tool-presentation/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/session-inspector/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-subagent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/llm-deepseek-api-key/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-jobs/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/guard/timeout-policy/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/account-controller/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-workflow-run/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/browser-use-playwright-mcp/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/schedule/tool-schedule/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/web/web-search-deepseek/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/test-support/llm-replay/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/connection/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-permission-presets/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/agent-loop/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/computer-use-cua-driver-mcp/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/mcp/mcp-resources/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/test-support/client-runtime/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/claude-code-mods/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/preset/persona/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-directory-picker-browse/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-persistence/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 3
+packages/client/resources/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/context/tmux-context/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/goal/goal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/llm/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/lsp/lsp-stdio/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-log-deepseek/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/ssh/sandbox-ssh/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/ssh/ssh-helper-runtime/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/goal/command-goal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session-query/session-query/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-input-trigger/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-general/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/computer-use-cua-driver-native/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-plugins/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-title-llm/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/deliverables/tool-present/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/speech-to-text-sensevoice/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/llm-pi-ai/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-shell/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/ssh/fs-ssh/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/directory-picker/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-projection/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/sandbox/sandbox-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-plugin-inventory/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-sidebar-files/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/bundle/sdk-minimal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/credentials/credentials-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-format/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/typert/protocol/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/credentials/authorization/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/output-retention/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-primitives/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/agent-default-model/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/subagent-fork-in-process/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/atomic-write/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-deliverables/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/home-paths/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/document/office-to-pdf/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-checkpoint-policy/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-session-log/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-telemetry-otel/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/plugin-market-bundle/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/storage/storage/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-api-protocol/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/session/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/todo/tool-todo/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/client-ui-claude-code-mods/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+apps/desktop/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-session/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/badge-skill-bundle/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-secret-mask/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/bundle/base/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-dockkit/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/locale/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-goal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/computer-use/computer-use/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/fs/fs/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/feedback/command-feedback/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/bundle/task-app/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/jobs/jobs-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/sdk/client/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/compaction/compaction-basic/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/sdk/protocol/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/workspace-path/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/preset/agent-preset/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/web/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+apps/plugin-market-generator/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/inspector/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/native-command/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/lazy-require/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/compaction/compaction-tool-result-pruner/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/attachment/attachment-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/shell-env/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-deepseek-model-label-1017/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/package-manifest/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/store/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-approval/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/settings/settings/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-stats/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-format-catalog/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/test-support/session-snapshot/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-reference/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/context/time-context/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-turn-outline/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-agent-loop/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/llm-retry/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/subagent-dsh-sdk/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/directory-picker-native/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/attachment/attachment/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-plugin-market/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/skill/tool-workspace-dependencies/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/typert/registry/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/plugin-market-index/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/timeout/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/shortcuts/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-conversation/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-session-persistence-jsonl/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/bundle/acp-app/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/subagent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/tool-worktree/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-format-v3-to-v4/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/spill/spill/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/tool-ralph/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/llm-deepseek/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/boot/app-boot/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/directory-picker-auto/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/mcp/mcp-client/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/fs/tool-fs/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/storage/storage-domain/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/plugin-inventory/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-workspace/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/tool-subagent-control/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/boot/config-editor/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/scope/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/agent-team-profile/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/webserver/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/gateway/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/web/tool-web/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/workflow/tool-workflow/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/client-ui-agent-team/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-agent-preset-registry/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/ssh/subprocess-ssh/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/workflow/workflow/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/subagent-spawn-in-process/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/webhook-github/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-slots/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-plan/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/subagent-codex/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/test-support/agent-loop-testkit/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-directory-picker-native/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/lsp/tool-lsp/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/terminal-controller/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/client-ui-cot-translation/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-chat/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/terminal-bundle/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/remotes/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-models/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/deepseek-llm-api-extensions/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/bundle/web-app/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/bundle/sdk-app/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/extensions/tool-cordis/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/web/web-deepseek-api/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/web/web-search-exa/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/fs/tool-str-replace-editor/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/preset/agent-preset-registry/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-sidebar/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/telemetry/otel/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/goal/tool-goal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/typert/generator/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/feedback/message-feedback/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/storage/storage-json/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/browser-use-stagehand-native/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/test-support/remote-mock/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/credentials/credentials/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+apps/cli/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-skill/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/product-analytics/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/deliverables/workspace-changes/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/client-ui-voice-input/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/workspace-controller/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/hooks-codex/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/system-prompt/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/cua/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/guard/repeat-tool-reminder/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-title-first-prompt-llm/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/core/agent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-sidebar-browser/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/interaction/user-approval/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-brand-official/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-format-v2-to-v3/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/skill/skill/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/settings-controller/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-commands/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/speech-to-text/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/plan/plan-mode/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/ssh/ssh/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/test-support/llm-mock-server/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/terminal/terminal-bash/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/plugin-package-inventory-deepseek/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-title/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/boot/plugin-manager/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/workflow/workflow-ptc/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/acp/acp/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/workspace-files/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-tool/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/api-speech-to-text/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/webhook/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/product-telemetry-otel/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/tool-bash-persistent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-subagent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-sidebar-right/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/tool-pwsh/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/worktree/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/skill/skill-office/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/spill/spill-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/code-language/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/agent-team/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-user-questions/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/test-support/loader-smoke/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/goal/goal-round-driver/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/cot-translation-bundle/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/identity/anonymous-user-id/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/llm-deepseek-account/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/voice-input-bundle/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/interaction/permission-presets/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session-query/session-log-export/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/ptc-runtime/ptc-runtime-node/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/brand/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/boot/cmdline/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/translator/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/webworker-runtime/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/frontend-static/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+apps/task-web/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/context/harness-dev-context/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/terminal/terminal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/fs/tool-fs-search/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-renderer/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/hmr/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/subagent-claude-code/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-plugin-manager/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-agent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/ptc-runtime/ptc-runtime/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-schedule/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/ralph-bundle/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/modules/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/pwsh-sandbox/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/auto-review/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/hook-protocol/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/bash-sandbox/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-api-client/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/typert/loader/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/compaction/compaction-image-offload/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/compaction/compaction/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-telemetry/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/spill/spill-policy/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/session-controller/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+apps/web/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/compaction/command-compact/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/browser-use-chrome-devtools-mcp/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/skill-badge/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/launch-environment/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-persistence-jsonl/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/ptc-runtime-python/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/credentials/deepseek-account-platform/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/llm/token-meter/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/boot/hmr/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-layout/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/extensions/ui-cordis/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/context/file-reference/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/fs/fs-observation-policy/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-model-selection/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/interaction/user-questions/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/file-upload/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/api/job-controller/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/tool-bash/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-sidebar-terminal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subprocess/win32-process/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/web/web/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/storage/storage-sqlite/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/fs/fs-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-format-v1-to-v2/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/browser-use/browser-use/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-session/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/tool-session-query/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-web-search/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-shortcuts/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/chunked-list/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-settings-agent-loop/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/host/directory-picker-browse/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task-api-gateway/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/shell/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/task/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-theme/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/workspace/workspace/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-trajectory/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/session-title-all-prompts-llm/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/boot/plugin-market/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/tool-agent-team/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/working-directory/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/shell/tool-pwsh-persistent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/task/tool-task-dispatch/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/session-titles-bundle/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/http-proxy/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/interaction/commands/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/subagent-acp/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/fs/fs-sandbox/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/session-projection-cache/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/values/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-open-in-app/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session/tool-working-directory/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/inspector-profile/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/crypto/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/context/session-reference/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/sandbox/sandbox-policy/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+apps/desktop-host/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/session-query/session-query-sqlite/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/sdk/server/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/sandbox/sandbox-windows-acl/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subprocess/subprocess-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-attachment/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/tool-terminal/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/util/time/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/lsp/lsp/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/interaction/tool-ask-user/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/credentials/deepseek-account/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/session-search/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-agent-preset/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/context/file-reference-local/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/cua-macos/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-sidebar-documentpreview/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/webworker-packer/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subprocess/subprocess/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/bundle/headless/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/subagent/tool-subagent/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/client/ui-message-feedback/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/experimental/browser-use-runtime/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+packages/web/web-fetch-http/package.json
+  s_ee315801ab9ee3::t_ca211b06420be6 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "89089be65e63bcdf8209f92f94d2b2e3ecc029f1",
+  "prompts": {},
+  "sessions": {
+    "s_ee315801ab9ee3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9688fb9d-d72e-44af-be3c-6bbefc9c1db5",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
