@@ -1,0 +1,36 @@
+apps/task-web/README.zh.md
+  s_ee315801ab9ee3::t_3c551458c18daf 27,48
+apps/task-web/tests/composer.client.spec.tsx
+  s_ee315801ab9ee3::t_3c551458c18daf 67,69-70,72-75,284-294
+  s_ee315801ab9ee3::t_afb3262f701a6f 295-296
+apps/task-web/tests/task-web.e2e.ts
+  s_ee315801ab9ee3::t_3c551458c18daf 360-381
+apps/task-web/src/components/Composer.tsx
+  s_ee315801ab9ee3::t_3c551458c18daf 19-20,26-32,46,49,52,119
+apps/task-web/tests/run-tabs.client.spec.tsx
+  s_ee315801ab9ee3::t_3c551458c18daf 1-111
+apps/task-web/README.i18n.yaml
+  s_ee315801ab9ee3::t_3c551458c18daf 9-10,15-16
+apps/task-web/README.md
+  s_ee315801ab9ee3::t_3c551458c18daf 27,48
+apps/task-web/src/pages/Run.tsx
+  s_ee315801ab9ee3::t_3c551458c18daf 301-312,322-330
+apps/task-web/src/styles/app.css
+  s_ee315801ab9ee3::t_3c551458c18daf 593
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "03953b3b4c487dabf54fbf6155c1b0ebbc0d70e9",
+  "prompts": {},
+  "sessions": {
+    "s_ee315801ab9ee3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9688fb9d-d72e-44af-be3c-6bbefc9c1db5",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
