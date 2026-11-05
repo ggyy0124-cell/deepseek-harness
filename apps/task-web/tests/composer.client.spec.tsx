@@ -64,12 +64,15 @@ function mount(answers: Answers = {}) {
   const onUploaded = vi.fn()
   const connection = new TaskConnection('http://127.0.0.1:3081/')
   const app: AppValue = { connection, events: new TaskEventHub(connection), toast, openSettings: () => {}, openTrigger: () => {} }
-  const view = render(
+  const tree = (visible: boolean) => (
     <AppContext.Provider value={app}>
-      <Composer run={run} onSent={onSent} onUploaded={onUploaded} footer={null} />
-    </AppContext.Provider>,
+      <Composer run={run} visible={visible} onSent={onSent} onUploaded={onUploaded} footer={null} />
+    </AppContext.Provider>
   )
-  return { sent, toast, onSent, onUploaded, view }
+  const view = render(tree(true))
+  /** Show or hide the box without remounting it, as the Run page does when another tab opens. */
+  const show = (visible: boolean) => { view.rerender(tree(visible)) }
+  return { sent, toast, onSent, onUploaded, view, show }
 }
 
 const box = () => screen.getByRole<HTMLTextAreaElement>('textbox', { name: '补充信息' })
@@ -276,6 +279,19 @@ describe('drafts', () => {
     fireEvent.paste(box(), { clipboardData: transfer([png()]) })
     view.unmount()
     expect(revoked).toEqual(['blob:shot.png'])
+  })
+
+  it('stay with the text while the box is hidden, and are not released', () => {
+    const { show } = mount()
+    fireEvent.paste(box(), { clipboardData: transfer([png(), log()]) })
+    fireEvent.change(box(), { target: { value: '附件是现场日志' } })
+    show(false)
+    expect(screen.queryByRole('textbox', { name: '补充信息' })).toBeNull()
+    expect(revoked).toEqual([])
+    show(true)
+    expect(box().value).toBe('附件是现场日志')
+    expect(within(drafts()).getByRole('img', { name: 'shot.png' })).toBeTruthy()
+    expect(within(drafts()).getByText('run.log')).toBeTruthy()
   })
 
   it('are locked while they upload', async () => {

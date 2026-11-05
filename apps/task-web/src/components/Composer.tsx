@@ -16,12 +16,20 @@ const COMPOSER_MAX_PX = 240
 /** Supplemental input box of an open Run. Files from the picker, a paste or a drop wait as thumbnails or file cards and upload
  * together with the input, so a file chosen by mistake can still be removed.
  * @param props.run - open execution; remount per Run so text and files never carry over.
+ * @param props.visible - false while another tab shows: the box stays mounted, so its text, files and pending send survive,
+ * and takes no space.
  * @param props.onSent - refresh after the input was accepted.
  * @param props.onUploaded - refresh after files were stored.
  * @param props.footer - content under the box.
  * @returns the input box.
  */
-export function Composer({ run, onSent, onUploaded, footer }: { run: Run; onSent: () => void; onUploaded: () => void; footer: ReactNode }) {
+export function Composer({ run, visible, onSent, onUploaded, footer }: {
+  run: Run
+  visible: boolean
+  onSent: () => void
+  onUploaded: () => void
+  footer: ReactNode
+}) {
   const t = useT()
   const { connection, toast } = useApp()
   const schema = run.supplementalInputSchema
@@ -35,12 +43,13 @@ export function Composer({ run, onSent, onUploaded, footer }: { run: Run; onSent
   const { drafts, add, drop, uploadKey } = useDrafts()
   const blocked = run.status === 'blocked'
   const hasInput = structured || text.trim() !== ''
+  // A box that takes no space has no height to measure; it grows to its text when it shows again.
   useLayoutEffect(() => {
     const node = area.current
-    if (node === null) return
+    if (node === null || !visible) return
     node.style.height = 'auto'
     node.style.height = `${Math.min(node.scrollHeight + node.offsetHeight - node.clientHeight, COMPOSER_MAX_PX)}px`
-  }, [text])
+  }, [text, visible])
   /** Take the files of a paste or drop into the drafts.
    * @returns the files taken.
    */
@@ -107,7 +116,7 @@ export function Composer({ run, onSent, onUploaded, footer }: { run: Run; onSent
   }
   const sendLabel = !hasInput ? t.run.upload : blocked ? t.run.wake : t.run.send
   return (
-    <div className="tw-composer-wrap">
+    <div className="tw-composer-wrap" hidden={!visible}>
       <div className="tw-composer" data-over={over || undefined} onPaste={paste} onDragOver={dragOver} onDragLeave={dragLeave}
         onDrop={dropFiles}>
         <div className="tw-composer-title"><span className="tw-strong">{t.run.composerLabel}</span><span className="tw-muted-small">{t.run.composerHint}</span></div>
