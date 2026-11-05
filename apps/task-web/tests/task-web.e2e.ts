@@ -357,6 +357,28 @@ describe('Task Web client', () => {
     await page.locator('.tw-run-header').getByText('已失败').waitFor({ timeout: 30000 })
   }, 60000)
 
+  it('keeps what was typed into the input box and a confirmation card while another tab shows', async () => {
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: /待处理/ }).click()
+    await page.getByRole('region', { name: '业务确认' }).first().waitFor({ timeout: 30000 })
+    await page.getByRole('link', { name: '打开执行' }).first().click()
+    const composer = page.getByRole('textbox', { name: '补充信息' })
+    await composer.fill('draft input')
+    await page.getByRole('tab', { name: /交互\s*1/ }).click()
+    const card = page.getByRole('region', { name: '业务确认' })
+    const note = card.getByRole('textbox', { name: '补充说明（可选）' })
+    await card.getByRole('option', { name: /Approve and continue/ }).click()
+    await note.fill('draft note')
+    // Each tab shows only its own box, and the box comes back as it was left.
+    expect(await composer.count()).toBe(0)
+    await page.getByRole('tab', { name: '会话' }).click()
+    expect(await card.count()).toBe(0)
+    expect(await composer.inputValue()).toBe('draft input')
+    expect((await composer.boundingBox())?.height ?? 0).toBeGreaterThan(0)
+    await page.getByRole('tab', { name: /交互\s*1/ }).click()
+    expect(await note.inputValue()).toBe('draft note')
+    expect(await card.getByRole('option', { name: /Approve and continue/ }).getAttribute('aria-selected')).toBe('true')
+  }, 60000)
+
   it('restarts a failed ordinary run from its result and links the new run to it', async () => {
     await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: /待处理/ }).click()
     const card = page.getByRole('region', { name: '业务确认' }).first()

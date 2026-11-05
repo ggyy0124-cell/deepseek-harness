@@ -298,12 +298,18 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
                   {waiting.length > 0 && <MetaLine text={t.status.waiting_input} />}
                 </>
               )}
-              {tab === 'interactions' && (
-                waiting.length === 0
-                  ? <EmptyState icon={<IconQuestionOutlineRegular size={20} />}
-                    title={t.run.noInteractions}>{t.run.noInteractionsBody}</EmptyState>
-                  : waiting.map(item => <InteractionCard key={`${item.id}:${item.revision}`} interaction={item} runName={name}
-                    callArguments={callArguments(item.callId)} onDone={refreshAll} />)
+              {tab === 'interactions' && waiting.length === 0 && (
+                <EmptyState icon={<IconQuestionOutlineRegular size={20} />}
+                  title={t.run.noInteractions}>{t.run.noInteractionsBody}</EmptyState>
+              )}
+              {/* The cards stay mounted under the other tabs, so a chosen option and typed notes survive a visit to them. */}
+              {waiting.length > 0 && (
+                <div hidden={tab !== 'interactions'}>
+                  <div className="tw-stack-16">
+                    {waiting.map(item => <InteractionCard key={`${item.id}:${item.revision}`} interaction={item} runName={name}
+                      callArguments={callArguments(item.callId)} onDone={refreshAll} />)}
+                  </div>
+                </div>
               )}
               {tab === 'result' && <ResultTab run={run} attachments={files} onRestarted={refreshAll} />}
               {tab === 'files' && (
@@ -313,10 +319,15 @@ function RunDetail({ run, reload }: { run: Run; reload: () => void }) {
               {tab === 'lineage' && <Lineage run={run} />}
             </div>
           </div>
-          {/* Supplemental input belongs to the Session; the Interactions tab answers waits through its own cards. */}
-          {tab === 'session' && (open
-            ? <Composer key={run.id} run={run} onSent={refreshAll} onUploaded={attachments.reload} footer={<RunStatsBar stats={stats} />} />
-            : <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} footer={<RunStatsBar stats={stats} />} />)}
+          {/* Supplemental input belongs to the Session; the Interactions tab answers waits through its own cards.
+              The input stays mounted under the other tabs, so its text and files survive a visit to them. */}
+          {open && (
+            <Composer key={run.id} run={run} visible={tab === 'session'} onSent={refreshAll} onUploaded={attachments.reload}
+              footer={<RunStatsBar stats={stats} />} />
+          )}
+          {tab === 'session' && !open && (
+            <ReadonlyBar run={run} definitionNext={definition?.nextDueAt ?? null} footer={<RunStatsBar stats={stats} />} />
+          )}
         </div>
         <Sidebar open={sidebar.open} covering={sidebar.covering} width={sidebar.width} tabs={sideTabs} active={activeSide}
           activeRef={activeSideTab} scrollKey={activeSide === 'record' ? `${selectedId ?? ''}:${selection?.tab ?? ''}` : activeSide} onSelect={setSideTab}

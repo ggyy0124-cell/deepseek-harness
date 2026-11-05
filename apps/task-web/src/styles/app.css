@@ -590,6 +590,7 @@ button.tw-danger-fill:hover:not(:disabled) { background: var(--dsw-alias-state-e
 .tw-file-text { min-width: 0; display: flex; flex-direction: column; }
 .tw-file-name { font-size: 13px; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tw-composer-wrap { flex: none; padding: 0 24px 14px; display: flex; flex-direction: column; align-items: center; }
+.tw-composer-wrap[hidden] { display: none; }
 .tw-composer {
   box-sizing: border-box; width: 100%; max-width: var(--tw-run-column-max); display: flex; flex-direction: column; border: 0.5px solid var(--dsw-alias-border-l4);
   border-radius: var(--dsw-radius-xl); background: var(--dsw-alias-bg-layer-1); box-shadow: var(--tw-shadow-soft);
