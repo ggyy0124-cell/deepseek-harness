@@ -1,0 +1,739 @@
+apps/cli/package.json
+  s_ee315801ab9ee3::t_c898a3ddf57812 4
+apps/desktop-host/package.json
+  s_ee315801ab9ee3::t_e325ff637fcef7 4
+apps/desktop/package.json
+  s_ee315801ab9ee3::t_4e1a6b061ed54a 4
+apps/plugin-market-generator/package.json
+  s_ee315801ab9ee3::t_1f755e3a0bb7a0 4
+apps/task-web/package.json
+  s_ee315801ab9ee3::t_c12584caa32e17 4
+apps/web/package.json
+  s_ee315801ab9ee3::t_ec6d4eb799d5c9 4
+package.json
+  s_ee315801ab9ee3::t_9ce0695def3271 3
+packages/acp/acp/package.json
+  s_ee315801ab9ee3::t_532dc95a8b0119 4
+packages/api/account-controller/package.json
+  s_ee315801ab9ee3::t_ed530240116f0b 4
+packages/api/gateway/package.json
+  s_ee315801ab9ee3::t_541266567681e2 4
+packages/api/job-controller/package.json
+  s_ee315801ab9ee3::t_b1fe96197072fa 4
+packages/api/remote-access/package.json
+  s_ee315801ab9ee3::t_9dc425a146bec7 4
+packages/api/remotes/package.json
+  s_ee315801ab9ee3::t_48bb936979ed8f 4
+packages/api/session-controller/package.json
+  s_ee315801ab9ee3::t_9e8ecdc6bf2057 4
+packages/api/settings-controller/package.json
+  s_ee315801ab9ee3::t_bffefb494945ea 4
+packages/api/terminal-controller/package.json
+  s_ee315801ab9ee3::t_4dc09f44d921f3 4
+packages/api/workspace-controller/package.json
+  s_ee315801ab9ee3::t_d22d903effe6eb 4
+packages/api/workspace-files/package.json
+  s_ee315801ab9ee3::t_e24b10fdadec82 4
+packages/attachment/attachment-local/package.json
+  s_ee315801ab9ee3::t_7cd3101ed72158 4
+packages/attachment/attachment/package.json
+  s_ee315801ab9ee3::t_e7a62d3863eb88 4
+packages/boot/app-boot/package.json
+  s_ee315801ab9ee3::t_111012d293b1c8 4
+packages/boot/cmdline/package.json
+  s_ee315801ab9ee3::t_db219d236454b8 4
+packages/boot/config-editor/package.json
+  s_ee315801ab9ee3::t_cc0ed430e8611e 4
+packages/boot/hmr/package.json
+  s_ee315801ab9ee3::t_f5198216edd71e 4
+packages/boot/plugin-manager/package.json
+  s_ee315801ab9ee3::t_13588da0f51200 4
+packages/boot/plugin-market/package.json
+  s_ee315801ab9ee3::t_1a7f7176a85263 4
+packages/browser-use/browser-use/package.json
+  s_ee315801ab9ee3::t_20de85e45453ea 4
+packages/bundle/acp-app/package.json
+  s_ee315801ab9ee3::t_7ba422e9fd224d 4
+packages/bundle/base/package.json
+  s_ee315801ab9ee3::t_9c49dae5caee99 4
+packages/bundle/headless/package.json
+  s_ee315801ab9ee3::t_b5f844a27b10fd 4
+packages/bundle/sdk-app/package.json
+  s_ee315801ab9ee3::t_ecf9c12fa68ccb 4
+packages/bundle/sdk-minimal/package.json
+  s_ee315801ab9ee3::t_1826d1a6827e4e 4
+packages/bundle/task-app/package.json
+  s_ee315801ab9ee3::t_29891d8c3b4d1e 4
+packages/bundle/web-app/package.json
+  s_ee315801ab9ee3::t_6e36b9426fe330 4
+packages/client/connection/package.json
+  s_ee315801ab9ee3::t_247f76f21ef367 4
+packages/client/file-upload/package.json
+  s_ee315801ab9ee3::t_3ab76a6285539a 4
+packages/client/hmr/package.json
+  s_ee315801ab9ee3::t_89e3d33cca362c 4
+packages/client/locale/package.json
+  s_ee315801ab9ee3::t_c29cee653e0361 4
+packages/client/modules/package.json
+  s_ee315801ab9ee3::t_bea75c6afc0523 4
+packages/client/product-analytics/package.json
+  s_ee315801ab9ee3::t_a1d86e0c177279 4
+packages/client/resources/package.json
+  s_ee315801ab9ee3::t_681458ff316f3f 4
+packages/client/shortcuts/package.json
+  s_ee315801ab9ee3::t_dd9722f74d92f3 4
+packages/client/store/package.json
+  s_ee315801ab9ee3::t_c50260918bfc3c 4
+packages/client/ui-agent-preset/package.json
+  s_ee315801ab9ee3::t_63462dd560b5c6 4
+packages/client/ui-approval/package.json
+  s_ee315801ab9ee3::t_2ac014d5e73019 4
+packages/client/ui-attachment/package.json
+  s_ee315801ab9ee3::t_c2632e9261385d 4
+packages/client/ui-brand-official/package.json
+  s_ee315801ab9ee3::t_46fdc8b173af7c 4
+packages/client/ui-chat/package.json
+  s_ee315801ab9ee3::t_87aa5a5e0a4824 4
+packages/client/ui-commands/package.json
+  s_ee315801ab9ee3::t_c59d4d9d731894 4
+packages/client/ui-conversation/package.json
+  s_ee315801ab9ee3::t_ffd8cc1db24b89 4
+packages/client/ui-deepseek-model-label-1017/package.json
+  s_ee315801ab9ee3::t_bef07d10b327f7 4
+packages/client/ui-deliverables/package.json
+  s_ee315801ab9ee3::t_c34042589b558e 4
+packages/client/ui-directory-picker-browse/package.json
+  s_ee315801ab9ee3::t_d89faebc3733df 4
+packages/client/ui-directory-picker-native/package.json
+  s_ee315801ab9ee3::t_b60801a1533e5f 4
+packages/client/ui-dockkit/package.json
+  s_ee315801ab9ee3::t_f6839ae089f1d7 4
+packages/client/ui-goal/package.json
+  s_ee315801ab9ee3::t_1e2e497ef1eb96 4
+packages/client/ui-input-trigger/package.json
+  s_ee315801ab9ee3::t_ffb9ce393af327 4
+packages/client/ui-jobs/package.json
+  s_ee315801ab9ee3::t_c3f2d6c333956d 4
+packages/client/ui-layout/package.json
+  s_ee315801ab9ee3::t_0bf52d68ace9e3 4
+packages/client/ui-message-feedback/package.json
+  s_ee315801ab9ee3::t_1ad4f566d471cf 4
+packages/client/ui-model-selection/package.json
+  s_ee315801ab9ee3::t_3a5a79ce03d899 4
+packages/client/ui-open-in-app/package.json
+  s_ee315801ab9ee3::t_b59a812b206ced 4
+packages/client/ui-permission-presets/package.json
+  s_ee315801ab9ee3::t_22578f963e11db 4
+packages/client/ui-plan/package.json
+  s_ee315801ab9ee3::t_a3ea3b6a384000 4
+packages/client/ui-plugin-manager/package.json
+  s_ee315801ab9ee3::t_642664f9b61551 4
+packages/client/ui-plugin-market/package.json
+  s_ee315801ab9ee3::t_01ae7758f62ba4 4
+packages/client/ui-primitives/package.json
+  s_ee315801ab9ee3::t_3ee8532157f37a 4
+packages/client/ui-reference/package.json
+  s_ee315801ab9ee3::t_225d3e28752270 4
+packages/client/ui-renderer/package.json
+  s_ee315801ab9ee3::t_7cff41f400c4ca 4
+packages/client/ui-schedule/package.json
+  s_ee315801ab9ee3::t_776fc19b23dd36 4
+packages/client/ui-secret-mask/package.json
+  s_ee315801ab9ee3::t_e15878cae8616f 4
+packages/client/ui-session/package.json
+  s_ee315801ab9ee3::t_88c5a2477681ca 4
+packages/client/ui-settings-account/package.json
+  s_ee315801ab9ee3::t_6ef66082781494 4
+packages/client/ui-settings-agent-loop/package.json
+  s_ee315801ab9ee3::t_519a5f4db79ab6 4
+packages/client/ui-settings-general/package.json
+  s_ee315801ab9ee3::t_f7de9d564ac46d 4
+packages/client/ui-settings-models/package.json
+  s_ee315801ab9ee3::t_36b589a3001084 4
+packages/client/ui-settings-plugin-inventory/package.json
+  s_ee315801ab9ee3::t_79588dabc35d19 4
+packages/client/ui-settings-plugins/package.json
+  s_ee315801ab9ee3::t_8e3cb5233a3cdf 4
+packages/client/ui-settings-session-log/package.json
+  s_ee315801ab9ee3::t_fcfbab4a1fc90f 4
+packages/client/ui-settings-shell/package.json
+  s_ee315801ab9ee3::t_43be6695d9a99a 4
+packages/client/ui-settings-subagent/package.json
+  s_ee315801ab9ee3::t_a487ecac712a46 4
+packages/client/ui-settings-web-search/package.json
+  s_ee315801ab9ee3::t_740d9c69fc810f 4
+packages/client/ui-settings/package.json
+  s_ee315801ab9ee3::t_e4c69cb9eba741 4
+packages/client/ui-shortcuts/package.json
+  s_ee315801ab9ee3::t_bba5358b350e03 4
+packages/client/ui-sidebar-browser/package.json
+  s_ee315801ab9ee3::t_7ad737f02654e6 4
+packages/client/ui-sidebar-documentpreview/package.json
+  s_ee315801ab9ee3::t_449816a0eff783 4
+packages/client/ui-sidebar-files/package.json
+  s_ee315801ab9ee3::t_0542af9195296f 4
+packages/client/ui-sidebar-right/package.json
+  s_ee315801ab9ee3::t_e90b60f2725a51 4
+packages/client/ui-sidebar-terminal/package.json
+  s_ee315801ab9ee3::t_2c3530584d5510 4
+packages/client/ui-sidebar/package.json
+  s_ee315801ab9ee3::t_bf0246d1e032ba 4
+packages/client/ui-skill/package.json
+  s_ee315801ab9ee3::t_d85fc454f39dbb 4
+packages/client/ui-slots/package.json
+  s_ee315801ab9ee3::t_5ec1cb544435ad 4
+packages/client/ui-subagent/package.json
+  s_ee315801ab9ee3::t_76e1218e1c857f 4
+packages/client/ui-theme/package.json
+  s_ee315801ab9ee3::t_c72b22d6d50838 4
+packages/client/ui-tool/package.json
+  s_ee315801ab9ee3::t_929923940f545c 4
+packages/client/ui-trajectory/package.json
+  s_ee315801ab9ee3::t_c226b3ee6de2bd 4
+packages/client/ui-user-questions/package.json
+  s_ee315801ab9ee3::t_69e1c7852f7efe 4
+packages/client/ui-workflow-run/package.json
+  s_ee315801ab9ee3::t_4362735e220cfb 4
+packages/client/ui-workspace/package.json
+  s_ee315801ab9ee3::t_3c9d8eaa343a4c 4
+packages/client/web/package.json
+  s_ee315801ab9ee3::t_03c74313cb6737 4
+packages/compaction/command-compact/package.json
+  s_ee315801ab9ee3::t_42b1de022f648d 4
+packages/compaction/compaction-basic/package.json
+  s_ee315801ab9ee3::t_e9e0f426105ef5 4
+packages/compaction/compaction-image-offload/package.json
+  s_ee315801ab9ee3::t_a00f85845cee7d 4
+packages/compaction/compaction-tool-result-pruner/package.json
+  s_ee315801ab9ee3::t_01c742e489d481 4
+packages/compaction/compaction/package.json
+  s_ee315801ab9ee3::t_abcdcdf680241f 4
+packages/computer-use/computer-use/package.json
+  s_ee315801ab9ee3::t_561bb0ef8053cd 4
+packages/context/agent-instructions/package.json
+  s_ee315801ab9ee3::t_d30e68cb517629 4
+packages/context/file-reference-local/package.json
+  s_ee315801ab9ee3::t_94bdfe435d18a0 4
+packages/context/file-reference/package.json
+  s_ee315801ab9ee3::t_7ec739be7b65a7 4
+packages/context/harness-dev-context/package.json
+  s_ee315801ab9ee3::t_67bb5ce11056ba 4
+packages/context/session-reference/package.json
+  s_ee315801ab9ee3::t_00fbfa4ef04d37 4
+packages/context/time-context/package.json
+  s_ee315801ab9ee3::t_b8572e34509942 4
+packages/context/tmux-context/package.json
+  s_ee315801ab9ee3::t_e85cf5935d5264 4
+packages/core/agent-default-model/package.json
+  s_ee315801ab9ee3::t_9a9934b57f9766 4
+packages/core/agent-loop/package.json
+  s_ee315801ab9ee3::t_f29b584946418f 4
+packages/core/agent-tool-presentation/package.json
+  s_ee315801ab9ee3::t_6756c211638103 4
+packages/core/agent/package.json
+  s_ee315801ab9ee3::t_f96d2c49b273ba 4
+packages/core/scope/package.json
+  s_ee315801ab9ee3::t_242b4ad0b7c5d3 4
+packages/core/session/package.json
+  s_ee315801ab9ee3::t_cafadcab0c758b 4
+packages/core/system-prompt/package.json
+  s_ee315801ab9ee3::t_5a83fbe5b9f2f6 4
+packages/core/tools/package.json
+  s_ee315801ab9ee3::t_273e810828199c 4
+packages/credentials/authorization/package.json
+  s_ee315801ab9ee3::t_51e2e05ea81218 4
+packages/credentials/credentials-local/package.json
+  s_ee315801ab9ee3::t_95e299d7422047 4
+packages/credentials/credentials/package.json
+  s_ee315801ab9ee3::t_902084281cb21b 4
+packages/credentials/deepseek-account-platform/package.json
+  s_ee315801ab9ee3::t_b3c88cc542fb2d 4
+packages/credentials/deepseek-account/package.json
+  s_ee315801ab9ee3::t_224e96072e3e24 4
+packages/deliverables/tool-present/package.json
+  s_ee315801ab9ee3::t_e47ea0bbeee0a4 4
+packages/deliverables/workspace-changes/package.json
+  s_ee315801ab9ee3::t_da1c52126103ae 4
+packages/document/office-to-pdf/package.json
+  s_ee315801ab9ee3::t_e48e3a745eb03f 4
+packages/experimental/agent-team-profile/package.json
+  s_ee315801ab9ee3::t_e5fb5cdbacb5fa 4
+packages/experimental/agent-team/package.json
+  s_ee315801ab9ee3::t_969a0ad991e4ba 4
+packages/experimental/api-speech-to-text/package.json
+  s_ee315801ab9ee3::t_eeb4d4dda3dc32 4
+packages/experimental/auto-review/package.json
+  s_ee315801ab9ee3::t_b4382bc3f03d47 4
+packages/experimental/badge-skill-bundle/package.json
+  s_ee315801ab9ee3::t_a2d69b8dc4b17e 4
+packages/experimental/browser-use-chrome-devtools-mcp/package.json
+  s_ee315801ab9ee3::t_d50187834372aa 4
+packages/experimental/browser-use-playwright-mcp/package.json
+  s_ee315801ab9ee3::t_b02e1c495899db 4
+packages/experimental/browser-use-runtime/package.json
+  s_ee315801ab9ee3::t_2b91706ed10149 4
+packages/experimental/browser-use-stagehand-native/package.json
+  s_ee315801ab9ee3::t_27f189a46f9f40 4
+packages/experimental/claude-code-mods/package.json
+  s_ee315801ab9ee3::t_5c88fc4e6625f3 4
+packages/experimental/client-ui-agent-team/package.json
+  s_ee315801ab9ee3::t_e31355cc974fd9 4
+packages/experimental/client-ui-claude-code-mods/package.json
+  s_ee315801ab9ee3::t_5cdbff5365f460 4
+packages/experimental/client-ui-cot-translation/package.json
+  s_ee315801ab9ee3::t_f9b18a79e2409f 4
+packages/experimental/client-ui-voice-input/package.json
+  s_ee315801ab9ee3::t_7ce567c3366ec6 4
+packages/experimental/computer-use-cua-driver-mcp/package.json
+  s_ee315801ab9ee3::t_b80ecba14f5f5b 4
+packages/experimental/computer-use-cua-driver-native/package.json
+  s_ee315801ab9ee3::t_04a89dce46e3c5 4
+packages/experimental/cot-translation-bundle/package.json
+  s_ee315801ab9ee3::t_8900e742fe2525 4
+packages/experimental/cua-macos/package.json
+  s_ee315801ab9ee3::t_11c717a3120366 4
+packages/experimental/cua/package.json
+  s_ee315801ab9ee3::t_d9765636b761bd 4
+packages/experimental/hook-protocol/package.json
+  s_ee315801ab9ee3::t_9bf755c6882d85 4
+packages/experimental/hooks-claude-code/package.json
+  s_ee315801ab9ee3::t_3cfe5e577f2cd5 4
+packages/experimental/hooks-codex/package.json
+  s_ee315801ab9ee3::t_2be4440a87ea68 4
+packages/experimental/inspector-profile/package.json
+  s_ee315801ab9ee3::t_790064d7390c15 4
+packages/experimental/inspector/package.json
+  s_ee315801ab9ee3::t_36eb417a9e9d79 4
+packages/experimental/plugin-market-bundle/package.json
+  s_ee315801ab9ee3::t_a84b204cd4db63 4
+packages/experimental/ptc-runtime-python/package.json
+  s_ee315801ab9ee3::t_d7b51e9de1860e 4
+packages/experimental/ralph-bundle/package.json
+  s_ee315801ab9ee3::t_5269c70e44bc7c 4
+packages/experimental/session-inspector/package.json
+  s_ee315801ab9ee3::t_70cdd5fee4d5d0 4
+packages/experimental/session-search/package.json
+  s_ee315801ab9ee3::t_1b0d3069ff44db 4
+packages/experimental/session-title-all-prompts-llm/package.json
+  s_ee315801ab9ee3::t_59c7b8b3603708 4
+packages/experimental/session-titles-bundle/package.json
+  s_ee315801ab9ee3::t_314849973d226f 4
+packages/experimental/skill-badge/package.json
+  s_ee315801ab9ee3::t_aaee1a9bb15cd0 4
+packages/experimental/speech-to-text-sensevoice/package.json
+  s_ee315801ab9ee3::t_7e5f6b24327cd1 4
+packages/experimental/speech-to-text/package.json
+  s_ee315801ab9ee3::t_a684f77ca8c1e5 4
+packages/experimental/terminal-bundle/package.json
+  s_ee315801ab9ee3::t_90a83b627da7b7 4
+packages/experimental/tool-agent-team/package.json
+  s_ee315801ab9ee3::t_a639e765a26821 4
+packages/experimental/tool-ralph/package.json
+  s_ee315801ab9ee3::t_5d18b1bd24e60f 4
+packages/experimental/tool-session-query/package.json
+  s_ee315801ab9ee3::t_87f9f912392c55 4
+packages/experimental/tool-terminal/package.json
+  s_ee315801ab9ee3::t_bd7ade9ea7f8fc 4
+packages/experimental/tool-worktree/package.json
+  s_ee315801ab9ee3::t_c78dd70653ad5f 4
+packages/experimental/translator/package.json
+  s_ee315801ab9ee3::t_00f1ce269f7851 4
+packages/experimental/voice-input-bundle/package.json
+  s_ee315801ab9ee3::t_5a24d6c60ddc71 4
+packages/experimental/webhook-github/package.json
+  s_ee315801ab9ee3::t_c18699876918eb 4
+packages/experimental/webhook/package.json
+  s_ee315801ab9ee3::t_5437bb59bdf6d7 4
+packages/experimental/webworker-packer/package.json
+  s_ee315801ab9ee3::t_b7e3a3d5a0af03 4
+packages/experimental/webworker-runtime/package.json
+  s_ee315801ab9ee3::t_c411bc5d4c55fe 4
+packages/experimental/worktree/package.json
+  s_ee315801ab9ee3::t_040ee87c5e5216 4
+packages/extensions/cordis-client-runner/package.json
+  s_ee315801ab9ee3::t_094e616d07ff67 4
+packages/extensions/cordis-host-runner/package.json
+  s_ee315801ab9ee3::t_f73d93cd993e99 4
+packages/extensions/tool-cordis/package.json
+  s_ee315801ab9ee3::t_41d0d40c497130 4
+packages/extensions/ui-cordis/package.json
+  s_ee315801ab9ee3::t_1e867a23fb24d1 4
+packages/feedback/command-feedback/package.json
+  s_ee315801ab9ee3::t_b33282094fbfe1 4
+packages/feedback/message-feedback/package.json
+  s_ee315801ab9ee3::t_b374816db478ec 4
+packages/fs/fs-local/package.json
+  s_ee315801ab9ee3::t_f3ccc61c797304 4
+packages/fs/fs-observation-policy/package.json
+  s_ee315801ab9ee3::t_9aed6cefdb75c1 4
+packages/fs/fs-sandbox/package.json
+  s_ee315801ab9ee3::t_dcd6074b18f8ea 4
+packages/fs/fs/package.json
+  s_ee315801ab9ee3::t_fd6bb405fbc6cd 4
+packages/fs/tool-fs-search/package.json
+  s_ee315801ab9ee3::t_a21d80210cfc07 4
+packages/fs/tool-fs/package.json
+  s_ee315801ab9ee3::t_b90014510bb8b0 4
+packages/fs/tool-str-replace-editor/package.json
+  s_ee315801ab9ee3::t_f23b7ec94bf248 4
+packages/goal/command-goal/package.json
+  s_ee315801ab9ee3::t_0cadb61e24baf5 4
+packages/goal/goal-round-driver/package.json
+  s_ee315801ab9ee3::t_42a41248105539 4
+packages/goal/goal/package.json
+  s_ee315801ab9ee3::t_d16420cca02dbd 4
+packages/goal/tool-goal/package.json
+  s_ee315801ab9ee3::t_1161377206f1de 4
+packages/guard/repeat-tool-reminder/package.json
+  s_ee315801ab9ee3::t_edf9b610379b35 4
+packages/guard/timeout-policy/package.json
+  s_ee315801ab9ee3::t_72959e4859db23 4
+packages/host/directory-picker-auto/package.json
+  s_ee315801ab9ee3::t_9bd91811cbff00 4
+packages/host/directory-picker-browse/package.json
+  s_ee315801ab9ee3::t_38b59cd3815361 4
+packages/host/directory-picker-native/package.json
+  s_ee315801ab9ee3::t_e96af985252554 4
+packages/host/directory-picker/package.json
+  s_ee315801ab9ee3::t_83daa1bb4aa5fa 4
+packages/host/frontend-static/package.json
+  s_ee315801ab9ee3::t_4c1126af520428 4
+packages/host/open-in-app/package.json
+  s_ee315801ab9ee3::t_2f2cafd18b7429 4
+packages/host/plugin-inventory/package.json
+  s_ee315801ab9ee3::t_9e6496cb8a5423 4
+packages/host/product-telemetry-otel/package.json
+  s_ee315801ab9ee3::t_d932864258bcb6 4
+packages/host/webserver/package.json
+  s_ee315801ab9ee3::t_dbd6240df4051b 4
+packages/identity/anonymous-user-id/package.json
+  s_ee315801ab9ee3::t_badf937a2ae037 4
+packages/interaction/commands/package.json
+  s_ee315801ab9ee3::t_8ed8c038f90230 4
+packages/interaction/permission-presets/package.json
+  s_ee315801ab9ee3::t_cdd3633b67d2a3 4
+packages/interaction/tool-ask-user/package.json
+  s_ee315801ab9ee3::t_e69f9f06caf83c 4
+packages/interaction/user-approval/package.json
+  s_ee315801ab9ee3::t_f51f7f47702c6c 4
+packages/interaction/user-questions/package.json
+  s_ee315801ab9ee3::t_be1341bc6c1557 4
+packages/jobs/jobs-local/package.json
+  s_ee315801ab9ee3::t_32c30d75168b4f 4
+packages/jobs/jobs/package.json
+  s_ee315801ab9ee3::t_ff59e8de973bf5 4
+packages/jobs/tool-jobs/package.json
+  s_ee315801ab9ee3::t_97525eb6e3b3f0 4
+packages/llm/deepseek-llm-api-extensions/package.json
+  s_ee315801ab9ee3::t_cb713b00eca2cc 4
+packages/llm/llm-deepseek-account/package.json
+  s_ee315801ab9ee3::t_74de351c8a777b 4
+packages/llm/llm-deepseek-api-key/package.json
+  s_ee315801ab9ee3::t_982a194c18d1f8 4
+packages/llm/llm-deepseek/package.json
+  s_ee315801ab9ee3::t_6ecf54495074bd 4
+packages/llm/llm-pi-ai/package.json
+  s_ee315801ab9ee3::t_b6ef49e3a9a20a 4
+packages/llm/llm-retry/package.json
+  s_ee315801ab9ee3::t_b14580ab18bd75 4
+packages/llm/llm/package.json
+  s_ee315801ab9ee3::t_6da8ddb208ee8f 4
+packages/llm/plugin-package-inventory-deepseek/package.json
+  s_ee315801ab9ee3::t_2bb52d80549bd9 4
+packages/llm/token-meter/package.json
+  s_ee315801ab9ee3::t_ff1f05702ef324 4
+packages/lsp/lsp-stdio/package.json
+  s_ee315801ab9ee3::t_81527726de6e1c 4
+packages/lsp/lsp/package.json
+  s_ee315801ab9ee3::t_1042047e5fac55 4
+packages/lsp/tool-lsp/package.json
+  s_ee315801ab9ee3::t_5a73549c122d0d 4
+packages/mcp/mcp-client/package.json
+  s_ee315801ab9ee3::t_ceafe0965d2edf 4
+packages/mcp/mcp-resources/package.json
+  s_ee315801ab9ee3::t_c424bcf2f3f0be 4
+packages/plan/plan-mode/package.json
+  s_ee315801ab9ee3::t_7e559480049b97 4
+packages/preset/agent-preset-registry/package.json
+  s_ee315801ab9ee3::t_a85c3d54b3956a 4
+packages/preset/agent-preset/package.json
+  s_ee315801ab9ee3::t_73c67f686d7d8f 4
+packages/preset/persona/package.json
+  s_ee315801ab9ee3::t_977d1d2cce95eb 4
+packages/ptc-runtime/ptc-runtime-node/package.json
+  s_ee315801ab9ee3::t_de24e451cf5815 4
+packages/ptc-runtime/ptc-runtime/package.json
+  s_ee315801ab9ee3::t_06d3eaac0463de 4
+packages/sandbox/sandbox-local/package.json
+  s_ee315801ab9ee3::t_0a0986f2b40bb7 4
+packages/sandbox/sandbox-policy/package.json
+  s_ee315801ab9ee3::t_435f9860579f24 4
+packages/sandbox/sandbox-windows-acl/package.json
+  s_ee315801ab9ee3::t_da79588494a150 4
+packages/sandbox/sandbox/package.json
+  s_ee315801ab9ee3::t_4845541ef6a81d 4
+packages/schedule/schedule/package.json
+  s_ee315801ab9ee3::t_ccd9a176f38e6d 4
+packages/schedule/tool-schedule/package.json
+  s_ee315801ab9ee3::t_0f93f114f5d213 4
+packages/sdk/client/package.json
+  s_ee315801ab9ee3::t_7827e1da5809a7 4
+packages/sdk/protocol/package.json
+  s_ee315801ab9ee3::t_19de2061726427 4
+packages/sdk/server/package.json
+  s_ee315801ab9ee3::t_7ba864794eae71 4
+packages/session-query/session-log-export/package.json
+  s_ee315801ab9ee3::t_869986b4fafcc8 4
+packages/session-query/session-query-sqlite/package.json
+  s_ee315801ab9ee3::t_435b307cabbbfc 4
+packages/session-query/session-query/package.json
+  s_ee315801ab9ee3::t_c46ebe2d7659df 4
+packages/session/session-checkpoint-policy/package.json
+  s_ee315801ab9ee3::t_36846ea5367c75 4
+packages/session/session-format-catalog/package.json
+  s_ee315801ab9ee3::t_e524000acc37e0 4
+packages/session/session-format-v0-to-v1/package.json
+  s_ee315801ab9ee3::t_e8517fa832c6dc 4
+packages/session/session-format-v1-to-v2/package.json
+  s_ee315801ab9ee3::t_dd18d56712158f 4
+packages/session/session-format-v2-to-v3/package.json
+  s_ee315801ab9ee3::t_2902fddbf45110 4
+packages/session/session-format-v3-to-v4/package.json
+  s_ee315801ab9ee3::t_8b11c01baa87f3 4
+packages/session/session-format/package.json
+  s_ee315801ab9ee3::t_2a091f5305d91b 4
+packages/session/session-log-deepseek/package.json
+  s_ee315801ab9ee3::t_87d171580d58a7 4
+packages/session/session-persistence-jsonl/package.json
+  s_ee315801ab9ee3::t_18c195d695ea6c 4
+packages/session/session-persistence/package.json
+  s_ee315801ab9ee3::t_00a8002d6ec74e 4
+packages/session/session-projection-cache/package.json
+  s_ee315801ab9ee3::t_064eead82591a5 4
+packages/session/session-projection/package.json
+  s_ee315801ab9ee3::t_c9e20fb95a5827 4
+packages/session/session-stats/package.json
+  s_ee315801ab9ee3::t_4c54f218721717 4
+packages/session/session-telemetry-otel/package.json
+  s_ee315801ab9ee3::t_51e51c646d5644 4
+packages/session/session-telemetry/package.json
+  s_ee315801ab9ee3::t_5599cf963f9e6b 4
+packages/session/session-title-first-prompt-llm/package.json
+  s_ee315801ab9ee3::t_b57b5ead3b08e7 4
+packages/session/session-title-llm/package.json
+  s_ee315801ab9ee3::t_5ff8f1af268bb1 4
+packages/session/session-title/package.json
+  s_ee315801ab9ee3::t_ec63a6d3654341 4
+packages/session/session-turn-outline/package.json
+  s_ee315801ab9ee3::t_87ff7c7cde792e 4
+packages/session/tool-working-directory/package.json
+  s_ee315801ab9ee3::t_24d03123a72565 4
+packages/session/working-directory/package.json
+  s_ee315801ab9ee3::t_eaeb5de0ee0c66 4
+packages/settings/settings/package.json
+  s_ee315801ab9ee3::t_01cd2827a9a29e 4
+packages/shell/bash-local/package.json
+  s_ee315801ab9ee3::t_8211897c074b11 4
+packages/shell/bash-sandbox/package.json
+  s_ee315801ab9ee3::t_21789ca0f33f77 4
+packages/shell/pwsh-local/package.json
+  s_ee315801ab9ee3::t_fe142b29ce7b7f 4
+packages/shell/pwsh-sandbox/package.json
+  s_ee315801ab9ee3::t_6be8a7132523e0 4
+packages/shell/shell-env/package.json
+  s_ee315801ab9ee3::t_d452ed1f702115 4
+packages/shell/shell/package.json
+  s_ee315801ab9ee3::t_9c52176392ca84 4
+packages/shell/tool-bash-persistent/package.json
+  s_ee315801ab9ee3::t_0b3ed09bd513cf 4
+packages/shell/tool-bash/package.json
+  s_ee315801ab9ee3::t_b4dd8b7db09eba 4
+packages/shell/tool-pwsh-persistent/package.json
+  s_ee315801ab9ee3::t_ccc7a7429303ca 4
+packages/shell/tool-pwsh/package.json
+  s_ee315801ab9ee3::t_a9ee1ff80ca2d8 4
+packages/skill/skill-filesystem/package.json
+  s_ee315801ab9ee3::t_c8dbf44ac9284d 4
+packages/skill/skill-office/package.json
+  s_ee315801ab9ee3::t_edc9eada46055a 4
+packages/skill/skill/package.json
+  s_ee315801ab9ee3::t_5c6de6f09af3e6 4
+packages/skill/tool-skill/package.json
+  s_ee315801ab9ee3::t_f48872c3b0d5ad 4
+packages/skill/tool-workspace-dependencies/package.json
+  s_ee315801ab9ee3::t_707b99c54690ce 4
+packages/spill/spill-local/package.json
+  s_ee315801ab9ee3::t_be32e3e67e58b0 4
+packages/spill/spill-policy/package.json
+  s_ee315801ab9ee3::t_aaacb5ff4aa05d 4
+packages/spill/spill/package.json
+  s_ee315801ab9ee3::t_88506e219c2169 4
+packages/ssh/fs-ssh/package.json
+  s_ee315801ab9ee3::t_55b9ab22d719b6 4
+packages/ssh/sandbox-ssh/package.json
+  s_ee315801ab9ee3::t_69bf9ce690d9d1 4
+packages/ssh/ssh-helper-runtime/package.json
+  s_ee315801ab9ee3::t_4953286a4dfcaa 4
+packages/ssh/ssh/package.json
+  s_ee315801ab9ee3::t_aef054c994dfcc 4
+packages/ssh/subprocess-ssh/package.json
+  s_ee315801ab9ee3::t_3411f39c0b4d86 4
+packages/storage/storage-domain/package.json
+  s_ee315801ab9ee3::t_a048eef6feebe3 4
+packages/storage/storage-json/package.json
+  s_ee315801ab9ee3::t_268b529620b8c1 4
+packages/storage/storage-sqlite/package.json
+  s_ee315801ab9ee3::t_3040ac227458af 4
+packages/storage/storage/package.json
+  s_ee315801ab9ee3::t_f121a8dff6fb8b 4
+packages/subagent/subagent-acp/package.json
+  s_ee315801ab9ee3::t_627b93cef71f63 4
+packages/subagent/subagent-claude-code/package.json
+  s_ee315801ab9ee3::t_f872482bae4272 4
+packages/subagent/subagent-codex/package.json
+  s_ee315801ab9ee3::t_5a73627ad262e6 4
+packages/subagent/subagent-dsh-sdk/package.json
+  s_ee315801ab9ee3::t_fa9d9770f6f5ad 4
+packages/subagent/subagent-fork-in-process/package.json
+  s_ee315801ab9ee3::t_3e97c44090004a 4
+packages/subagent/subagent-spawn-in-process/package.json
+  s_ee315801ab9ee3::t_7d2000354d0b0d 4
+packages/subagent/subagent/package.json
+  s_ee315801ab9ee3::t_d6082f5dcd89a3 4
+packages/subagent/tool-subagent-control/package.json
+  s_ee315801ab9ee3::t_2f06566fd47605 4
+packages/subagent/tool-subagent/package.json
+  s_ee315801ab9ee3::t_35125867fe40d5 4
+packages/subprocess/subprocess-local/package.json
+  s_ee315801ab9ee3::t_4861e89de1ebf8 4
+packages/subprocess/subprocess/package.json
+  s_ee315801ab9ee3::t_e6c3748ee4c5e3 4
+packages/subprocess/win32-process/package.json
+  s_ee315801ab9ee3::t_9363b21a501e04 4
+packages/task/task-agent-loop/package.json
+  s_ee315801ab9ee3::t_8e784400ac2a8f 4
+packages/task/task-agent-preset-registry/package.json
+  s_ee315801ab9ee3::t_8bd1d0a381c388 4
+packages/task/task-agent/package.json
+  s_ee315801ab9ee3::t_9b18565ae77438 4
+packages/task/task-api-client/package.json
+  s_ee315801ab9ee3::t_34bab64308dabc 4
+packages/task/task-api-gateway/package.json
+  s_ee315801ab9ee3::t_065b99986ae776 4
+packages/task/task-api-protocol/package.json
+  s_ee315801ab9ee3::t_40135509783760 4
+packages/task/task-local/package.json
+  s_ee315801ab9ee3::t_f976ca68b47a18 4
+packages/task/task-session-persistence-jsonl/package.json
+  s_ee315801ab9ee3::t_0b0ec8dcca2c8b 4
+packages/task/task-session/package.json
+  s_ee315801ab9ee3::t_7a365e6583f65f 4
+packages/task/task/package.json
+  s_ee315801ab9ee3::t_f8967c8d69a618 4
+packages/task/tool-task-dispatch/package.json
+  s_ee315801ab9ee3::t_403647a7e7b692 4
+packages/telemetry/otel/package.json
+  s_ee315801ab9ee3::t_75affc358f7cc5 4
+packages/terminal/terminal-bash/package.json
+  s_ee315801ab9ee3::t_bdae05a2fbf757 4
+packages/terminal/terminal/package.json
+  s_ee315801ab9ee3::t_6a3f57c4f01077 4
+packages/test-support/agent-loop-testkit/package.json
+  s_ee315801ab9ee3::t_e75941482bc196 4
+packages/test-support/client-runtime/package.json
+  s_ee315801ab9ee3::t_c6cd5e415a7aee 4
+packages/test-support/llm-mock-server/package.json
+  s_ee315801ab9ee3::t_ddc609b5940162 4
+packages/test-support/llm-replay/package.json
+  s_ee315801ab9ee3::t_0b73aed95c4760 4
+packages/test-support/loader-smoke/package.json
+  s_ee315801ab9ee3::t_85e7ad4c7d1f69 4
+packages/test-support/remote-mock/package.json
+  s_ee315801ab9ee3::t_a070ffa1e0572d 4
+packages/test-support/session-snapshot/package.json
+  s_ee315801ab9ee3::t_339b49fa8870d1 4
+packages/todo/tool-todo/package.json
+  s_ee315801ab9ee3::t_1880d48b87bb10 4
+packages/typert/generator/package.json
+  s_ee315801ab9ee3::t_bf798cd7714c41 4
+packages/typert/loader/package.json
+  s_ee315801ab9ee3::t_67cd508a4ab87f 4
+packages/typert/protocol/package.json
+  s_ee315801ab9ee3::t_f20ba45299058a 4
+packages/typert/registry/package.json
+  s_ee315801ab9ee3::t_19db84efb64e6a 4
+packages/util/atomic-write/package.json
+  s_ee315801ab9ee3::t_ade8b8411d6cd4 4
+packages/util/brand/package.json
+  s_ee315801ab9ee3::t_38dcb5451648fd 4
+packages/util/chunked-list/package.json
+  s_ee315801ab9ee3::t_5a5ca18c003e46 4
+packages/util/code-language/package.json
+  s_ee315801ab9ee3::t_87b2fb72ed09d1 4
+packages/util/crypto/package.json
+  s_ee315801ab9ee3::t_d5b4a680dcd067 4
+packages/util/deque/package.json
+  s_ee315801ab9ee3::t_dd0e23e1defde7 4
+packages/util/home-paths/package.json
+  s_ee315801ab9ee3::t_d146d6f4a9d2d1 4
+packages/util/http-proxy/package.json
+  s_ee315801ab9ee3::t_f76d05dd20625b 4
+packages/util/launch-environment/package.json
+  s_ee315801ab9ee3::t_097be57c8b801b 4
+packages/util/lazy-require/package.json
+  s_ee315801ab9ee3::t_8a0967e56ff6b1 4
+packages/util/native-command/package.json
+  s_ee315801ab9ee3::t_9392878e754a87 4
+packages/util/output-retention/package.json
+  s_ee315801ab9ee3::t_f30bbf4ea1a682 4
+packages/util/package-manifest/package.json
+  s_ee315801ab9ee3::t_165bc1a8a17f42 4
+packages/util/plugin-market-index/package.json
+  s_ee315801ab9ee3::t_20f4563548e1e1 4
+packages/util/time/package.json
+  s_ee315801ab9ee3::t_beed37de232212 4
+packages/util/timeout/package.json
+  s_ee315801ab9ee3::t_9546f79cae0387 4
+packages/util/values/package.json
+  s_ee315801ab9ee3::t_6ab48c44210f29 4
+packages/util/workspace-path/package.json
+  s_ee315801ab9ee3::t_cc9c8411b456cc 4
+packages/web/tool-web/package.json
+  s_ee315801ab9ee3::t_eac6a98c8c9917 4
+packages/web/web-deepseek-api/package.json
+  s_ee315801ab9ee3::t_62e6633d6d55ed 4
+packages/web/web-fetch-http/package.json
+  s_ee315801ab9ee3::t_bc065d28a7446f 4
+packages/web/web-search-deepseek/package.json
+  s_ee315801ab9ee3::t_5ac845da4a03eb 4
+packages/web/web-search-exa/package.json
+  s_ee315801ab9ee3::t_6b924405c71bdc 4
+packages/web/web-search-perplexity/package.json
+  s_ee315801ab9ee3::t_5b9c244a92ba7a 4
+packages/web/web/package.json
+  s_ee315801ab9ee3::t_f65c2d8f8db803 4
+packages/workflow/tool-workflow/package.json
+  s_ee315801ab9ee3::t_bfec4fee9d16e9 4
+packages/workflow/workflow-ptc/package.json
+  s_ee315801ab9ee3::t_5a453531a08a0b 4
+packages/workflow/workflow/package.json
+  s_ee315801ab9ee3::t_cf77a9792c6480 4
+packages/workspace/workspace/package.json
+  s_ee315801ab9ee3::t_5aeb97a7d4f2bc 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a9e23f148b146770a02df06dedc55bd7c8584f31",
+  "prompts": {},
+  "sessions": {
+    "s_ee315801ab9ee3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9688fb9d-d72e-44af-be3c-6bbefc9c1db5",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "luonian <nianluo@syncore.space>"
+    }
+  }
+}
